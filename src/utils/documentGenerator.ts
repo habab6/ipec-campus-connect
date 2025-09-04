@@ -256,147 +256,184 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
     <style>
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 1.5cm 2cm 3cm 2cm;
         }
         
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
             padding: 0; 
-            line-height: 1.6; 
+            line-height: 1.4; 
             color: #333;
+            font-size: 11pt;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content {
+            flex: 1;
         }
         
         .header { 
             display: flex; 
             justify-content: space-between; 
             border-bottom: 2px solid #2563eb; 
-            padding-bottom: 20px; 
-            margin-bottom: 30px; 
+            padding-bottom: 15px; 
+            margin-bottom: 20px; 
         }
         
         .logo { 
             color: #2563eb; 
-            font-size: 24px; 
+            font-size: 20px; 
             font-weight: bold; 
         }
         
         .company-info {
-            font-size: 14px;
-            line-height: 1.4;
+            font-size: 11px;
+            line-height: 1.3;
         }
         
         .invoice-info { 
-            text-align: right; 
+            text-align: right;
+            font-size: 11px;
+        }
+        
+        .invoice-info h1 {
+            font-size: 16px;
+            margin: 0 0 5px 0;
         }
         
         .billing-info { 
             display: flex; 
             justify-content: space-between; 
-            margin: 20px 0; 
+            margin: 15px 0; 
         }
         
         .billing-section { 
-            width: 45%; 
+            width: 45%;
+            font-size: 11px;
+        }
+        
+        .billing-section h3 {
+            font-size: 12px;
+            margin: 0 0 5px 0;
         }
         
         .invoice-table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin: 20px 0; 
+            margin: 15px 0; 
+            font-size: 11px;
         }
         
         .invoice-table th, .invoice-table td { 
             border: 1px solid #d1d5db; 
-            padding: 12px; 
+            padding: 8px; 
             text-align: left; 
         }
         
         .invoice-table th { 
-            background-color: #f3f4f6; 
+            background-color: #f3f4f6;
+            font-size: 10px;
         }
         
         .total { 
             text-align: right; 
-            font-size: 18px; 
+            font-size: 14px; 
             font-weight: bold; 
             color: #2563eb; 
+            margin: 15px 0;
         }
         
         .footer { 
-            margin-top: 40px; 
-            padding-top: 20px; 
+            margin-top: auto;
+            padding-top: 15px; 
             border-top: 1px solid #d1d5db; 
-            text-align: center; 
+            text-align: center;
+            font-size: 10px;
+            position: absolute;
+            bottom: 1cm;
+            left: 2cm;
+            right: 2cm;
         }
         
         @media print {
-            body { margin: 0; }
+            body { 
+                margin: 0;
+                height: 100vh;
+            }
+            .footer {
+                position: fixed;
+                bottom: 1cm;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <div class="logo">IPEC</div>
-            <div class="company-info">
-                <strong>Institut Privé d'Enseignement Commercial</strong><br>
-                Avenue Louise 123<br>
-                1050 Bruxelles, Belgique<br>
-                Tél: +32 2 123 45 67<br>
-                Email: info@ipec.be
+    <div class="content">
+        <div class="header">
+            <div>
+                <div class="logo">IPEC</div>
+                <div class="company-info">
+                    <strong>Institut privé des études commerciales</strong><br>
+                    Avenue Louise 123<br>
+                    1050 Bruxelles, Belgique<br>
+                    Tél: +32 2 123 45 67<br>
+                    Email: info@ipec.be
+                </div>
+            </div>
+            <div class="invoice-info">
+                <h1>FACTURE</h1>
+                <p><strong>N° ${invoiceNumber}</strong></p>
+                <p>Date: ${payment.invoiceDate ? new Date(payment.invoiceDate).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')}</p>
+                <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
             </div>
         </div>
-        <div class="invoice-info">
-            <h1>FACTURE</h1>
-            <p><strong>N° ${invoiceNumber}</strong></p>
-            <p>Date: ${payment.invoiceDate ? new Date(payment.invoiceDate).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')}</p>
-            <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
+        
+        <div class="billing-info">
+            <div class="billing-section">
+                <h3>Facturé à:</h3>
+                <p><strong>${student.firstName} ${student.lastName}</strong><br>
+                ${student.email}<br>
+                ${student.phone || ''}<br>
+                ${student.address || ''}</p>
+            </div>
+            <div class="billing-section">
+                <h3>Émetteur:</h3>
+                <p><strong>Institut privé des études commerciales</strong><br>
+                Avenue Louise 123<br>
+                1050 Bruxelles, Belgique</p>
+            </div>
         </div>
-    </div>
-    
-    <div class="billing-info">
-        <div class="billing-section">
-            <h3>Facturé à:</h3>
-            <p><strong>${student.firstName} ${student.lastName}</strong><br>
-            ${student.email}<br>
-            ${student.phone || ''}<br>
-            ${student.address || ''}</p>
+        
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Programme</th>
+                    <th>Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${payment.description}</td>
+                    <td>${payment.type}</td>
+                    <td>${student.program}</td>
+                    <td>${payment.amount}€</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="total">
+            <p>Total à payer: ${payment.amount}€</p>
         </div>
-        <div class="billing-section">
-            <h3>Émetteur:</h3>
-            <p><strong>Institut Privé d'Enseignement Commercial</strong><br>
-            Avenue Louise 123<br>
-            1050 Bruxelles, Belgique</p>
-        </div>
-    </div>
-    
-    <table class="invoice-table">
-        <thead>
-            <tr>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Programme</th>
-                <th>Montant</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>${payment.description}</td>
-                <td>${payment.type}</td>
-                <td>${student.program}</td>
-                <td>${payment.amount}€</td>
-            </tr>
-        </tbody>
-    </table>
-    
-    <div class="total">
-        <p>Total à payer: ${payment.amount}€</p>
     </div>
     
     <div class="footer">
         <p>Merci de votre confiance. Paiement dû avant le ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}.</p>
-        <p><strong>Institut Privé d'Enseignement Commercial - IPEC</strong></p>
+        <p><strong>Institut privé des études commerciales - IPEC</strong></p>
     </div>
 </body>
 </html>
@@ -516,71 +553,93 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
     <style>
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 1.5cm 2cm 3cm 2cm;
         }
         
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
             padding: 0; 
-            line-height: 1.6; 
+            line-height: 1.3; 
             color: #333;
+            font-size: 10pt;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content {
+            flex: 1;
         }
         
         .header { 
             display: flex; 
             justify-content: space-between; 
             border-bottom: 2px solid #2563eb; 
-            padding-bottom: 20px; 
-            margin-bottom: 30px; 
+            padding-bottom: 12px; 
+            margin-bottom: 15px; 
         }
         
         .logo { 
             color: #2563eb; 
-            font-size: 24px; 
+            font-size: 18px; 
             font-weight: bold; 
         }
         
         .company-info {
-            font-size: 14px;
-            line-height: 1.4;
+            font-size: 10px;
+            line-height: 1.2;
         }
         
         .summary-info { 
-            text-align: right; 
+            text-align: right;
+            font-size: 10px;
+        }
+        
+        .summary-info h1 {
+            font-size: 14px;
+            margin: 0 0 5px 0;
         }
         
         .billing-info { 
             display: flex; 
             justify-content: space-between; 
-            margin: 20px 0; 
+            margin: 12px 0; 
         }
         
         .billing-section { 
-            width: 45%; 
+            width: 45%;
+            font-size: 10px;
+        }
+        
+        .billing-section h3 {
+            font-size: 11px;
+            margin: 0 0 5px 0;
         }
         
         .payment-table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin: 20px 0; 
+            margin: 12px 0; 
+            font-size: 9pt;
         }
         
         .payment-table th, .payment-table td { 
             border: 1px solid #d1d5db; 
-            padding: 12px; 
+            padding: 6px; 
             text-align: left; 
         }
         
         .payment-table th { 
-            background-color: #f3f4f6; 
+            background-color: #f3f4f6;
+            font-size: 8pt;
         }
         
         .status-badge {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 8px;
             font-weight: bold;
             color: white;
         }
@@ -592,140 +651,157 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
         
         .total { 
             text-align: right; 
-            font-size: 18px; 
+            font-size: 12px; 
             font-weight: bold; 
             color: #2563eb; 
-            margin: 20px 0;
+            margin: 10px 0;
+        }
+        
+        h3 {
+            font-size: 11px;
+            margin: 10px 0 5px 0;
+            color: #2563eb;
         }
         
         .footer { 
-            margin-top: 40px; 
-            padding-top: 20px; 
+            margin-top: auto;
+            padding-top: 10px; 
             border-top: 1px solid #d1d5db; 
-            text-align: center; 
+            text-align: center;
+            font-size: 9px;
+            position: absolute;
+            bottom: 1cm;
+            left: 2cm;
+            right: 2cm;
         }
         
         @media print {
-            body { margin: 0; }
+            body { 
+                margin: 0;
+                height: 100vh;
+            }
+            .footer {
+                position: fixed;
+                bottom: 1cm;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <div class="logo">IPEC</div>
-            <div class="company-info">
-                <strong>Institut Privé d'Enseignement Commercial</strong><br>
-                Avenue Louise 123<br>
-                1050 Bruxelles, Belgique<br>
-                Tél: +32 2 123 45 67<br>
-                Email: info@ipec.be
+    <div class="content">
+        <div class="header">
+            <div>
+                <div class="logo">IPEC</div>
+                <div class="company-info">
+                    <strong>Institut privé des études commerciales</strong><br>
+                    Avenue Louise 123<br>
+                    1050 Bruxelles, Belgique<br>
+                    Tél: +32 2 123 45 67<br>
+                    Email: info@ipec.be
+                </div>
+            </div>
+            <div class="summary-info">
+                <h1>RÉCAPITULATIF DE PAIEMENT</h1>
+                <p><strong>Facture N° ${payment.invoiceNumber || 'N/A'}</strong></p>
+                <p>Date: ${new Date().toLocaleDateString('fr-FR')}</p>
+                <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
             </div>
         </div>
-        <div class="summary-info">
-            <h1>RÉCAPITULATIF DE PAIEMENT</h1>
-            <p><strong>Facture N° ${payment.invoiceNumber || 'N/A'}</strong></p>
-            <p>Date: ${new Date().toLocaleDateString('fr-FR')}</p>
-            <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
+        
+        <div class="billing-info">
+            <div class="billing-section">
+                <h3>Étudiant:</h3>
+                <p><strong>${student.firstName} ${student.lastName}</strong><br>
+                ${student.email}<br>
+                ${student.phone || ''}<br>
+                Référence: ${student.reference}<br>
+                Programme: ${student.program}</p>
+            </div>
+            <div class="billing-section">
+                <h3>Émetteur:</h3>
+                <p><strong>Institut privé des études commerciales</strong><br>
+                Avenue Louise 123<br>
+                1050 Bruxelles, Belgique</p>
+            </div>
         </div>
-    </div>
-    
-    <div class="billing-info">
-        <div class="billing-section">
-            <h3>Étudiant:</h3>
-            <p><strong>${student.firstName} ${student.lastName}</strong><br>
-            ${student.email}<br>
-            ${student.phone || ''}<br>
-            Référence: ${student.reference}<br>
-            Programme: ${student.program}</p>
+        
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Montant total</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${payment.description}</td>
+                    <td>${payment.type}</td>
+                    <td>${payment.amount}€</td>
+                    <td>
+                        <span class="status-badge ${payment.status === 'Payé' ? 'status-paid' : 
+                          payment.status === 'En attente' ? 'status-pending' : 
+                          payment.status === 'En retard' ? 'status-overdue' : 'status-refunded'}">
+                            ${payment.status}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        ${payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 ? `
+        <h3>Historique des paiements</h3>
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Moyen</th>
+                    <th>Acompte</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${payment.installments.map((installment, index) => `
+                <tr>
+                    <td>${new Date(installment.paidDate).toLocaleDateString('fr-FR')}</td>
+                    <td>${installment.amount}€</td>
+                    <td>${installment.method}</td>
+                    <td>#${index + 1}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        
+        <div class="total">
+            <p>Total payé: ${getTotalPaid()}€ | Reste: ${getRemainingAmount()}€</p>
         </div>
-        <div class="billing-section">
-            <h3>Émetteur:</h3>
-            <p><strong>Institut Privé d'Enseignement Commercial</strong><br>
-            Avenue Louise 123<br>
-            1050 Bruxelles, Belgique</p>
-        </div>
+        ` : ''}
+        
+        ${payment.status === 'Payé' && !payment.installments ? `
+        <h3>Paiement effectué</h3>
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th>Date de paiement</th>
+                    <th>Montant payé</th>
+                    <th>Moyen de paiement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}</td>
+                    <td>${payment.amount}€</td>
+                    <td>${payment.method || 'N/A'}</td>
+                </tr>
+            </tbody>
+        </table>
+        ` : ''}
     </div>
-    
-    <table class="payment-table">
-        <thead>
-            <tr>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Montant total</th>
-                <th>Statut</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>${payment.description}</td>
-                <td>${payment.type}</td>
-                <td>${payment.amount}€</td>
-                <td>
-                    <span class="status-badge ${payment.status === 'Payé' ? 'status-paid' : 
-                      payment.status === 'En attente' ? 'status-pending' : 
-                      payment.status === 'En retard' ? 'status-overdue' : 'status-refunded'}">
-                        ${payment.status}
-                    </span>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    
-    ${payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 ? `
-    <h3>Historique des paiements</h3>
-    <table class="payment-table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Montant</th>
-                <th>Moyen de paiement</th>
-                <th>Acompte #</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${payment.installments.map((installment, index) => `
-            <tr>
-                <td>${new Date(installment.paidDate).toLocaleDateString('fr-FR')}</td>
-                <td>${installment.amount}€</td>
-                <td>${installment.method}</td>
-                <td>Acompte ${index + 1}</td>
-            </tr>
-            `).join('')}
-        </tbody>
-    </table>
-    
-    <div class="total">
-        <p>Total payé: ${getTotalPaid()}€</p>
-        <p>Reste à payer: ${getRemainingAmount()}€</p>
-    </div>
-    ` : ''}
-    
-    ${payment.status === 'Payé' && !payment.installments ? `
-    <h3>Informations de paiement</h3>
-    <table class="payment-table">
-        <thead>
-            <tr>
-                <th>Date de paiement</th>
-                <th>Montant payé</th>
-                <th>Moyen de paiement</th>
-                <th>Statut</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>${payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}</td>
-                <td>${payment.amount}€</td>
-                <td>${payment.method || 'N/A'}</td>
-                <td>Paiement complet</td>
-            </tr>
-        </tbody>
-    </table>
-    ` : ''}
     
     <div class="footer">
         <p>Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>
-        <p><strong>Institut Privé d'Enseignement Commercial - IPEC</strong></p>
+        <p><strong>Institut privé des études commerciales - IPEC</strong></p>
     </div>
 </body>
 </html>
