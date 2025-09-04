@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro } from "lucide-react";
+import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { generateInvoiceNumber, generateInvoice, downloadDocument } from "@/utils/documentGenerator";
@@ -781,6 +781,9 @@ const PaymentManagement = () => {
                   </div>
                 )}
                 <DialogFooter>
+                  <Button onClick={() => window.print()}>
+                    Imprimer
+                  </Button>
                   <Button variant="outline" onClick={() => setShowPaymentSummary(false)}>
                     Fermer
                   </Button>
