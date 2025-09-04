@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Student, Payment } from "@/types";
-import { generateInvoiceNumber, generateInvoice, downloadDocument } from "@/utils/documentGenerator";
+import { generateInvoiceNumber, generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
 
 const PaymentManagement = () => {
   const { toast } = useToast();
@@ -281,6 +281,26 @@ const PaymentManagement = () => {
     toast({
       title: "Facture générée",
       description: "La facture a été téléchargée avec succès.",
+    });
+  };
+
+  const generatePaymentSummaryDocument = (payment: Payment) => {
+    const student = getStudent(payment.studentId);
+    if (!student) {
+      toast({
+        title: "Erreur",
+        description: "Étudiant non trouvé.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const summaryHtml = generatePaymentSummary(student, payment);
+    downloadDocument(summaryHtml, `Recapitulatif_Paiement_${payment.invoiceNumber}_${student.lastName}.html`);
+    
+    toast({
+      title: "Récapitulatif généré",
+      description: "Le récapitulatif de paiement a été téléchargé avec succès.",
     });
   };
 
@@ -781,7 +801,8 @@ const PaymentManagement = () => {
                   </div>
                 )}
                 <DialogFooter>
-                  <Button onClick={() => window.print()}>
+                  <Button onClick={() => generatePaymentSummaryDocument(selectedPaymentForSummary)}>
+                    <Printer className="mr-2 h-4 w-4" />
                     Imprimer
                   </Button>
                   <Button variant="outline" onClick={() => setShowPaymentSummary(false)}>

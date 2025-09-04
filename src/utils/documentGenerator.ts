@@ -423,6 +423,286 @@ export const generateCreditNote = (student: Student, payment: Payment, reason: s
   `;
 };
 
+export const generatePaymentSummary = (student: Student, payment: Payment): string => {
+  const getTotalPaid = (): number => {
+    if (!payment.installments) return payment.status === 'Payé' ? payment.amount : 0;
+    return payment.installments.reduce((sum, inst) => sum + inst.amount, 0);
+  };
+
+  const getRemainingAmount = (): number => {
+    return payment.amount - getTotalPaid();
+  };
+
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Récapitulatif de paiement - IPEC</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            line-height: 1.6; 
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2563eb;
+        }
+        
+        .logo {
+            color: #2563eb;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .document-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .info-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .label {
+            font-weight: bold;
+            width: 150px;
+            flex-shrink: 0;
+        }
+        
+        .value {
+            flex-grow: 1;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .status-paid { background-color: #22c55e; }
+        .status-pending { background-color: #eab308; }
+        .status-overdue { background-color: #ef4444; }
+        .status-refunded { background-color: #3b82f6; }
+        
+        .payment-history {
+            margin: 20px 0;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .history-table th,
+        .history-table td {
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .history-table th {
+            background-color: #f3f4f6;
+            font-weight: bold;
+        }
+        
+        .summary-box {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            background-color: #eff6ff;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        .total-amount {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #d1d5db;
+            padding-top: 20px;
+        }
+        
+        @media print {
+            body { margin: 0; }
+            .header { page-break-inside: avoid; }
+            .summary-box { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">IPEC BRUXELLES</div>
+        <div class="subtitle">Institut Privé des Études Commerciales</div>
+        <div class="document-title">RÉCAPITULATIF DE PAIEMENT</div>
+    </div>
+    
+    <div class="info-section">
+        <h3>Informations de l'étudiant</h3>
+        <div class="info-row">
+            <span class="label">Nom complet :</span>
+            <span class="value">${student.firstName} ${student.lastName}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Email :</span>
+            <span class="value">${student.email}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Programme :</span>
+            <span class="value">${student.program}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Référence :</span>
+            <span class="value">${student.reference}</span>
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <h3>Informations du paiement</h3>
+        <div class="info-row">
+            <span class="label">Type :</span>
+            <span class="value">${payment.type}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Description :</span>
+            <span class="value">${payment.description}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Montant total :</span>
+            <span class="value">${payment.amount}€</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Échéance :</span>
+            <span class="value">${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Statut :</span>
+            <span class="value">
+                <span class="status-badge ${payment.status === 'Payé' ? 'status-paid' : 
+                  payment.status === 'En attente' ? 'status-pending' : 
+                  payment.status === 'En retard' ? 'status-overdue' : 'status-refunded'}">
+                    ${payment.status}
+                </span>
+            </span>
+        </div>
+    </div>
+    
+    ${payment.type === 'Minerval' && payment.installments ? `
+    <div class="payment-history">
+        <h3>Historique des paiements</h3>
+        ${payment.installments.length === 0 ? 
+          '<p>Aucun paiement enregistré</p>' : `
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Moyen de paiement</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${payment.installments.map((installment, index) => `
+                <tr>
+                    <td>${new Date(installment.paidDate).toLocaleDateString('fr-FR')}</td>
+                    <td>${installment.amount}€</td>
+                    <td>${installment.method}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        `}
+    </div>
+    
+    <div class="summary-box">
+        <h3>Résumé financier</h3>
+        <div class="total-row">
+            <span>Montant total :</span>
+            <span>${payment.amount}€</span>
+        </div>
+        <div class="total-row">
+            <span>Total payé :</span>
+            <span>${getTotalPaid()}€</span>
+        </div>
+        <div class="total-row total-amount">
+            <span>Reste à payer :</span>
+            <span>${getRemainingAmount()}€</span>
+        </div>
+    </div>
+    ` : `
+    ${payment.status === 'Payé' && !payment.installments ? `
+    <div class="payment-history">
+        <h3>Informations de paiement</h3>
+        <div class="info-section">
+            <div class="info-row">
+                <span class="label">Date de paiement :</span>
+                <span class="value">${payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Moyen de paiement :</span>
+                <span class="value">${payment.method || 'N/A'}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Montant payé :</span>
+                <span class="value">${payment.amount}€</span>
+            </div>
+        </div>
+    </div>
+    ` : ''}
+    `}
+    
+    <div class="footer">
+        <p>Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>
+        <p><strong>IPEC Bruxelles</strong> - Institut Privé des Études Commerciales</p>
+    </div>
+</body>
+</html>
+  `;
+};
+
 export const downloadDocument = (content: string, filename: string) => {
   const blob = new Blob([content], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
