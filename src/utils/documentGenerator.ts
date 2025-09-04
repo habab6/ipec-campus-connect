@@ -256,7 +256,7 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
     <style>
         @page {
             size: A4;
-            margin: 1.5cm 2cm 3cm 2cm;
+            margin: 0;
         }
         
         body { 
@@ -269,18 +269,41 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            height: 100vh;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            z-index: 1000;
+            padding: 20px;
         }
         
         .content {
             flex: 1;
+            margin-top: 140px;
+            margin-bottom: 80px;
+            padding: 0 20px;
+            overflow-y: auto;
         }
         
-        .header { 
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            z-index: 1000;
+        }
+        
+        .header-content { 
             display: flex; 
             justify-content: space-between; 
             border-bottom: 2px solid #2563eb; 
             padding-bottom: 15px; 
-            margin-bottom: 20px; 
         }
         
         .logo { 
@@ -347,15 +370,10 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
         }
         
         .footer { 
-            margin-top: auto;
-            padding-top: 15px; 
+            padding: 15px 20px; 
             border-top: 1px solid #d1d5db; 
             text-align: center;
             font-size: 10px;
-            position: absolute;
-            bottom: 1cm;
-            left: 2cm;
-            right: 2cm;
         }
         
         @media print {
@@ -363,16 +381,24 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
                 margin: 0;
                 height: 100vh;
             }
+            .header {
+                position: fixed;
+                top: 0;
+            }
             .footer {
                 position: fixed;
-                bottom: 1cm;
+                bottom: 0;
+            }
+            .content {
+                margin-top: 140px;
+                margin-bottom: 80px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="content">
-        <div class="header">
+    <div class="header">
+        <div class="header-content">
             <div>
                 <div class="logo">IPEC</div>
                 <div class="company-info">
@@ -390,6 +416,9 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
                 <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
             </div>
         </div>
+    </div>
+    
+    <div class="content">
         
         <div class="billing-info">
             <div class="billing-section">
@@ -553,7 +582,7 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
     <style>
         @page {
             size: A4;
-            margin: 1.5cm 2cm 3cm 2cm;
+            margin: 0;
         }
         
         body { 
@@ -566,18 +595,41 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            height: 100vh;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            z-index: 1000;
+            padding: 20px;
         }
         
         .content {
             flex: 1;
+            margin-top: 140px;
+            margin-bottom: 80px;
+            padding: 0 20px;
+            overflow-y: auto;
         }
         
-        .header { 
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            z-index: 1000;
+        }
+        
+        .header-content { 
             display: flex; 
             justify-content: space-between; 
             border-bottom: 2px solid #2563eb; 
             padding-bottom: 12px; 
-            margin-bottom: 15px; 
         }
         
         .logo { 
@@ -664,15 +716,10 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
         }
         
         .footer { 
-            margin-top: auto;
-            padding-top: 10px; 
+            padding: 10px 20px; 
             border-top: 1px solid #d1d5db; 
             text-align: center;
             font-size: 9px;
-            position: absolute;
-            bottom: 1cm;
-            left: 2cm;
-            right: 2cm;
         }
         
         @media print {
@@ -680,16 +727,24 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
                 margin: 0;
                 height: 100vh;
             }
+            .header {
+                position: fixed;
+                top: 0;
+            }
             .footer {
                 position: fixed;
-                bottom: 1cm;
+                bottom: 0;
+            }
+            .content {
+                margin-top: 140px;
+                margin-bottom: 80px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="content">
-        <div class="header">
+    <div class="header">
+        <div class="header-content">
             <div>
                 <div class="logo">IPEC</div>
                 <div class="company-info">
@@ -707,6 +762,9 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
                 <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
             </div>
         </div>
+    </div>
+    
+    <div class="content">
         
         <div class="billing-info">
             <div class="billing-section">
