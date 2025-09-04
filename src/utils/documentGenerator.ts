@@ -26,13 +26,11 @@ export const generateRegistrationDocument = (student: Student): string => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attestation d'Inscription - IPEC Bruxelles</title>
+    <title>Attestation d'Inscription - IPEC</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 1.5cm;
         }
         
         * {
@@ -42,172 +40,131 @@ export const generateRegistrationDocument = (student: Student): string => {
         }
         
         body { 
-            font-family: 'Inter', sans-serif; 
-            line-height: 1.5; 
-            color: #1f2937;
-            background: white;
-            font-size: 11pt;
-            max-width: 21cm;
-            margin: 0 auto;
-            padding: 1cm;
+            font-family: Arial, sans-serif; 
+            line-height: 1.3; 
+            color: #000;
+            font-size: 10pt;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 1.5cm;
-            padding-bottom: 0.8cm;
-            border-bottom: 2px solid #1e40af;
+            margin-bottom: 0.8cm;
+            padding-bottom: 0.3cm;
+            border-bottom: 1px solid #000;
         }
         
         .logo {
-            font-size: 24pt;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 8px;
+            font-size: 18pt;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 3px;
         }
         
         .institution {
-            font-size: 14pt;
-            color: #4b5563;
-            margin-bottom: 20px;
+            font-size: 11pt;
+            margin-bottom: 8px;
         }
         
         .document-title {
-            font-size: 20pt;
-            font-weight: 600;
-            color: #1f2937;
+            font-size: 14pt;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         
         .document-number {
-            font-size: 10pt;
-            color: #6b7280;
-            font-weight: 500;
+            font-size: 9pt;
         }
         
-        .content {
-            margin: 1cm 0;
+        .date-location {
+            text-align: right;
+            margin: 0.3cm 0;
+            font-size: 10pt;
         }
         
         .certification {
             text-align: justify;
-            font-size: 12pt;
-            line-height: 1.8;
-            margin-bottom: 1.2cm;
-            font-weight: 500;
+            font-size: 10pt;
+            line-height: 1.4;
+            margin-bottom: 0.5cm;
         }
         
         .student-details {
-            margin: 0.8cm 0;
+            margin: 0.4cm 0;
         }
         
         .detail-row {
             display: flex;
-            margin-bottom: 8px;
-            align-items: baseline;
+            margin-bottom: 2px;
+            font-size: 10pt;
         }
         
         .label {
-            font-weight: 600;
-            color: #374151;
-            width: 4cm;
+            font-weight: bold;
+            width: 3cm;
             flex-shrink: 0;
         }
         
         .value {
-            color: #1f2937;
             flex-grow: 1;
         }
         
         .program-section {
             text-align: center;
-            margin: 2cm 0;
-            padding: 15px 0;
-            background: #f8fafc;
+            margin: 0.4cm 0;
+            padding: 8px;
+            background: #f5f5f5;
         }
         
         .program-title {
-            font-size: 16pt;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 5px;
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 3px;
         }
         
         .program-details {
-            font-size: 11pt;
-            color: #4b5563;
-            font-weight: 500;
+            font-size: 10pt;
         }
         
         .validity-text {
             text-align: center;
             font-style: italic;
-            margin: 1.5cm 0;
-            font-size: 11pt;
-            color: #6b7280;
+            margin: 0.4cm 0;
+            font-size: 10pt;
         }
         
         .signature-section {
             display: flex;
             justify-content: space-between;
-            margin-top: 3cm;
+            margin-top: 0.6cm;
         }
         
         .signature-block {
             text-align: center;
-            width: 6cm;
+            width: 5cm;
         }
         
         .signature-line {
-            border-bottom: 1px solid #374151;
-            height: 2cm;
-            margin-bottom: 8px;
+            border-bottom: 1px solid #000;
+            height: 1cm;
+            margin-bottom: 5px;
         }
         
         .signature-label {
-            font-size: 10pt;
-            color: #6b7280;
-            font-weight: 500;
+            font-size: 9pt;
         }
         
         .footer {
             text-align: center;
-            margin-top: 1cm;
-            padding-top: 0.5cm;
-            border-top: 1px solid #e5e7eb;
-        }
-        
-        .institution-footer {
-            font-weight: 600;
-            color: #1e40af;
-            font-size: 12pt;
-            margin-bottom: 5px;
-        }
-        
-        .footer-details {
-            color: #6b7280;
-            font-size: 10pt;
-            line-height: 1.4;
-        }
-        
-        .date-location {
-            text-align: right;
-            margin: 1cm 0;
-            font-size: 11pt;
-            color: #4b5563;
+            margin-top: 0.5cm;
+            padding-top: 0.3cm;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
         }
         
         @media print {
-            body {
-                padding: 0;
-                margin: 0;
-            }
-            
-            .signature-section {
-                page-break-inside: avoid;
-            }
+            body { margin: 0; padding: 0; }
+            .signature-section { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -220,96 +177,66 @@ export const generateRegistrationDocument = (student: Student): string => {
     </div>
     
     <div class="date-location">
-        Bruxelles, le ${currentDate.toLocaleDateString('fr-FR', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        })}
+        Bruxelles, le ${currentDate.toLocaleDateString('fr-FR')}
     </div>
     
-    <div class="content">
-        <div class="certification">
-            Je soussigné, Directeur de l'Institut Privé des Études Commerciales (IPEC) de Bruxelles, 
-            certifie que <strong>${student.firstName} ${student.lastName}</strong>, 
-            ${student.dateOfBirth ? `né(e) le ${new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}` : ''} 
-            ${student.countryOfBirth ? `à ${student.countryOfBirth}` : ''}, 
-            est dûment inscrit(e) dans notre établissement pour l'année académique ${student.registrationYear}-${student.registrationYear + 1}.
+    <div class="certification">
+        Je soussigné, Directeur de l'Institut Privé des Études Commerciales (IPEC), 
+        certifie que <strong>${student.firstName} ${student.lastName}</strong>${student.dateOfBirth ? `, né(e) le ${new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}` : ''}${student.countryOfBirth ? ` à ${student.countryOfBirth}` : ''}, 
+        est dûment inscrit(e) dans notre établissement pour l'année académique ${student.registrationYear}-${student.registrationYear + 1}.
+    </div>
+    
+    <div class="student-details">
+        <div class="detail-row">
+            <span class="label">Nom :</span>
+            <span class="value">${student.firstName} ${student.lastName}</span>
         </div>
-        
-        <div class="student-details">
-            <div class="detail-row">
-                <span class="label">Nom complet :</span>
-                <span class="value">${student.firstName} ${student.lastName}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">N° de référence :</span>
-                <span class="value">${student.reference}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Adresse e-mail :</span>
-                <span class="value">${student.email}</span>
-            </div>
-            ${student.phone ? `
-            <div class="detail-row">
-                <span class="label">Téléphone :</span>
-                <span class="value">${student.phone}</span>
-            </div>` : ''}
-            ${student.address ? `
-            <div class="detail-row">
-                <span class="label">Adresse :</span>
-                <span class="value">${student.address}</span>
-            </div>` : ''}
-            <div class="detail-row">
-                <span class="label">Date d'inscription :</span>
-                <span class="value">${new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Statut :</span>
-                <span class="value">${student.status}</span>
-            </div>
+        <div class="detail-row">
+            <span class="label">Référence :</span>
+            <span class="value">${student.reference}</span>
         </div>
-        
-        <div class="program-section">
-            <div class="program-title">${student.program}</div>
-            <div class="program-details">
-                ${student.specialty ? `Spécialité : ${student.specialty} • ` : ''}
-                ${student.studyYear}${student.studyYear === 1 ? 'ère' : 'ème'} année
-                ${student.hasMBA2Diploma ? ' • Titulaire du diplôme MBA 2' : ''}
-            </div>
+        <div class="detail-row">
+            <span class="label">Email :</span>
+            <span class="value">${student.email}</span>
         </div>
-        
-        <div class="certification">
-            L'étudiant(e) suit régulièrement les cours du programme mentionné ci-dessus et est en règle 
-            avec les exigences administratives de l'institution.
+        <div class="detail-row">
+            <span class="label">Inscription :</span>
+            <span class="value">${new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
         </div>
-        
-        ${student.notes ? `
-        <div style="margin: 1cm 0; font-size: 11pt;">
-            <strong>Observations :</strong> ${student.notes}
-        </div>` : ''}
-        
-        <div class="validity-text">
-            Cette attestation est délivrée pour servir et valoir ce que de droit.
+        <div class="detail-row">
+            <span class="label">Statut :</span>
+            <span class="value">${student.status}</span>
         </div>
-        
-        <div class="signature-section">
-            <div class="signature-block">
-                <div class="signature-line"></div>
-                <div class="signature-label">Cachet de l'Institution</div>
-            </div>
-            <div class="signature-block">
-                <div class="signature-line"></div>
-                <div class="signature-label">Le Directeur</div>
-            </div>
+    </div>
+    
+    <div class="program-section">
+        <div class="program-title">${student.program}</div>
+        <div class="program-details">
+            ${student.specialty ? `${student.specialty} • ` : ''}${student.studyYear}${student.studyYear === 1 ? 'ère' : 'ème'} année
+        </div>
+    </div>
+    
+    <div class="certification">
+        L'étudiant(e) suit régulièrement les cours et est en règle avec les exigences administratives.
+    </div>
+    
+    <div class="validity-text">
+        Cette attestation est délivrée pour servir et valoir ce que de droit.
+    </div>
+    
+    <div class="signature-section">
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div class="signature-label">Cachet de l'Institution</div>
+        </div>
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div class="signature-label">Le Directeur</div>
         </div>
     </div>
     
     <div class="footer">
-        <div class="institution-footer">IPEC BRUXELLES</div>
-        <div class="footer-details">
-            Institut Privé des Études Commerciales<br>
-            Bruxelles, Belgique
-        </div>
+        <strong>Institut Privé des Études Commerciales - Bruxelles</strong>
     </div>
 </body>
 </html>
