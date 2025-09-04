@@ -277,7 +277,7 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
         <div class="invoice-info">
             <h1>FACTURE</h1>
             <p><strong>N° ${invoiceNumber}</strong></p>
-            <p>Date: ${new Date().toLocaleDateString('fr-FR')}</p>
+            <p>Date: ${payment.invoiceDate ? new Date(payment.invoiceDate).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')}</p>
             <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
         </div>
     </div>

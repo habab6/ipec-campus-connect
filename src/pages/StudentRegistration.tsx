@@ -141,7 +141,8 @@ const StudentRegistration = () => {
       status: 'En attente',
       type: 'Frais de dossier',
       description: 'Frais de dossier d\'inscription',
-      invoiceNumber: generateInvoiceNumber()
+      invoiceNumber: generateInvoiceNumber(),
+      invoiceDate: today.toISOString().split('T')[0]
     };
 
     // Attendre 1ms pour avoir un timestamp différent
@@ -156,7 +157,9 @@ const StudentRegistration = () => {
       status: 'En attente',
       type: 'Minerval',
       description: `Minerval annuel - ${formData.program}`,
-      invoiceNumber: generateInvoiceNumber()
+      invoiceNumber: generateInvoiceNumber(),
+      invoiceDate: today.toISOString().split('T')[0],
+      installments: []
     };
 
     payments.push(registrationPayment, tuitionPayment);

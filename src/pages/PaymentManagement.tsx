@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText } from "lucide-react";
+import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { generateInvoiceNumber, generateInvoice, downloadDocument } from "@/utils/documentGenerator";
@@ -27,6 +27,21 @@ const PaymentManagement = () => {
     method: "",
     paidDate: "",
     paidMethod: ""
+  });
+  const [showPaymentSummary, setShowPaymentSummary] = useState(false);
+  const [selectedPaymentForSummary, setSelectedPaymentForSummary] = useState<Payment | null>(null);
+  const [installmentDialog, setInstallmentDialog] = useState<{
+    isOpen: boolean;
+    paymentId: string;
+    amount: string;
+    method: string;
+    paidDate: string;
+  }>({
+    isOpen: false,
+    paymentId: '',
+    amount: '',
+    method: '',
+    paidDate: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
@@ -85,7 +100,9 @@ const PaymentManagement = () => {
       description: newPayment.description || `${newPayment.type} - ${getStudentName(selectedStudent)}`,
       method: newPayment.paidMethod as Payment['method'],
       invoiceNumber: generateInvoiceNumber(),
-      paidDate: newPayment.paidDate || undefined
+      invoiceDate: new Date().toISOString().split('T')[0],
+      paidDate: newPayment.paidDate || undefined,
+      installments: newPayment.type === 'Minerval' ? [] : undefined
     };
 
     const updatedPayments = [...payments, payment];
@@ -158,12 +175,93 @@ const PaymentManagement = () => {
   };
 
   const openPaymentDialog = (paymentId: string) => {
-    setPaymentDialog({
-      isOpen: true,
-      paymentId,
-      paidDate: new Date().toISOString().split('T')[0],
-      method: ''
+    const payment = payments.find(p => p.id === paymentId);
+    if (payment?.type === 'Minerval') {
+      // Pour le minerval, ouvrir le dialogue d'acompte
+      setInstallmentDialog({
+        isOpen: true,
+        paymentId,
+        amount: '',
+        method: '',
+        paidDate: new Date().toISOString().split('T')[0]
+      });
+    } else {
+      // Pour les autres paiements, dialogue normal
+      setPaymentDialog({
+        isOpen: true,
+        paymentId,
+        paidDate: new Date().toISOString().split('T')[0],
+        method: ''
+      });
+    }
+  };
+
+  const addInstallment = () => {
+    const amount = parseFloat(installmentDialog.amount);
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir un montant valide.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedPayments = payments.map(p => {
+      if (p.id === installmentDialog.paymentId) {
+        const currentInstallments = p.installments || [];
+        const totalPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0) + amount;
+        
+        const newInstallment = {
+          id: Date.now().toString(),
+          amount,
+          paidDate: installmentDialog.paidDate,
+          method: installmentDialog.method as Payment['method']
+        };
+
+        const updatedInstallments = [...currentInstallments, newInstallment];
+        const isFullyPaid = totalPaid >= p.amount;
+
+        return {
+          ...p,
+          installments: updatedInstallments,
+          status: isFullyPaid ? 'Payé' as Payment['status'] : 'En attente' as Payment['status'],
+          paidDate: isFullyPaid ? installmentDialog.paidDate : undefined,
+          method: isFullyPaid ? installmentDialog.method as Payment['method'] : p.method
+        };
+      }
+      return p;
     });
+
+    setPayments(updatedPayments);
+    localStorage.setItem('payments', JSON.stringify(updatedPayments));
+    
+    toast({
+      title: "Acompte ajouté",
+      description: `Acompte de ${amount}€ enregistré avec succès.`,
+    });
+
+    setInstallmentDialog({
+      isOpen: false,
+      paymentId: '',
+      amount: '',
+      method: '',
+      paidDate: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const openPaymentSummary = (payment: Payment) => {
+    setSelectedPaymentForSummary(payment);
+    setShowPaymentSummary(true);
+  };
+
+  const getTotalPaidForPayment = (payment: Payment): number => {
+    if (!payment.installments) return 0;
+    return payment.installments.reduce((sum, inst) => sum + inst.amount, 0);
+  };
+
+  const getRemainingAmount = (payment: Payment): number => {
+    return payment.amount - getTotalPaidForPayment(payment);
   };
 
   const generateInvoiceDocument = (payment: Payment) => {
@@ -431,7 +529,7 @@ const PaymentManagement = () => {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
                             <p><strong>Montant:</strong> {payment.amount}€</p>
                             <p><strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
-                            <p><strong>Facture:</strong> {payment.invoiceNumber}</p>
+                            <p><strong>N° Facture:</strong> {payment.invoiceNumber}</p>
                             {payment.paidDate && (
                               <p><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}</p>
                             )}
@@ -446,15 +544,24 @@ const PaymentManagement = () => {
                             </p>
                           )}
                         </div>
-
-                        <div className="flex flex-wrap gap-2">
+                        
+                        <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => generateInvoiceDocument(payment)}
                           >
-                            <FileText className="mr-2 h-4 w-4" />
+                            <Receipt className="h-4 w-4 mr-1" />
                             Facture
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openPaymentSummary(payment)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Récapitulatif
                           </Button>
                           
                           {payment.status === 'En attente' && (
@@ -463,17 +570,24 @@ const PaymentManagement = () => {
                               size="sm"
                               onClick={() => openPaymentDialog(payment.id)}
                             >
-                              <Receipt className="mr-2 h-4 w-4" />
-                              Marquer payé
+                              {payment.type === 'Minerval' ? (
+                                <>
+                                  <Euro className="h-4 w-4 mr-1" />
+                                  Ajouter acompte
+                                </>
+                              ) : (
+                                'Marquer payé'
+                              )}
                             </Button>
                           )}
-                          
-                          <Link to={`/documents/${payment.studentId}`}>
-                            <Button variant="outline" size="sm">
-                              <Eye className="mr-2 h-4 w-4" />
-                              Documents
-                            </Button>
-                          </Link>
+
+                          {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
+                            <div className="text-xs text-muted-foreground">
+                              Payé: {getTotalPaidForPayment(payment)}€ / {payment.amount}€
+                              <br />
+                              Reste: {getRemainingAmount(payment)}€
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -481,63 +595,200 @@ const PaymentManagement = () => {
                 ))}
               </div>
             )}
+
+            {/* Dialog pour marquer comme payé */}
+            <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Marquer le paiement comme payé</DialogTitle>
+                  <DialogDescription>
+                    Veuillez renseigner les informations de paiement
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="paidDate">Date de paiement</Label>
+                    <Input
+                      id="paidDate"
+                      type="date"
+                      value={paymentDialog.paidDate}
+                      onChange={(e) => setPaymentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="method">Moyen de paiement</Label>
+                    <Select onValueChange={(value) => setPaymentDialog(prev => ({ ...prev, method: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez le moyen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Espèces">Espèces</SelectItem>
+                        <SelectItem value="Virement">Virement bancaire</SelectItem>
+                        <SelectItem value="Carte">Carte bancaire</SelectItem>
+                        <SelectItem value="Chèque">Chèque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPaymentDialog(prev => ({ ...prev, isOpen: false }))}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleMarkAsPaid}>
+                    Confirmer le paiement
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Dialog pour acompte minerval */}
+            <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un acompte pour le minerval</DialogTitle>
+                  <DialogDescription>
+                    Enregistrez un paiement partiel pour le minerval
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="installmentAmount">Montant de l'acompte (€)</Label>
+                    <Input
+                      id="installmentAmount"
+                      type="number"
+                      step="0.01"
+                      value={installmentDialog.amount}
+                      onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="installmentDate">Date de paiement</Label>
+                    <Input
+                      id="installmentDate"
+                      type="date"
+                      value={installmentDialog.paidDate}
+                      onChange={(e) => setInstallmentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="installmentMethod">Moyen de paiement</Label>
+                    <Select onValueChange={(value) => setInstallmentDialog(prev => ({ ...prev, method: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez le moyen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Espèces">Espèces</SelectItem>
+                        <SelectItem value="Virement">Virement bancaire</SelectItem>
+                        <SelectItem value="Carte">Carte bancaire</SelectItem>
+                        <SelectItem value="Chèque">Chèque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setInstallmentDialog(prev => ({ ...prev, isOpen: false }))}>
+                    Annuler
+                  </Button>
+                  <Button onClick={addInstallment}>
+                    Ajouter l'acompte
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Dialog récapitulatif de paiements */}
+            <Dialog open={showPaymentSummary} onOpenChange={setShowPaymentSummary}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Récapitulatif des paiements</DialogTitle>
+                  <DialogDescription>
+                    Détail des paiements pour {selectedPaymentForSummary && getStudentName(selectedPaymentForSummary.studentId)}
+                  </DialogDescription>
+                </DialogHeader>
+                {selectedPaymentForSummary && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Type de paiement</Label>
+                        <p className="font-medium">{selectedPaymentForSummary.type}</p>
+                      </div>
+                      <div>
+                        <Label>Montant total</Label>
+                        <p className="font-medium">{selectedPaymentForSummary.amount}€</p>
+                      </div>
+                      <div>
+                        <Label>Échéance</Label>
+                        <p className="font-medium">{new Date(selectedPaymentForSummary.dueDate).toLocaleDateString('fr-FR')}</p>
+                      </div>
+                      <div>
+                        <Label>Statut</Label>
+                        <Badge className={getStatusBadgeColor(selectedPaymentForSummary.status)}>
+                          {selectedPaymentForSummary.status}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {selectedPaymentForSummary.type === 'Minerval' && selectedPaymentForSummary.installments && (
+                      <div>
+                        <Label className="text-base font-semibold">Historique des paiements</Label>
+                        {selectedPaymentForSummary.installments.length === 0 ? (
+                          <p className="text-muted-foreground mt-2">Aucun paiement enregistré</p>
+                        ) : (
+                          <div className="mt-2 space-y-2">
+                            {selectedPaymentForSummary.installments.map((installment, index) => (
+                              <div key={installment.id} className="flex justify-between items-center p-3 border rounded">
+                                <div>
+                                  <p className="font-medium">Acompte #{index + 1}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {new Date(installment.paidDate).toLocaleDateString('fr-FR')} - {installment.method}
+                                  </p>
+                                </div>
+                                <p className="font-semibold">{installment.amount}€</p>
+                              </div>
+                            ))}
+                            <div className="border-t pt-2 mt-2">
+                              <div className="flex justify-between items-center font-semibold">
+                                <span>Total payé:</span>
+                                <span>{getTotalPaidForPayment(selectedPaymentForSummary)}€</span>
+                              </div>
+                              <div className="flex justify-between items-center text-muted-foreground">
+                                <span>Reste à payer:</span>
+                                <span>{getRemainingAmount(selectedPaymentForSummary)}€</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedPaymentForSummary.status === 'Payé' && !selectedPaymentForSummary.installments && (
+                      <div>
+                        <Label className="text-base font-semibold">Informations de paiement</Label>
+                        <div className="mt-2 p-3 border rounded">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-medium">Paiement complet</p>
+                              <p className="text-sm text-muted-foreground">
+                                {selectedPaymentForSummary.paidDate && new Date(selectedPaymentForSummary.paidDate).toLocaleDateString('fr-FR')} - {selectedPaymentForSummary.method}
+                              </p>
+                            </div>
+                            <p className="font-semibold">{selectedPaymentForSummary.amount}€</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowPaymentSummary(false)}>
+                    Fermer
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
-
-        {/* Dialog pour marquer comme payé */}
-        <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Marquer le paiement comme payé</DialogTitle>
-              <DialogDescription>
-                Veuillez spécifier la date de paiement et le moyen utilisé.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="paidDate">Date de paiement *</Label>
-                <Input
-                  id="paidDate"
-                  type="date"
-                  value={paymentDialog.paidDate}
-                  onChange={(e) => setPaymentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="paymentMethod">Moyen de paiement *</Label>
-                <Select onValueChange={(value) => setPaymentDialog(prev => ({ ...prev, method: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez le moyen de paiement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Espèces">Espèces</SelectItem>
-                    <SelectItem value="Carte">Carte bancaire</SelectItem>
-                    <SelectItem value="Virement">Virement bancaire</SelectItem>
-                    <SelectItem value="Chèque">Chèque</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setPaymentDialog(prev => ({ ...prev, isOpen: false }))}
-              >
-                Annuler
-              </Button>
-              <Button 
-                onClick={handleMarkAsPaid}
-                disabled={!paymentDialog.paidDate || !paymentDialog.method}
-              >
-                Confirmer le paiement
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

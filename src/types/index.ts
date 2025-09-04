@@ -29,6 +29,15 @@ export interface Payment {
   description: string;
   method?: 'Espèces' | 'Carte' | 'Virement' | 'Chèque';
   invoiceNumber?: string;
+  invoiceDate?: string; // Date de génération de la facture
+  installments?: PaymentInstallment[]; // Pour les paiements échelonnés
+}
+
+export interface PaymentInstallment {
+  id: string;
+  amount: number;
+  paidDate: string;
+  method: 'Espèces' | 'Carte' | 'Virement' | 'Chèque';
 }
 
 export interface Document {
