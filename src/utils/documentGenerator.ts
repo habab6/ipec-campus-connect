@@ -443,58 +443,66 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
     <style>
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 1.5cm;
         }
         
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
             padding: 0; 
-            line-height: 1.6; 
+            line-height: 1.4; 
             color: #333;
+            font-size: 11pt;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #2563eb;
         }
         
         .logo {
             color: #2563eb;
-            font-size: 28px;
+            font-size: 22px;
             font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .subtitle {
-            font-size: 16px;
-            color: #666;
             margin-bottom: 5px;
         }
         
+        .subtitle {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
         .document-title {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
             color: #2563eb;
         }
         
         .info-section {
-            margin: 20px 0;
-            padding: 15px;
+            margin: 15px 0;
+            padding: 10px;
             background-color: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 6px;
+        }
+        
+        .info-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #2563eb;
         }
         
         .info-row {
             display: flex;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            font-size: 11px;
         }
         
         .label {
             font-weight: bold;
-            width: 150px;
+            width: 120px;
             flex-shrink: 0;
         }
         
@@ -504,9 +512,9 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
         
         .status-badge {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
             font-weight: bold;
             color: white;
         }
@@ -517,19 +525,26 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
         .status-refunded { background-color: #3b82f6; }
         
         .payment-history {
-            margin: 20px 0;
+            margin: 15px 0;
+        }
+        
+        .payment-history h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #2563eb;
         }
         
         .history-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 8px;
+            font-size: 10px;
         }
         
         .history-table th,
         .history-table td {
             border: 1px solid #d1d5db;
-            padding: 10px;
+            padding: 6px;
             text-align: left;
         }
         
@@ -539,38 +554,45 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
         }
         
         .summary-box {
-            margin: 20px 0;
-            padding: 15px;
+            margin: 15px 0;
+            padding: 10px;
             border: 2px solid #2563eb;
-            border-radius: 8px;
+            border-radius: 6px;
             background-color: #eff6ff;
+        }
+        
+        .summary-box h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #2563eb;
         }
         
         .total-row {
             display: flex;
             justify-content: space-between;
-            margin: 5px 0;
-            font-size: 16px;
+            margin: 3px 0;
+            font-size: 12px;
         }
         
         .total-amount {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 14px;
         }
         
         .footer {
-            margin-top: 40px;
+            margin-top: 20px;
             text-align: center;
-            font-size: 12px;
+            font-size: 9px;
             color: #666;
             border-top: 1px solid #d1d5db;
-            padding-top: 20px;
+            padding-top: 10px;
         }
         
         @media print {
             body { margin: 0; }
             .header { page-break-inside: avoid; }
             .summary-box { page-break-inside: avoid; }
+            .payment-history { page-break-inside: avoid; }
         }
     </style>
 </head>

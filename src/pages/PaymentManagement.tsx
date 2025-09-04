@@ -743,9 +743,11 @@ const PaymentManagement = () => {
                       </div>
                       <div>
                         <Label>Statut</Label>
-                        <Badge className={getStatusBadgeColor(selectedPaymentForSummary.status)}>
-                          {selectedPaymentForSummary.status}
-                        </Badge>
+                        <div className="mt-2">
+                          <Badge className={`${getStatusBadgeColor(selectedPaymentForSummary.status)} text-white`}>
+                            {selectedPaymentForSummary.status}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
 
