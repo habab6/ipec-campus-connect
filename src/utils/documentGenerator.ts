@@ -30,7 +30,7 @@ export const generateRegistrationDocument = (student: Student): string => {
     <style>
         @page {
             size: A4;
-            margin: 1.5cm;
+            margin: 0;
         }
         
         * {
@@ -41,39 +41,47 @@ export const generateRegistrationDocument = (student: Student): string => {
         
         body { 
             font-family: Arial, sans-serif; 
-            line-height: 1.3; 
-            color: #000;
-            font-size: 10pt;
+            font-size: 11px;
+            line-height: 1.3;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         .header {
-            text-align: center;
-            margin-bottom: 0.8cm;
-            padding-bottom: 0.3cm;
-            border-bottom: 1px solid #000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #d1d5db;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
         
         .logo {
-            font-size: 18pt;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 3px;
-        }
-        
-        .institution {
-            font-size: 11pt;
-            margin-bottom: 8px;
-        }
-        
-        .document-title {
-            font-size: 14pt;
-            font-weight: bold;
-            text-transform: uppercase;
             margin-bottom: 5px;
         }
         
-        .document-number {
-            font-size: 9pt;
+        .company-info {
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        
+        .invoice-info { 
+            text-align: right;
+            font-size: 11px;
+        }
+        
+        .invoice-info h1 {
+            font-size: 16px;
+            margin: 0 0 5px 0;
         }
         
         .date-location {
@@ -180,62 +188,64 @@ export const generateRegistrationDocument = (student: Student): string => {
         <div class="document-number">N° ${documentNumber}</div>
     </div>
     
-    <div class="date-location">
-        Bruxelles, le ${currentDate.toLocaleDateString('fr-FR')}
-    </div>
-    
-    <div class="certification">
-        Je soussigné, Directeur de l'Institut Privé des Études Commerciales (IPEC), 
-        certifie que <strong>${student.firstName} ${student.lastName}</strong>${student.dateOfBirth ? `, né(e) le ${new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}` : ''}${student.countryOfBirth ? ` à ${student.countryOfBirth}` : ''}, 
-        est dûment inscrit(e) dans notre établissement pour l'année académique ${student.registrationYear}-${student.registrationYear + 1}.
-    </div>
-    
-    <div class="student-details">
-        <div class="detail-row">
-            <span class="label">Nom :</span>
-            <span class="value">${student.firstName} ${student.lastName}</span>
+        
+        <div class="billing-info">
+            <div class="billing-section">
+                <h3>Étudiant(e):</h3>
+                <p><strong>${student.firstName} ${student.lastName}</strong><br>
+                ${student.email}<br>
+                ${student.phone || ''}<br>
+                Référence: ${student.reference}</p>
+            </div>
+            <div class="billing-section">
+                <h3>Établissement:</h3>
+                <p><strong>Institut privé des études commerciales</strong><br>
+                Avenue Louise 123<br>
+                1050 Bruxelles, Belgique</p>
+            </div>
         </div>
-        <div class="detail-row">
-            <span class="label">Référence :</span>
-            <span class="value">${student.reference}</span>
+        
+        <div class="certification">
+            Je soussigné, Directeur de l'Institut Privé des Études Commerciales (IPEC), 
+            certifie que <strong>${student.firstName} ${student.lastName}</strong>${student.dateOfBirth ? `, né(e) le ${new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}` : ''}${student.countryOfBirth ? ` à ${student.countryOfBirth}` : ''}, 
+            est dûment inscrit(e) dans notre établissement pour l'année académique ${student.registrationYear}-${student.registrationYear + 1}.
         </div>
-        <div class="detail-row">
-            <span class="label">Email :</span>
-            <span class="value">${student.email}</span>
+        
+        <div class="student-details">
+            <div class="detail-row">
+                <span class="detail-label">Programme :</span>
+                <span class="detail-value">${student.program}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Spécialité :</span>
+                <span class="detail-value">${student.specialty || 'Non spécifiée'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Année d'étude :</span>
+                <span class="detail-value">${student.studyYear}${student.studyYear === 1 ? 'ère' : 'ème'} année</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date d'inscription :</span>
+                <span class="detail-value">${new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Statut :</span>
+                <span class="detail-value">${student.status}</span>
+            </div>
         </div>
-        <div class="detail-row">
-            <span class="label">Inscription :</span>
-            <span class="value">${new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
+        
+        <div class="certification">
+            L'étudiant(e) suit régulièrement les cours et est en règle avec les exigences administratives.
+            Cette attestation est délivrée pour servir et valoir ce que de droit.
         </div>
-        <div class="detail-row">
-            <span class="label">Statut :</span>
-            <span class="value">${student.status}</span>
-        </div>
-    </div>
-    
-    <div class="program-section">
-        <div class="program-title">${student.program}</div>
-        <div class="program-details">
-            ${student.specialty ? `${student.specialty} • ` : ''}${student.studyYear}${student.studyYear === 1 ? 'ère' : 'ème'} année
-        </div>
-    </div>
-    
-    <div class="certification">
-        L'étudiant(e) suit régulièrement les cours et est en règle avec les exigences administratives.
-    </div>
-    
-    <div class="validity-text">
-        Cette attestation est délivrée pour servir et valoir ce que de droit.
-    </div>
-    
-    <div class="signature-section">
-        <div class="signature-block">
-            <div class="signature-line"></div>
-            <div class="signature-label">Cachet de l'Institution</div>
-        </div>
-        <div class="signature-block">
-            <div class="signature-line"></div>
-            <div class="signature-label">Le Directeur</div>
+        
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-label">Cachet de l'Institution</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-label">Le Directeur</div>
+            </div>
         </div>
     </div>
     
