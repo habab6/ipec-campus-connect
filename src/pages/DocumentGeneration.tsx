@@ -15,6 +15,7 @@ import {
   downloadDocument,
   generateCreditNoteNumber
 } from "@/utils/documentGenerator";
+import { fillRegistrationPdf, fillInvoicePdf, fillCreditNotePdf, downloadPdf } from "@/utils/pdfFiller";
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -38,31 +39,49 @@ const DocumentGeneration = () => {
     setPayments(studentPayments);
   }, [studentId]);
 
-  const generateRegistrationDoc = () => {
+  const generateRegistrationDoc = async () => {
     if (!student) return;
     
-    const docHtml = generateRegistrationDocument(student);
-    downloadDocument(docHtml, `Document_Inscription_${student.lastName}_${student.firstName}.html`);
-    
-    toast({
-      title: "Document généré",
-      description: "Le document d'inscription a été téléchargé avec succès.",
-    });
+    try {
+      const pdfBytes = await fillRegistrationPdf(student);
+      const filename = `attestation-inscription-${student.firstName}-${student.lastName}.pdf`;
+      downloadPdf(pdfBytes, filename);
+      
+      toast({
+        title: "Document généré",
+        description: "L'attestation d'inscription a été générée avec succès.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de générer le document",
+        variant: "destructive",
+      });
+    }
   };
 
-  const generateInvoiceDoc = (payment: Payment) => {
+  const generateInvoiceDoc = async (payment: Payment) => {
     if (!student) return;
     
-    const invoiceHtml = generateInvoice(student, payment);
-    downloadDocument(invoiceHtml, `Facture_${payment.invoiceNumber}_${student.lastName}.html`);
-    
-    toast({
-      title: "Facture générée",
-      description: "La facture a été téléchargée avec succès.",
-    });
+    try {
+      const pdfBytes = await fillInvoicePdf(student, payment);
+      const filename = `facture-${payment.id}-${student.firstName}-${student.lastName}.pdf`;
+      downloadPdf(pdfBytes, filename);
+      
+      toast({
+        title: "Facture générée",
+        description: `La facture pour le paiement de ${payment.amount}€ a été générée.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de générer la facture",
+        variant: "destructive",
+      });
+    }
   };
 
-  const generateCreditNoteDoc = () => {
+  const generateCreditNoteDoc = async () => {
     if (!student || !selectedPayment || !creditNoteReason.trim()) {
       toast({
         title: "Erreur",
@@ -72,36 +91,44 @@ const DocumentGeneration = () => {
       return;
     }
 
-    const creditNoteHtml = generateCreditNote(student, selectedPayment, creditNoteReason);
-    const creditNumber = generateCreditNoteNumber();
-    downloadDocument(creditNoteHtml, `Note_Credit_${creditNumber}_${student.lastName}.html`);
+    try {
+      const pdfBytes = await fillCreditNotePdf(student, selectedPayment, creditNoteReason);
+      const filename = `avoir-${selectedPayment.id}-${student.firstName}-${student.lastName}.pdf`;
+      downloadPdf(pdfBytes, filename);
 
-    // Mettre à jour le statut du paiement
-    const updatedPayments = payments.map(p => 
-      p.id === selectedPayment.id 
-        ? { ...p, status: 'Remboursé' as Payment['status'] }
-        : p
-    );
-    setPayments(updatedPayments);
-    
-    // Sauvegarder dans localStorage
-    const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
-    const globalUpdatedPayments = allPayments.map((p: Payment) => 
-      p.id === selectedPayment.id 
-        ? { ...p, status: 'Remboursé' as Payment['status'] }
-        : p
-    );
-    localStorage.setItem('payments', JSON.stringify(globalUpdatedPayments));
-    
-    toast({
-      title: "Note de crédit générée",
-      description: "La note de crédit a été téléchargée et le paiement marqué comme remboursé.",
-    });
+      // Mettre à jour le statut du paiement
+      const updatedPayments = payments.map(p => 
+        p.id === selectedPayment.id 
+          ? { ...p, status: 'Remboursé' as Payment['status'] }
+          : p
+      );
+      setPayments(updatedPayments);
+      
+      // Sauvegarder dans localStorage
+      const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+      const globalUpdatedPayments = allPayments.map((p: Payment) => 
+        p.id === selectedPayment.id 
+          ? { ...p, status: 'Remboursé' as Payment['status'] }
+          : p
+      );
+      localStorage.setItem('payments', JSON.stringify(globalUpdatedPayments));
+      
+      toast({
+        title: "Note de crédit générée",
+        description: "La note de crédit a été téléchargée et le paiement marqué comme remboursé.",
+      });
 
-    // Reset form
-    setCreditNoteReason("");
-    setSelectedPayment(null);
-    setShowCreditNoteForm(false);
+      // Reset form
+      setCreditNoteReason("");
+      setSelectedPayment(null);
+      setShowCreditNoteForm(false);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de générer l'avoir",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!student) {
