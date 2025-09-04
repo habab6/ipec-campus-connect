@@ -54,8 +54,8 @@ export const generateRegistrationDocument = (student: Student): string => {
         
         .header {
             text-align: center;
-            margin-bottom: 3cm;
-            padding-bottom: 1cm;
+            margin-bottom: 1.5cm;
+            padding-bottom: 0.8cm;
             border-bottom: 2px solid #1e40af;
         }
         
@@ -88,19 +88,19 @@ export const generateRegistrationDocument = (student: Student): string => {
         }
         
         .content {
-            margin: 2cm 0;
+            margin: 1cm 0;
         }
         
         .certification {
             text-align: justify;
             font-size: 12pt;
             line-height: 1.8;
-            margin-bottom: 2cm;
+            margin-bottom: 1.2cm;
             font-weight: 500;
         }
         
         .student-details {
-            margin: 1.5cm 0;
+            margin: 0.8cm 0;
         }
         
         .detail-row {
@@ -174,8 +174,8 @@ export const generateRegistrationDocument = (student: Student): string => {
         
         .footer {
             text-align: center;
-            margin-top: 2cm;
-            padding-top: 1cm;
+            margin-top: 1cm;
+            padding-top: 0.5cm;
             border-top: 1px solid #e5e7eb;
         }
         
@@ -213,8 +213,8 @@ export const generateRegistrationDocument = (student: Student): string => {
 </head>
 <body>
     <div class="header">
-        <div class="logo">IPEC BRUXELLES</div>
-        <div class="institution">Institut Privé d'Enseignement Complémentaire</div>
+        <div class="logo">IPEC</div>
+        <div class="institution">Institut Privé des Études Commerciales</div>
         <h1 class="document-title">Attestation d'Inscription</h1>
         <div class="document-number">N° ${documentNumber}</div>
     </div>
@@ -229,7 +229,7 @@ export const generateRegistrationDocument = (student: Student): string => {
     
     <div class="content">
         <div class="certification">
-            Je soussigné, Directeur de l'Institut Privé d'Enseignement Complémentaire (IPEC) de Bruxelles, 
+            Je soussigné, Directeur de l'Institut Privé des Études Commerciales (IPEC) de Bruxelles, 
             certifie que <strong>${student.firstName} ${student.lastName}</strong>, 
             ${student.dateOfBirth ? `né(e) le ${new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}` : ''} 
             ${student.countryOfBirth ? `à ${student.countryOfBirth}` : ''}, 
@@ -307,7 +307,7 @@ export const generateRegistrationDocument = (student: Student): string => {
     <div class="footer">
         <div class="institution-footer">IPEC BRUXELLES</div>
         <div class="footer-details">
-            Institut Privé d'Enseignement Complémentaire<br>
+            Institut Privé des Études Commerciales<br>
             Bruxelles, Belgique
         </div>
     </div>
