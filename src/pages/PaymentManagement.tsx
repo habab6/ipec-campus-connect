@@ -23,7 +23,9 @@ const PaymentManagement = () => {
     dueDate: "",
     type: "",
     description: "",
-    method: ""
+    method: "",
+    paidDate: "",
+    paidMethod: ""
   });
 
   useEffect(() => {
@@ -38,10 +40,29 @@ const PaymentManagement = () => {
     }
   }, []);
 
+  const calculateDueDate = (type: string): string => {
+    const today = new Date();
+    
+    if (type === 'Frais de dossier') {
+      // 14 jours calendaires après aujourd'hui
+      const dueDate = new Date(today);
+      dueDate.setDate(today.getDate() + 14);
+      return dueDate.toISOString().split('T')[0];
+    } else if (type === 'Minerval') {
+      // 31 décembre de l'année en cours
+      return `${today.getFullYear()}-12-31`;
+    }
+    
+    // Par défaut, 30 jours
+    const dueDate = new Date(today);
+    dueDate.setDate(today.getDate() + 30);
+    return dueDate.toISOString().split('T')[0];
+  };
+
   const handleAddPayment = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedStudent || !newPayment.amount || !newPayment.dueDate || !newPayment.type) {
+    if (!selectedStudent || !newPayment.amount || !newPayment.type) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -50,16 +71,20 @@ const PaymentManagement = () => {
       return;
     }
 
+    // Calcul automatique de l'échéance si non spécifiée
+    const dueDate = newPayment.dueDate || calculateDueDate(newPayment.type);
+
     const payment: Payment = {
       id: Date.now().toString(),
       studentId: selectedStudent,
       amount: parseFloat(newPayment.amount),
-      dueDate: newPayment.dueDate,
-      status: 'En attente',
+      dueDate: dueDate,
+      status: newPayment.paidDate ? 'Payé' : 'En attente',
       type: newPayment.type as Payment['type'],
       description: newPayment.description || `${newPayment.type} - ${getStudentName(selectedStudent)}`,
-      method: newPayment.method as Payment['method'],
-      invoiceNumber: generateInvoiceNumber()
+      method: newPayment.paidMethod as Payment['method'],
+      invoiceNumber: generateInvoiceNumber(),
+      paidDate: newPayment.paidDate || undefined
     };
 
     const updatedPayments = [...payments, payment];
@@ -77,7 +102,9 @@ const PaymentManagement = () => {
       dueDate: "",
       type: "",
       description: "",
-      method: ""
+      method: "",
+      paidDate: "",
+      paidMethod: ""
     });
     setSelectedStudent("");
     setShowAddPayment(false);
@@ -92,10 +119,15 @@ const PaymentManagement = () => {
     return students.find(s => s.id === studentId);
   };
 
-  const markAsPaid = (paymentId: string) => {
+  const markAsPaid = (paymentId: string, method?: Payment['method']) => {
     const updatedPayments = payments.map(p => 
       p.id === paymentId 
-        ? { ...p, status: 'Payé' as Payment['status'], paidDate: new Date().toISOString() }
+        ? { 
+            ...p, 
+            status: 'Payé' as Payment['status'], 
+            paidDate: new Date().toISOString().split('T')[0],
+            method: (method || p.method) as Payment['method']
+          }
         : p
     );
     setPayments(updatedPayments);
@@ -253,12 +285,19 @@ const PaymentManagement = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="type">Type de paiement *</Label>
-                        <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, type: value }))}>
+                        <Select onValueChange={(value) => {
+                          setNewPayment(prev => ({ 
+                            ...prev, 
+                            type: value,
+                            dueDate: calculateDueDate(value)
+                          }));
+                        }}>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionnez le type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Inscription">Inscription</SelectItem>
+                            <SelectItem value="Frais de dossier">Frais de dossier</SelectItem>
+                            <SelectItem value="Minerval">Minerval</SelectItem>
                             <SelectItem value="Frais mensuel">Frais mensuel</SelectItem>
                             <SelectItem value="Matériel">Matériel</SelectItem>
                             <SelectItem value="Examen">Examen</SelectItem>
@@ -268,14 +307,47 @@ const PaymentManagement = () => {
                       </div>
                       
                       <div>
-                        <Label htmlFor="dueDate">Date d'échéance *</Label>
+                        <Label htmlFor="dueDate">Date d'échéance {newPayment.type && (newPayment.type === 'Frais de dossier' || newPayment.type === 'Minerval') ? '(automatique)' : '*'}</Label>
                         <Input
                           id="dueDate"
                           type="date"
                           value={newPayment.dueDate}
                           onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
-                          required
+                          placeholder={newPayment.type === 'Frais de dossier' ? '14 jours' : newPayment.type === 'Minerval' ? '31 décembre' : ''}
                         />
+                        {newPayment.type === 'Frais de dossier' && (
+                          <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 14 jours calendaires</p>
+                        )}
+                        {newPayment.type === 'Minerval' && (
+                          <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 31 décembre {new Date().getFullYear()}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="paidDate">Date de paiement (si déjà payé)</Label>
+                        <Input
+                          id="paidDate"
+                          type="date"
+                          value={newPayment.paidDate}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, paidDate: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="paidMethod">Moyen de paiement</Label>
+                        <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, paidMethod: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez le moyen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Espèces">Espèces</SelectItem>
+                            <SelectItem value="Carte">Carte bancaire</SelectItem>
+                            <SelectItem value="Virement">Virement bancaire</SelectItem>
+                            <SelectItem value="Chèque">Chèque</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -329,12 +401,15 @@ const PaymentManagement = () => {
                             <Badge variant="outline">{payment.type}</Badge>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
                             <p><strong>Montant:</strong> {payment.amount}€</p>
                             <p><strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
                             <p><strong>Facture:</strong> {payment.invoiceNumber}</p>
                             {payment.paidDate && (
                               <p><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}</p>
+                            )}
+                            {payment.method && (
+                              <p><strong>Moyen:</strong> {payment.method}</p>
                             )}
                           </div>
 
