@@ -28,7 +28,12 @@ export const generateRegistrationDocument = (student: Student): string => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attestation d'Inscription - IPEC Bruxelles</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
         
         * {
             margin: 0;
@@ -38,413 +43,272 @@ export const generateRegistrationDocument = (student: Student): string => {
         
         body { 
             font-family: 'Inter', sans-serif; 
-            line-height: 1.6; 
+            line-height: 1.5; 
             color: #1f2937;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-        
-        .document-container {
-            max-width: 800px;
-            margin: 0 auto;
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            overflow: hidden;
+            font-size: 11pt;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 1cm;
         }
         
         .header {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
-            color: white;
-            padding: 40px 50px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
-            opacity: 0.1;
+            margin-bottom: 3cm;
+            padding-bottom: 1cm;
+            border-bottom: 2px solid #1e40af;
         }
         
         .logo {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .institution-name {
-            font-size: 18px;
-            font-weight: 400;
-            margin-bottom: 25px;
-            opacity: 0.95;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .document-title {
-            font-size: 28px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .document-subtitle {
-            font-size: 16px;
-            font-weight: 300;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .document-info {
-            background: #f8fafc;
-            padding: 20px 50px;
-            border-bottom: 3px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .document-number {
-            font-weight: 600;
-            color: #1e40af;
-            font-size: 14px;
-        }
-        
-        .document-date {
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .content {
-            padding: 50px;
-        }
-        
-        .certification-text {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            border-left: 5px solid #10b981;
-            padding: 25px;
-            margin-bottom: 40px;
-            border-radius: 0 8px 8px 0;
-            font-size: 16px;
-            line-height: 1.8;
-            color: #065f46;
-        }
-        
-        .student-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin: 40px 0;
-        }
-        
-        .info-section {
-            background: #f9fafb;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .section-title::before {
-            content: '●';
-            color: #3b82f6;
-            font-size: 12px;
-        }
-        
-        .field {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .label {
-            font-weight: 500;
-            color: #6b7280;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .value {
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 15px;
-        }
-        
-        .program-highlight {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            border: 2px solid #3b82f6;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .program-title {
-            font-size: 20px;
+            font-size: 24pt;
             font-weight: 700;
             color: #1e40af;
             margin-bottom: 8px;
         }
         
-        .program-details {
-            color: #1e40af;
+        .institution {
+            font-size: 14pt;
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+        
+        .document-title {
+            font-size: 20pt;
+            font-weight: 600;
+            color: #1f2937;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .document-number {
+            font-size: 10pt;
+            color: #6b7280;
             font-weight: 500;
         }
         
-        .footer {
-            background: #f8fafc;
-            padding: 40px 50px;
+        .content {
+            margin: 2cm 0;
+        }
+        
+        .certification {
+            text-align: justify;
+            font-size: 12pt;
+            line-height: 1.8;
+            margin-bottom: 2cm;
+            font-weight: 500;
+        }
+        
+        .student-details {
+            margin: 1.5cm 0;
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: baseline;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: #374151;
+            width: 4cm;
+            flex-shrink: 0;
+        }
+        
+        .value {
+            color: #1f2937;
+            flex-grow: 1;
+        }
+        
+        .program-section {
             text-align: center;
-            border-top: 1px solid #e5e7eb;
+            margin: 2cm 0;
+            padding: 15px 0;
+            background: #f8fafc;
+        }
+        
+        .program-title {
+            font-size: 16pt;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+        
+        .program-details {
+            font-size: 11pt;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        
+        .validity-text {
+            text-align: center;
+            font-style: italic;
+            margin: 1.5cm 0;
+            font-size: 11pt;
+            color: #6b7280;
         }
         
         .signature-section {
             display: flex;
             justify-content: space-between;
-            margin: 40px 0 20px 0;
-            align-items: flex-end;
+            margin-top: 3cm;
         }
         
-        .signature-box {
+        .signature-block {
             text-align: center;
-            width: 200px;
+            width: 6cm;
         }
         
         .signature-line {
-            border-bottom: 2px solid #1e40af;
-            margin-bottom: 10px;
-            height: 60px;
+            border-bottom: 1px solid #374151;
+            height: 2cm;
+            margin-bottom: 8px;
         }
         
         .signature-label {
-            font-size: 12px;
+            font-size: 10pt;
             color: #6b7280;
             font-weight: 500;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 2cm;
+            padding-top: 1cm;
+            border-top: 1px solid #e5e7eb;
         }
         
         .institution-footer {
             font-weight: 600;
             color: #1e40af;
-            font-size: 16px;
-            margin-bottom: 8px;
+            font-size: 12pt;
+            margin-bottom: 5px;
         }
         
-        .footer-text {
+        .footer-details {
             color: #6b7280;
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 10pt;
+            line-height: 1.4;
         }
         
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .status-actif {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        
-        .status-inactif {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        
-        .status-suspendu {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #fed7aa;
+        .date-location {
+            text-align: right;
+            margin: 1cm 0;
+            font-size: 11pt;
+            color: #4b5563;
         }
         
         @media print {
             body {
-                background: white;
                 padding: 0;
-            }
-            .document-container {
-                box-shadow: none;
-                border-radius: 0;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .student-info {
-                grid-template-columns: 1fr;
-                gap: 20px;
+                margin: 0;
             }
             
             .signature-section {
-                flex-direction: column;
-                gap: 30px;
-                align-items: center;
-            }
-            
-            .content, .header, .document-info, .footer {
-                padding-left: 25px;
-                padding-right: 25px;
+                page-break-inside: avoid;
             }
         }
     </style>
 </head>
 <body>
-    <div class="document-container">
-        <div class="header">
-            <div class="logo">IPEC BRUXELLES</div>
-            <div class="institution-name">Institut Privé d'Enseignement Complémentaire</div>
-            <h1 class="document-title">Attestation d'Inscription</h1>
-            <div class="document-subtitle">Document Officiel</div>
+    <div class="header">
+        <div class="logo">IPEC BRUXELLES</div>
+        <div class="institution">Institut Privé d'Enseignement Complémentaire</div>
+        <h1 class="document-title">Attestation d'Inscription</h1>
+        <div class="document-number">N° ${documentNumber}</div>
+    </div>
+    
+    <div class="date-location">
+        Bruxelles, le ${currentDate.toLocaleDateString('fr-FR', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        })}
+    </div>
+    
+    <div class="content">
+        <div class="certification">
+            Je soussigné, Directeur de l'Institut Privé d'Enseignement Complémentaire (IPEC) de Bruxelles, 
+            certifie que <strong>${student.firstName} ${student.lastName}</strong>, 
+            ${student.dateOfBirth ? `né(e) le ${new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}` : ''} 
+            ${student.countryOfBirth ? `à ${student.countryOfBirth}` : ''}, 
+            est dûment inscrit(e) dans notre établissement pour l'année académique ${student.registrationYear}-${student.registrationYear + 1}.
         </div>
         
-        <div class="document-info">
-            <div class="document-number">N° ${documentNumber}</div>
-            <div class="document-date">Délivrée le ${currentDate.toLocaleDateString('fr-FR', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            })}</div>
-        </div>
-        
-        <div class="content">
-            <div class="certification-text">
-                <strong>Je soussigné, Directeur de l'Institut Privé d'Enseignement Complémentaire (IPEC) de Bruxelles, certifie par la présente que :</strong>
+        <div class="student-details">
+            <div class="detail-row">
+                <span class="label">Nom complet :</span>
+                <span class="value">${student.firstName} ${student.lastName}</span>
             </div>
-            
-            <div class="student-info">
-                <div class="info-section">
-                    <h3 class="section-title">Informations Personnelles</h3>
-                    <div class="field">
-                        <span class="label">Nom complet</span>
-                        <span class="value">${student.firstName} ${student.lastName}</span>
-                    </div>
-                    <div class="field">
-                        <span class="label">Date de naissance</span>
-                        <span class="value">${student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('fr-FR') : 'Non renseignée'}</span>
-                    </div>
-                    <div class="field">
-                        <span class="label">Pays de naissance</span>
-                        <span class="value">${student.countryOfBirth || 'Non renseigné'}</span>
-                    </div>
-                    <div class="field">
-                        <span class="label">Adresse</span>
-                        <span class="value">${student.address || 'Non renseignée'}</span>
-                    </div>
-                </div>
-                
-                <div class="info-section">
-                    <h3 class="section-title">Informations de Contact</h3>
-                    <div class="field">
-                        <span class="label">Adresse e-mail</span>
-                        <span class="value">${student.email}</span>
-                    </div>
-                    <div class="field">
-                        <span class="label">Téléphone</span>
-                        <span class="value">${student.phone || 'Non renseigné'}</span>
-                    </div>
-                    <div class="field">
-                        <span class="label">Numéro de référence</span>
-                        <span class="value">${student.reference}</span>
-                    </div>
-                    <div class="field">
-                        <span class="label">Statut actuel</span>
-                        <span class="value">
-                            <span class="status-badge status-${student.status.toLowerCase()}">${student.status}</span>
-                        </span>
-                    </div>
-                </div>
+            <div class="detail-row">
+                <span class="label">N° de référence :</span>
+                <span class="value">${student.reference}</span>
             </div>
-            
-            <div class="program-highlight">
-                <div class="program-title">${student.program}</div>
-                <div class="program-details">
-                    ${student.specialty ? `Spécialité: ${student.specialty} • ` : ''}
-                    Année d'études: ${student.studyYear}${student.studyYear === 1 ? 'ère' : 'ème'}
-                    ${student.hasMBA2Diploma ? ' • Titulaire du diplôme MBA 2' : ''}
-                </div>
+            <div class="detail-row">
+                <span class="label">Adresse e-mail :</span>
+                <span class="value">${student.email}</span>
             </div>
-            
-            <div class="info-section">
-                <h3 class="section-title">Informations d'Inscription</h3>
-                <div class="field">
-                    <span class="label">Date d'inscription</span>
-                    <span class="value">${new Date(student.registrationDate).toLocaleDateString('fr-FR', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                    })}</span>
-                </div>
-                <div class="field">
-                    <span class="label">Année académique</span>
-                    <span class="value">${student.registrationYear}-${student.registrationYear + 1}</span>
-                </div>
-                ${student.notes ? `
-                <div class="field">
-                    <span class="label">Observations</span>
-                    <span class="value">${student.notes}</span>
-                </div>` : ''}
+            ${student.phone ? `
+            <div class="detail-row">
+                <span class="label">Téléphone :</span>
+                <span class="value">${student.phone}</span>
+            </div>` : ''}
+            ${student.address ? `
+            <div class="detail-row">
+                <span class="label">Adresse :</span>
+                <span class="value">${student.address}</span>
+            </div>` : ''}
+            <div class="detail-row">
+                <span class="label">Date d'inscription :</span>
+                <span class="value">${new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
             </div>
-            
-            <div style="margin: 40px 0; padding: 20px; background: #fefce8; border-left: 4px solid #eab308; border-radius: 0 8px 8px 0;">
-                <p style="font-style: italic; color: #854d0e; font-size: 15px;">
-                    <strong>est dûment inscrit(e)</strong> dans notre établissement et suit régulièrement les cours du programme mentionné ci-dessus.
-                </p>
-            </div>
-            
-            <div class="signature-section">
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-label">Cachet de l'Institution</div>
-                </div>
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-label">Signature du Directeur</div>
-                </div>
+            <div class="detail-row">
+                <span class="label">Statut :</span>
+                <span class="value">${student.status}</span>
             </div>
         </div>
         
-        <div class="footer">
-            <div class="institution-footer">IPEC BRUXELLES</div>
-            <div class="footer-text">
-                Institut Privé d'Enseignement Complémentaire<br>
-                Excellence • Innovation • Formation de Qualité<br>
-                Bruxelles, Belgique
+        <div class="program-section">
+            <div class="program-title">${student.program}</div>
+            <div class="program-details">
+                ${student.specialty ? `Spécialité : ${student.specialty} • ` : ''}
+                ${student.studyYear}${student.studyYear === 1 ? 'ère' : 'ème'} année
+                ${student.hasMBA2Diploma ? ' • Titulaire du diplôme MBA 2' : ''}
             </div>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">
-                Ce document est généré électroniquement et constitue une attestation officielle d'inscription.
+        </div>
+        
+        <div class="certification">
+            L'étudiant(e) suit régulièrement les cours du programme mentionné ci-dessus et est en règle 
+            avec les exigences administratives de l'institution.
+        </div>
+        
+        ${student.notes ? `
+        <div style="margin: 1cm 0; font-size: 11pt;">
+            <strong>Observations :</strong> ${student.notes}
+        </div>` : ''}
+        
+        <div class="validity-text">
+            Cette attestation est délivrée pour servir et valoir ce que de droit.
+        </div>
+        
+        <div class="signature-section">
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-label">Cachet de l'Institution</div>
             </div>
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-label">Le Directeur</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div class="institution-footer">IPEC BRUXELLES</div>
+        <div class="footer-details">
+            Institut Privé d'Enseignement Complémentaire<br>
+            Bruxelles, Belgique
         </div>
     </div>
 </body>
