@@ -57,7 +57,7 @@ const StudentRegistration = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation basique
@@ -119,24 +119,40 @@ const StudentRegistration = () => {
     const payments = JSON.parse(localStorage.getItem('payments') || '[]');
     const programPrice = PROGRAM_PRICES[formData.program as keyof typeof PROGRAM_PRICES];
     
+    // Calculer les échéances selon les règles
+    const today = new Date();
+    
+    // Frais de dossier - 14 jours calendaires
+    const registrationDueDate = new Date(today);
+    registrationDueDate.setDate(today.getDate() + 14);
+    
+    // Minerval - 31 décembre de l'année en cours
+    const minervalDueDate = new Date(today.getFullYear(), 11, 31); // mois 11 = décembre
+    
+    // Petite pause pour assurer des numéros de facture différents
+    const baseTimestamp = Date.now();
+    
     // Frais de dossier
     const registrationPayment: Payment = {
-      id: `reg-${Date.now()}`,
+      id: `reg-${baseTimestamp}`,
       studentId: newStudent.id,
       amount: REGISTRATION_FEE,
-      dueDate: new Date().toISOString(),
+      dueDate: registrationDueDate.toISOString().split('T')[0],
       status: 'En attente',
       type: 'Frais de dossier',
       description: 'Frais de dossier d\'inscription',
       invoiceNumber: generateInvoiceNumber()
     };
 
+    // Attendre 1ms pour avoir un timestamp différent
+    await new Promise(resolve => setTimeout(resolve, 1));
+
     // Minerval (frais annuels)
     const tuitionPayment: Payment = {
-      id: `tuition-${Date.now()}`,
+      id: `tuition-${baseTimestamp + 1}`,
       studentId: newStudent.id,
       amount: programPrice,
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 jours
+      dueDate: minervalDueDate.toISOString().split('T')[0],
       status: 'En attente',
       type: 'Minerval',
       description: `Minerval annuel - ${formData.program}`,

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -119,13 +120,25 @@ const PaymentManagement = () => {
     return students.find(s => s.id === studentId);
   };
 
-  const markAsPaid = (paymentId: string, method?: Payment['method']) => {
+  const [paymentDialog, setPaymentDialog] = useState<{
+    isOpen: boolean;
+    paymentId: string;
+    paidDate: string;
+    method: string;
+  }>({
+    isOpen: false,
+    paymentId: '',
+    paidDate: new Date().toISOString().split('T')[0],
+    method: ''
+  });
+
+  const markAsPaid = (paymentId: string, paidDate?: string, method?: Payment['method']) => {
     const updatedPayments = payments.map(p => 
       p.id === paymentId 
         ? { 
             ...p, 
             status: 'Payé' as Payment['status'], 
-            paidDate: new Date().toISOString().split('T')[0],
+            paidDate: paidDate || new Date().toISOString().split('T')[0],
             method: (method || p.method) as Payment['method']
           }
         : p
@@ -136,6 +149,20 @@ const PaymentManagement = () => {
     toast({
       title: "Paiement confirmé",
       description: "Le paiement a été marqué comme payé.",
+    });
+  };
+
+  const handleMarkAsPaid = () => {
+    markAsPaid(paymentDialog.paymentId, paymentDialog.paidDate, paymentDialog.method as Payment['method']);
+    setPaymentDialog({ isOpen: false, paymentId: '', paidDate: new Date().toISOString().split('T')[0], method: '' });
+  };
+
+  const openPaymentDialog = (paymentId: string) => {
+    setPaymentDialog({
+      isOpen: true,
+      paymentId,
+      paidDate: new Date().toISOString().split('T')[0],
+      method: ''
     });
   };
 
@@ -434,7 +461,7 @@ const PaymentManagement = () => {
                             <Button
                               variant="default"
                               size="sm"
-                              onClick={() => markAsPaid(payment.id)}
+                              onClick={() => openPaymentDialog(payment.id)}
                             >
                               <Receipt className="mr-2 h-4 w-4" />
                               Marquer payé
@@ -456,6 +483,61 @@ const PaymentManagement = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Dialog pour marquer comme payé */}
+        <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Marquer le paiement comme payé</DialogTitle>
+              <DialogDescription>
+                Veuillez spécifier la date de paiement et le moyen utilisé.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="paidDate">Date de paiement *</Label>
+                <Input
+                  id="paidDate"
+                  type="date"
+                  value={paymentDialog.paidDate}
+                  onChange={(e) => setPaymentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="paymentMethod">Moyen de paiement *</Label>
+                <Select onValueChange={(value) => setPaymentDialog(prev => ({ ...prev, method: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez le moyen de paiement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Espèces">Espèces</SelectItem>
+                    <SelectItem value="Carte">Carte bancaire</SelectItem>
+                    <SelectItem value="Virement">Virement bancaire</SelectItem>
+                    <SelectItem value="Chèque">Chèque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setPaymentDialog(prev => ({ ...prev, isOpen: false }))}
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleMarkAsPaid}
+                disabled={!paymentDialog.paidDate || !paymentDialog.method}
+              >
+                Confirmer le paiement
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
