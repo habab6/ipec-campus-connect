@@ -252,27 +252,100 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facture ${invoiceNumber} - IPEC Bruxelles</title>
+    <title>Facture ${invoiceNumber} - IPEC</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
-        .logo { color: #2563eb; font-size: 24px; font-weight: bold; }
-        .invoice-info { text-align: right; }
-        .billing-info { display: flex; justify-content: space-between; margin: 20px 0; }
-        .billing-section { width: 45%; }
-        .invoice-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .invoice-table th, .invoice-table td { border: 1px solid #d1d5db; padding: 12px; text-align: left; }
-        .invoice-table th { background-color: #f3f4f6; }
-        .total { text-align: right; font-size: 18px; font-weight: bold; color: #2563eb; }
-        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #d1d5db; text-align: center; }
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            line-height: 1.6; 
+            color: #333;
+        }
+        
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 2px solid #2563eb; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px; 
+        }
+        
+        .logo { 
+            color: #2563eb; 
+            font-size: 24px; 
+            font-weight: bold; 
+        }
+        
+        .company-info {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .invoice-info { 
+            text-align: right; 
+        }
+        
+        .billing-info { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 20px 0; 
+        }
+        
+        .billing-section { 
+            width: 45%; 
+        }
+        
+        .invoice-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+        }
+        
+        .invoice-table th, .invoice-table td { 
+            border: 1px solid #d1d5db; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        
+        .invoice-table th { 
+            background-color: #f3f4f6; 
+        }
+        
+        .total { 
+            text-align: right; 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #2563eb; 
+        }
+        
+        .footer { 
+            margin-top: 40px; 
+            padding-top: 20px; 
+            border-top: 1px solid #d1d5db; 
+            text-align: center; 
+        }
+        
+        @media print {
+            body { margin: 0; }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div>
-            <div class="logo">IPEC BRUXELLES</div>
-            <p>Institut de Formation d'Excellence<br>
-            Bruxelles, Belgique</p>
+            <div class="logo">IPEC</div>
+            <div class="company-info">
+                <strong>Institut Privé d'Enseignement Commercial</strong><br>
+                Avenue Louise 123<br>
+                1050 Bruxelles, Belgique<br>
+                Tél: +32 2 123 45 67<br>
+                Email: info@ipec.be
+            </div>
         </div>
         <div class="invoice-info">
             <h1>FACTURE</h1>
@@ -292,9 +365,9 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
         </div>
         <div class="billing-section">
             <h3>Émetteur:</h3>
-            <p><strong>IPEC Bruxelles</strong><br>
-            Institut de Formation d'Excellence<br>
-            Bruxelles, Belgique</p>
+            <p><strong>Institut Privé d'Enseignement Commercial</strong><br>
+            Avenue Louise 123<br>
+            1050 Bruxelles, Belgique</p>
         </div>
     </div>
     
@@ -323,7 +396,7 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
     
     <div class="footer">
         <p>Merci de votre confiance. Paiement dû avant le ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}.</p>
-        <p><strong>IPEC Bruxelles</strong> - Excellence en formation</p>
+        <p><strong>Institut Privé d'Enseignement Commercial - IPEC</strong></p>
     </div>
 </body>
 </html>
@@ -443,78 +516,71 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
     <style>
         @page {
             size: A4;
-            margin: 1.5cm;
+            margin: 2cm;
         }
         
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
             padding: 0; 
-            line-height: 1.4; 
+            line-height: 1.6; 
             color: #333;
-            font-size: 11pt;
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #2563eb;
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 2px solid #2563eb; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px; 
         }
         
-        .logo {
-            color: #2563eb;
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 5px;
+        .logo { 
+            color: #2563eb; 
+            font-size: 24px; 
+            font-weight: bold; 
         }
         
-        .subtitle {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 3px;
+        .company-info {
+            font-size: 14px;
+            line-height: 1.4;
         }
         
-        .document-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #2563eb;
+        .summary-info { 
+            text-align: right; 
         }
         
-        .info-section {
-            margin: 15px 0;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
+        .billing-info { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 20px 0; 
         }
         
-        .info-section h3 {
-            margin: 0 0 8px 0;
-            font-size: 13px;
-            color: #2563eb;
+        .billing-section { 
+            width: 45%; 
         }
         
-        .info-row {
-            display: flex;
-            margin-bottom: 6px;
-            font-size: 11px;
+        .payment-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
         }
         
-        .label {
-            font-weight: bold;
-            width: 120px;
-            flex-shrink: 0;
+        .payment-table th, .payment-table td { 
+            border: 1px solid #d1d5db; 
+            padding: 12px; 
+            text-align: left; 
         }
         
-        .value {
-            flex-grow: 1;
+        .payment-table th { 
+            background-color: #f3f4f6; 
         }
         
         .status-badge {
             display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: bold;
             color: white;
         }
@@ -524,201 +590,142 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
         .status-overdue { background-color: #ef4444; }
         .status-refunded { background-color: #3b82f6; }
         
-        .payment-history {
-            margin: 15px 0;
+        .total { 
+            text-align: right; 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #2563eb; 
+            margin: 20px 0;
         }
         
-        .payment-history h3 {
-            margin: 0 0 8px 0;
-            font-size: 13px;
-            color: #2563eb;
-        }
-        
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 10px;
-        }
-        
-        .history-table th,
-        .history-table td {
-            border: 1px solid #d1d5db;
-            padding: 6px;
-            text-align: left;
-        }
-        
-        .history-table th {
-            background-color: #f3f4f6;
-            font-weight: bold;
-        }
-        
-        .summary-box {
-            margin: 15px 0;
-            padding: 10px;
-            border: 2px solid #2563eb;
-            border-radius: 6px;
-            background-color: #eff6ff;
-        }
-        
-        .summary-box h3 {
-            margin: 0 0 8px 0;
-            font-size: 13px;
-            color: #2563eb;
-        }
-        
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 3px 0;
-            font-size: 12px;
-        }
-        
-        .total-amount {
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 9px;
-            color: #666;
-            border-top: 1px solid #d1d5db;
-            padding-top: 10px;
+        .footer { 
+            margin-top: 40px; 
+            padding-top: 20px; 
+            border-top: 1px solid #d1d5db; 
+            text-align: center; 
         }
         
         @media print {
             body { margin: 0; }
-            .header { page-break-inside: avoid; }
-            .summary-box { page-break-inside: avoid; }
-            .payment-history { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="logo">IPEC BRUXELLES</div>
-        <div class="subtitle">Institut Privé des Études Commerciales</div>
-        <div class="document-title">RÉCAPITULATIF DE PAIEMENT</div>
-    </div>
-    
-    <div class="info-section">
-        <h3>Informations de l'étudiant</h3>
-        <div class="info-row">
-            <span class="label">Nom complet :</span>
-            <span class="value">${student.firstName} ${student.lastName}</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Email :</span>
-            <span class="value">${student.email}</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Programme :</span>
-            <span class="value">${student.program}</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Référence :</span>
-            <span class="value">${student.reference}</span>
-        </div>
-    </div>
-    
-    <div class="info-section">
-        <h3>Informations du paiement</h3>
-        <div class="info-row">
-            <span class="label">Type :</span>
-            <span class="value">${payment.type}</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Description :</span>
-            <span class="value">${payment.description}</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Montant total :</span>
-            <span class="value">${payment.amount}€</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Échéance :</span>
-            <span class="value">${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Statut :</span>
-            <span class="value">
-                <span class="status-badge ${payment.status === 'Payé' ? 'status-paid' : 
-                  payment.status === 'En attente' ? 'status-pending' : 
-                  payment.status === 'En retard' ? 'status-overdue' : 'status-refunded'}">
-                    ${payment.status}
-                </span>
-            </span>
-        </div>
-    </div>
-    
-    ${payment.type === 'Minerval' && payment.installments ? `
-    <div class="payment-history">
-        <h3>Historique des paiements</h3>
-        ${payment.installments.length === 0 ? 
-          '<p>Aucun paiement enregistré</p>' : `
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Montant</th>
-                    <th>Moyen de paiement</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${payment.installments.map((installment, index) => `
-                <tr>
-                    <td>${new Date(installment.paidDate).toLocaleDateString('fr-FR')}</td>
-                    <td>${installment.amount}€</td>
-                    <td>${installment.method}</td>
-                </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        `}
-    </div>
-    
-    <div class="summary-box">
-        <h3>Résumé financier</h3>
-        <div class="total-row">
-            <span>Montant total :</span>
-            <span>${payment.amount}€</span>
-        </div>
-        <div class="total-row">
-            <span>Total payé :</span>
-            <span>${getTotalPaid()}€</span>
-        </div>
-        <div class="total-row total-amount">
-            <span>Reste à payer :</span>
-            <span>${getRemainingAmount()}€</span>
-        </div>
-    </div>
-    ` : `
-    ${payment.status === 'Payé' && !payment.installments ? `
-    <div class="payment-history">
-        <h3>Informations de paiement</h3>
-        <div class="info-section">
-            <div class="info-row">
-                <span class="label">Date de paiement :</span>
-                <span class="value">${payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Moyen de paiement :</span>
-                <span class="value">${payment.method || 'N/A'}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Montant payé :</span>
-                <span class="value">${payment.amount}€</span>
+        <div>
+            <div class="logo">IPEC</div>
+            <div class="company-info">
+                <strong>Institut Privé d'Enseignement Commercial</strong><br>
+                Avenue Louise 123<br>
+                1050 Bruxelles, Belgique<br>
+                Tél: +32 2 123 45 67<br>
+                Email: info@ipec.be
             </div>
         </div>
+        <div class="summary-info">
+            <h1>RÉCAPITULATIF DE PAIEMENT</h1>
+            <p><strong>Facture N° ${payment.invoiceNumber || 'N/A'}</strong></p>
+            <p>Date: ${new Date().toLocaleDateString('fr-FR')}</p>
+            <p>Échéance: ${new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
+        </div>
+    </div>
+    
+    <div class="billing-info">
+        <div class="billing-section">
+            <h3>Étudiant:</h3>
+            <p><strong>${student.firstName} ${student.lastName}</strong><br>
+            ${student.email}<br>
+            ${student.phone || ''}<br>
+            Référence: ${student.reference}<br>
+            Programme: ${student.program}</p>
+        </div>
+        <div class="billing-section">
+            <h3>Émetteur:</h3>
+            <p><strong>Institut Privé d'Enseignement Commercial</strong><br>
+            Avenue Louise 123<br>
+            1050 Bruxelles, Belgique</p>
+        </div>
+    </div>
+    
+    <table class="payment-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Montant total</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>${payment.description}</td>
+                <td>${payment.type}</td>
+                <td>${payment.amount}€</td>
+                <td>
+                    <span class="status-badge ${payment.status === 'Payé' ? 'status-paid' : 
+                      payment.status === 'En attente' ? 'status-pending' : 
+                      payment.status === 'En retard' ? 'status-overdue' : 'status-refunded'}">
+                        ${payment.status}
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    ${payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 ? `
+    <h3>Historique des paiements</h3>
+    <table class="payment-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Montant</th>
+                <th>Moyen de paiement</th>
+                <th>Acompte #</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${payment.installments.map((installment, index) => `
+            <tr>
+                <td>${new Date(installment.paidDate).toLocaleDateString('fr-FR')}</td>
+                <td>${installment.amount}€</td>
+                <td>${installment.method}</td>
+                <td>Acompte ${index + 1}</td>
+            </tr>
+            `).join('')}
+        </tbody>
+    </table>
+    
+    <div class="total">
+        <p>Total payé: ${getTotalPaid()}€</p>
+        <p>Reste à payer: ${getRemainingAmount()}€</p>
     </div>
     ` : ''}
-    `}
+    
+    ${payment.status === 'Payé' && !payment.installments ? `
+    <h3>Informations de paiement</h3>
+    <table class="payment-table">
+        <thead>
+            <tr>
+                <th>Date de paiement</th>
+                <th>Montant payé</th>
+                <th>Moyen de paiement</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>${payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}</td>
+                <td>${payment.amount}€</td>
+                <td>${payment.method || 'N/A'}</td>
+                <td>Paiement complet</td>
+            </tr>
+        </tbody>
+    </table>
+    ` : ''}
     
     <div class="footer">
         <p>Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>
-        <p><strong>IPEC Bruxelles</strong> - Institut Privé des Études Commerciales</p>
+        <p><strong>Institut Privé d'Enseignement Commercial - IPEC</strong></p>
     </div>
 </body>
 </html>
