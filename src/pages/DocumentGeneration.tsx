@@ -16,6 +16,7 @@ import {
   generateCreditNoteNumber
 } from "@/utils/documentGenerator";
 import { fillRegistrationPdf, fillInvoicePdf, fillCreditNotePdf, downloadPdf } from "@/utils/pdfFiller";
+import { downloadAttestationTemplate } from "@/utils/createPdfTemplate";
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -195,10 +196,20 @@ const DocumentGeneration = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={generateRegistrationDoc} className="w-full">
-                  <Download className="mr-2 h-4 w-4" />
-                  Télécharger le document d'inscription
-                </Button>
+                <div className="space-y-3">
+                  <Button onClick={generateRegistrationDoc} className="w-full">
+                    <Download className="mr-2 h-4 w-4" />
+                    Télécharger le document d'inscription
+                  </Button>
+                  <Button 
+                    onClick={downloadAttestationTemplate} 
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Télécharger le template PDF d'exemple
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
