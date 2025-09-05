@@ -3,7 +3,7 @@ import { Student, Payment } from '@/types';
 
 // Load Questrial font
 const loadQuestrialFont = async (): Promise<Uint8Array> => {
-  const response = await fetch('https://fonts.gstatic.com/s/questrial/v18/QdVUSTchPBm7nuUeVf7EuStkm20oJA.woff2');
+  const response = await fetch('/fonts/Questrial-Regular.ttf');
   if (!response.ok) {
     throw new Error('Failed to load Questrial font');
   }
