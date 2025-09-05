@@ -6,22 +6,22 @@ import { Student, Payment } from '@/types';
 // Ajustez ces coordonnées selon votre template PDF
 const FIELD_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
-  dateDocument: { x: 150, y: 540 },          // Position de la date
+  dateDocument: { x: 155, y: 543 },          // Position de la date
   civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
   nomComplet: { x: 210, y: 274.9 },            // Position nom complet
-  dateNaissance: { x: 120, y: 650 },         // Position date de naissance
-  villeNaissance: { x: 250, y: 650 },        // Position ville de naissance
-  paysNaissance: { x: 400, y: 650 },         // Position pays de naissance
-  nationalite: { x: 120, y: 600 },           // Position nationalité
-  numeroIdentite: { x: 300, y: 600 },        // Position numéro d'identité/passeport
-  telephone: { x: 120, y: 600 },             // Position téléphone
-  email: { x: 300, y: 550 },                 // Position email
-  adresse: { x: 120, y: 500 },               // Position adresse complète
-  programme: { x: 120, y: 450 },             // Position programme d'études
-  niveau: { x: 300, y: 450 },                // Position niveau (1ère, 2ème...)
-  specialite: { x: 120, y: 400 },            // Position spécialité
-  anneeAcademique: { x: 350, y: 400 },       // Position année académique
-  dateInscription: { x: 120, y: 350 },       // Position date d'inscription
+  dateNaissance: { x: 210, y: 650 },         // Position date de naissance
+  villeNaissance: { x: 210, y: 650 },        // Position ville de naissance
+  paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
+  nationalite: { x: 210, y: 600 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 600 },        // Position numéro d'identité/passeport
+  telephone: { x: 210, y: 600 },             // Position téléphone
+  email: { x: 210, y: 550 },                 // Position email
+  adresse: { x: 210, y: 500 },               // Position adresse complète
+  programme: { x: 210, y: 450 },             // Position programme d'études
+  niveau: { x: 210, y: 450 },                // Position niveau (1ère, 2ème...)
+  specialite: { x: 210, y: 400 },            // Position spécialité
+  anneeAcademique: { x: 210, y: 400 },       // Position année académique
+  dateInscription: { x: 210, y: 350 },       // Position date d'inscription
 };
 
 // Charger le PDF template
