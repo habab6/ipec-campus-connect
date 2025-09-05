@@ -15,7 +15,7 @@ import {
   downloadDocument,
   generateCreditNoteNumber
 } from "@/utils/documentGenerator";
-import { fillRegistrationPdfWithPlaceholders, fillInvoicePdfWithPlaceholders, fillCreditNotePdf, downloadPdf, downloadAttestationTemplate } from "@/utils/placeholderPdfFiller";
+import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCreditNotePdf, downloadPdf, downloadAttestationTemplate } from "@/utils/positionPdfFiller";
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -43,7 +43,7 @@ const DocumentGeneration = () => {
     if (!student) return;
     
     try {
-      const pdfBytes = await fillRegistrationPdfWithPlaceholders(student);
+      const pdfBytes = await fillRegistrationPdfWithPositions(student);
       const filename = `attestation-inscription-${student.firstName}-${student.lastName}.pdf`;
       downloadPdf(pdfBytes, filename);
       
@@ -64,7 +64,7 @@ const DocumentGeneration = () => {
     if (!student) return;
     
     try {
-      const pdfBytes = await fillInvoicePdfWithPlaceholders(student, payment);
+      const pdfBytes = await fillInvoicePdfWithPositions(student, payment);
       const filename = `facture-${payment.id}-${student.firstName}-${student.lastName}.pdf`;
       downloadPdf(pdfBytes, filename);
       
