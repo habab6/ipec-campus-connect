@@ -6,7 +6,7 @@ import { Student, Payment } from '@/types';
 // Ajustez ces coordonnées selon votre template PDF
 const FIELD_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
-  dateDocument: { x: 157, y: 551 },          // Position de la date
+  dateDocument: { x: 160, y: 549 },          // Position de la date
   civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
   nomComplet: { x: 210, y: 274.9 },            // Position nom complet
   dateNaissance: { x: 210, y: 650 },         // Position date de naissance
