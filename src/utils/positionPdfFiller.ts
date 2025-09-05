@@ -5,7 +5,7 @@ import { Student, Payment } from '@/types';
 // Configuration des positions pour chaque champ
 // Ajustez ces coordonnées selon votre template PDF
 const FIELD_POSITIONS = {
-  numeroDocument: { x: 424, y: 39 },    // Position du numéro de document
+  numeroDocument: { x: 425, y: 38.5 },    // Position du numéro de document
   dateDocument: { x: 400, y: 750 },      // Position de la date
   nomEtudiant: { x: 120, y: 700 },       // Position du nom
   dateNaissance: { x: 120, y: 650 },     // Position date de naissance
