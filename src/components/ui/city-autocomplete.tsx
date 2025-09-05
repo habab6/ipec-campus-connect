@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { COUNTRY_CODES } from '@/utils/countryCodes';
 
 interface CityAutocompleteProps {
   value: string;
@@ -141,9 +142,9 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
             >
               <div className="flex justify-between items-center">
                 <span>{city}</span>
-                {cityToCountryMapping && cityToCountryMapping[city] && (
-                  <span className="text-xs text-muted-foreground">
-                    {cityToCountryMapping[city]}
+                {cityToCountryMapping && cityToCountryMapping[city] && COUNTRY_CODES[cityToCountryMapping[city]] && (
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {COUNTRY_CODES[cityToCountryMapping[city]]}
                   </span>
                 )}
               </div>

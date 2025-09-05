@@ -29,6 +29,47 @@ export const CITIES_TO_COUNTRIES: Record<string, string> = {
   // Royaume-Uni
   "Londres": "Royaume-Uni", "Birmingham": "Royaume-Uni", "Manchester": "Royaume-Uni", "Glasgow": "Royaume-Uni", "Liverpool": "Royaume-Uni", "Leeds": "Royaume-Uni", "Sheffield": "Royaume-Uni", "Édimbourg": "Royaume-Uni", "Bristol": "Royaume-Uni", "Cardiff": "Royaume-Uni", "Leicester": "Royaume-Uni", "Coventry": "Royaume-Uni", "Bradford": "Royaume-Uni", "Belfast": "Royaume-Uni", "Nottingham": "Royaume-Uni", "Hull": "Royaume-Uni", "Newcastle (UK)": "Royaume-Uni", "Stoke-on-Trent": "Royaume-Uni", "Wolverhampton": "Royaume-Uni", "Plymouth": "Royaume-Uni",
   
+  // Villes importantes d'Afrique
+  // Maroc
+  "Casablanca": "Maroc", "Rabat": "Maroc", "Fès": "Maroc", "Marrakech": "Maroc", "Agadir": "Maroc", "Tanger": "Maroc", "Meknès": "Maroc", "Oujda": "Maroc", "Kénitra": "Maroc", "Tétouan": "Maroc", "Salé": "Maroc", "El Jadida": "Maroc", "Beni Mellal": "Maroc", "Nador": "Maroc", "Taza": "Maroc", "Settat": "Maroc", "Larache": "Maroc", "Khémisset": "Maroc", "Guelmim": "Maroc", "Errachidia": "Maroc",
+  
+  // Algérie
+  "Alger": "Algérie", "Oran": "Algérie", "Constantine": "Algérie", "Annaba": "Algérie", "Blida": "Algérie", "Batna": "Algérie", "Djelfa": "Algérie", "Sétif": "Algérie", "Sidi Bel Abbès": "Algérie", "Biskra": "Algérie", "Tébessa": "Algérie", "El Oued": "Algérie", "Skikda": "Algérie", "Tiaret": "Algérie", "Béjaïa": "Algérie", "Tlemcen": "Algérie", "Ouargla": "Algérie", "Ech Chlef": "Algérie", "Mostaganem": "Algérie", "Bordj Bou Arréridj": "Algérie",
+  
+  // Tunisie
+  "Tunis": "Tunisie", "Sfax": "Tunisie", "Sousse": "Tunisie", "Kairouan": "Tunisie", "Bizerte": "Tunisie", "Gabès": "Tunisie", "Ariana": "Tunisie", "Gafsa": "Tunisie", "Monastir": "Tunisie", "Ben Arous": "Tunisie", "Kasserine": "Tunisie", "Médenine": "Tunisie", "Nabeul": "Tunisie", "Tataouine": "Tunisie", "Beja": "Tunisie", "Jendouba": "Tunisie", "Mahdia": "Tunisie", "Sidi Bouzid": "Tunisie", "Kef": "Tunisie", "Tozeur": "Tunisie",
+  
+  // Sénégal
+  "Dakar": "Sénégal", "Touba": "Sénégal", "Thiès": "Sénégal", "Kaolack": "Sénégal", "Saint-Louis": "Sénégal", "Mbour": "Sénégal", "Ziguinchor": "Sénégal", "Diourbel": "Sénégal", "Louga": "Sénégal", "Tambacounda": "Sénégal", "Rufisque": "Sénégal", "Richard Toll": "Sénégal", "Kolda": "Sénégal", "Fatick": "Sénégal", "Kaffrine": "Sénégal", "Sédhiou": "Sénégal", "Matam": "Sénégal", "Kédougou": "Sénégal", "Linguère": "Sénégal", "Podor": "Sénégal",
+  
+  // Cameroun
+  "Yaoundé": "Cameroun", "Douala": "Cameroun", "Garoua": "Cameroun", "Bamenda": "Cameroun", "Maroua": "Cameroun", "Bafoussam": "Cameroun", "Ngaoundéré": "Cameroun", "Bertoua": "Cameroun", "Ebolowa": "Cameroun", "Kribi": "Cameroun", "Edéa": "Cameroun", "Kumba": "Cameroun", "Foumban": "Cameroun", "Mbouda": "Cameroun", "Dschang": "Cameroun", "Limbe": "Cameroun", "Mbalmayo": "Cameroun", "Sangmélima": "Cameroun", "Buea": "Cameroun", "Guider": "Cameroun",
+  
+  // République du Congo
+  "Brazzaville": "République du Congo", "Pointe-Noire": "République du Congo", "Dolisie": "République du Congo", "Nkayi": "République du Congo", "Mossendjo": "République du Congo", "Impfondo": "République du Congo", "Ouesso": "République du Congo", "Madingou": "République du Congo", "Owando": "République du Congo", "Sibiti": "République du Congo", "Gamboma": "République du Congo", "Boundji": "République du Congo", "Makoua": "République du Congo", "Ewo": "République du Congo", "Kinkala": "République du Congo",
+  
+  // République démocratique du Congo
+  "Kinshasa": "République démocratique du Congo", "Lubumbashi": "République démocratique du Congo", "Mbuji-Mayi": "République démocratique du Congo", "Kisangani": "République démocratique du Congo", "Kananga": "République démocratique du Congo", "Bukavu": "République démocratique du Congo", "Tshikapa": "République démocratique du Congo", "Kolwezi": "République démocratique du Congo", "Likasi": "République démocratique du Congo", "Goma": "République démocratique du Congo", "Uvira": "République démocratique du Congo", "Bunia": "République démocratique du Congo", "Mbandaka": "République démocratique du Congo", "Matadi": "République démocratique du Congo", "Boma": "République démocratique du Congo",
+  
+  // Gabon
+  "Libreville": "Gabon", "Port-Gentil": "Gabon", "Franceville": "Gabon", "Oyem": "Gabon", "Moanda": "Gabon", "Mouila": "Gabon", "Lambaréné": "Gabon", "Tchibanga": "Gabon", "Koulamoutou": "Gabon", "Makokou": "Gabon", "Bitam": "Gabon", "Gamba": "Gabon", "Mitzic": "Gabon", "Ndjolé": "Gabon", "Lastoursville": "Gabon",
+  
+  // Guinée
+  "Conakry": "Guinée", "Nzérékoré": "Guinée", "Kankan": "Guinée", "Kindia": "Guinée", "Labe": "Guinée", "Mamou": "Guinée", "Boke": "Guinée", "Faranah": "Guinée", "Kissidougou": "Guinée", "Dabola": "Guinée", "Siguiri": "Guinée", "Kouroussa": "Guinée", "Macenta": "Guinée", "Télimélé": "Guinée", "Pita": "Guinée",
+  
+  // Autres pays d'Afrique
+  "Le Caire": "Égypte", "Alexandrie": "Égypte", "Gizeh": "Égypte", "Charm el-Cheikh": "Égypte", "Louxor": "Égypte", "Assouan": "Égypte", "Port-Saïd": "Égypte", "Suez": "Égypte", "Tanta": "Égypte", "Mansoura": "Égypte", "Ismaïlia": "Égypte", "Fayyoum": "Égypte", "Zagazig": "Égypte", "Assiout": "Égypte", "Damanhour": "Égypte",
+  "Lagos": "Nigeria", "Abuja": "Nigeria", "Kano": "Nigeria", "Ibadan": "Nigeria", "Port Harcourt": "Nigeria", "Benin City": "Nigeria", "Maiduguri": "Nigeria", "Zaria": "Nigeria", "Aba": "Nigeria", "Jos": "Nigeria", "Ilorin": "Nigeria", "Oyo": "Nigeria", "Enugu": "Nigeria", "Abeokuta": "Nigeria", "Kaduna": "Nigeria",
+  "Addis-Abeba": "Éthiopie", "Dire Dawa": "Éthiopie", "Mekele": "Éthiopie", "Adama": "Éthiopie", "Awasa": "Éthiopie", "Bahir Dar": "Éthiopie", "Gondar": "Éthiopie", "Dessie": "Éthiopie", "Jimma": "Éthiopie", "Jijiga": "Éthiopie",
+  "Nairobi": "Kenya", "Mombasa": "Kenya", "Nakuru": "Kenya", "Eldoret": "Kenya", "Kisumu": "Kenya", "Thika": "Kenya", "Malindi": "Kenya", "Kitale": "Kenya", "Garissa": "Kenya", "Kakamega": "Kenya",
+  "Accra": "Ghana", "Kumasi": "Ghana", "Tamale": "Ghana", "Sekondi-Takoradi": "Ghana", "Sunyani": "Ghana", "Cape Coast": "Ghana", "Obuasi": "Ghana", "Tarkwa": "Ghana", "Koforidua": "Ghana", "Tema": "Ghana",
+  "Abidjan": "Côte d'Ivoire", "Bouaké": "Côte d'Ivoire", "Daloa": "Côte d'Ivoire", "Yamoussoukro": "Côte d'Ivoire", "San-Pédro": "Côte d'Ivoire", "Korhogo": "Côte d'Ivoire", "Man": "Côte d'Ivoire", "Divo": "Côte d'Ivoire", "Gagnoa": "Côte d'Ivoire", "Anyama": "Côte d'Ivoire",
+  "Ouagadougou": "Burkina Faso", "Bobo-Dioulasso": "Burkina Faso", "Koudougou": "Burkina Faso", "Ouahigouya": "Burkina Faso", "Banfora": "Burkina Faso", "Tenkodogo": "Burkina Faso", "Kaya": "Burkina Faso", "Dori": "Burkina Faso", "Fada N'gourma": "Burkina Faso", "Gaoua": "Burkina Faso",
+  "Bamako": "Mali", "Sikasso": "Mali", "Mopti": "Mali", "Koutiala": "Mali", "Kayes": "Mali", "Ségou": "Mali", "Gao": "Mali", "Kidal": "Mali", "Tombouctou": "Mali", "San": "Mali",
+  "Niamey": "Niger", "Zinder": "Niger", "Maradi": "Niger", "Agadez": "Niger", "Tahoua": "Niger", "Dosso": "Niger", "Tillabéri": "Niger", "Diffa": "Niger", "Arlit": "Niger", "Tessaoua": "Niger",
+  "N'Djamena": "Tchad", "Moundou": "Tchad", "Sarh": "Tchad", "Abéché": "Tchad", "Kelo": "Tchad", "Koumra": "Tchad", "Pala": "Tchad", "Am Timan": "Tchad", "Bongor": "Tchad", "Mongo": "Tchad",
+  "Bangui": "Centrafrique", "Bimbo": "Centrafrique", "Berbérati": "Centrafrique", "Carnot": "Centrafrique", "Bambari": "Centrafrique", "Bouar": "Centrafrique", "Bossangoa": "Centrafrique", "Bria": "Centrafrique", "Bangassou": "Centrafrique", "Nola": "Centrafrique",
+  
   // Autres villes importantes d'Europe
   "Vienne": "Autriche", "Salzburg": "Autriche", "Graz": "Autriche", "Linz": "Autriche", "Innsbruck": "Autriche",
   "Prague": "Tchéquie", "Brno": "Tchéquie", "Ostrava": "Tchéquie", "Plzen": "Tchéquie",
@@ -40,23 +81,6 @@ export const CITIES_TO_COUNTRIES: Record<string, string> = {
   "Budapest": "Hongrie", "Debrecen": "Hongrie", "Szeged": "Hongrie", "Miskolc": "Hongrie",
   "Athènes": "Grèce", "Thessalonique": "Grèce", "Patras": "Grèce", "Héraklion": "Grèce",
   "Dublin": "Irlande", "Cork": "Irlande", "Limerick": "Irlande", "Galway": "Irlande",
-  
-  // Villes importantes d'Afrique
-  "Casablanca": "Maroc", "Rabat": "Maroc", "Fès": "Maroc", "Marrakech": "Maroc", "Agadir": "Maroc", "Tanger": "Maroc", "Meknès": "Maroc", "Oujda": "Maroc", "Kénitra": "Maroc", "Tétouan": "Maroc", "Salé": "Maroc",
-  "Alger": "Algérie", "Oran": "Algérie", "Constantine": "Algérie", "Annaba": "Algérie", "Blida": "Algérie", "Batna": "Algérie", "Djelfa": "Algérie", "Sétif": "Algérie", "Sidi Bel Abbès": "Algérie", "Biskra": "Algérie",
-  "Tunis": "Tunisie", "Sfax": "Tunisie", "Sousse": "Tunisie", "Kairouan": "Tunisie", "Bizerte": "Tunisie", "Gabès": "Tunisie", "Ariana": "Tunisie", "Gafsa": "Tunisie", "Monastir": "Tunisie", "Ben Arous": "Tunisie",
-  "Le Caire": "Égypte", "Alexandrie": "Égypte", "Gizeh": "Égypte", "Charm el-Cheikh": "Égypte", "Louxor": "Égypte", "Assouan": "Égypte", "Port-Saïd": "Égypte", "Suez": "Égypte", "Tanta": "Égypte", "Mansoura": "Égypte",
-  "Lagos": "Nigeria", "Abuja": "Nigeria", "Kano": "Nigeria", "Ibadan": "Nigeria", "Port Harcourt": "Nigeria",
-  "Kinshasa": "République démocratique du Congo", "Lubumbashi": "République démocratique du Congo", "Mbuji-Mayi": "République démocratique du Congo", "Kisangani": "République démocratique du Congo", "Kananga": "République démocratique du Congo",
-  "Addis-Abeba": "Éthiopie", "Dire Dawa": "Éthiopie", "Mekele": "Éthiopie", "Adama": "Éthiopie", "Awasa": "Éthiopie",
-  "Nairobi": "Kenya", "Mombasa": "Kenya", "Nakuru": "Kenya", "Eldoret": "Kenya", "Kisumu": "Kenya",
-  "Dakar": "Sénégal", "Touba": "Sénégal", "Thiès": "Sénégal", "Kaolack": "Sénégal", "Saint-Louis": "Sénégal",
-  "Accra": "Ghana", "Kumasi": "Ghana", "Tamale": "Ghana", "Sekondi-Takoradi": "Ghana", "Sunyani": "Ghana",
-  "Abidjan": "Côte d'Ivoire", "Bouaké": "Côte d'Ivoire", "Daloa": "Côte d'Ivoire", "Yamoussoukro": "Côte d'Ivoire", "San-Pédro": "Côte d'Ivoire",
-  "Ouagadougou": "Burkina Faso", "Bobo-Dioulasso": "Burkina Faso", "Koudougou": "Burkina Faso", "Ouahigouya": "Burkina Faso", "Banfora": "Burkina Faso",
-  "Bamako": "Mali", "Sikasso": "Mali", "Mopti": "Mali", "Koutiala": "Mali", "Kayes": "Mali",
-  "Niamey": "Niger", "Zinder": "Niger", "Maradi": "Niger", "Agadez": "Niger", "Tahoua": "Niger",
-  
   // Villes importantes d'Asie
   "Tokyo": "Japon", "Osaka": "Japon", "Yokohama": "Japon", "Nagoya": "Japon", "Sapporo": "Japon", "Fukuoka": "Japon", "Kobe": "Japon", "Kyoto": "Japon", "Kawasaki": "Japon", "Saitama": "Japon",
   "Pékin": "Chine", "Shanghai": "Chine", "Chongqing": "Chine", "Tianjin": "Chine", "Guangzhou": "Chine", "Shenzhen": "Chine", "Wuhan": "Chine", "Dongguan": "Chine", "Chengdu": "Chine", "Nanjing": "Chine",
