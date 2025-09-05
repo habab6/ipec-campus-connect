@@ -67,54 +67,49 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
       'anneeInscription': new Date().getFullYear().toString(),
     };
 
-    // Get field positions before flattening
-    const fieldPositions: Record<string, { x: number; y: number }> = {};
+    // Process text replacement with placeholders
+    // You should put placeholders like {dateDocument}, {nomEtudiant} in your PDF template
     
-    Object.keys(fieldMappings).forEach((fieldName) => {
-      try {
-        const field = form.getTextField(fieldName);
-        const widgets = field.acroField.getWidgets();
-        if (widgets.length > 0) {
-          const widget = widgets[0];
-          const rect = widget.getRectangle();
-          fieldPositions[fieldName] = {
-            x: rect.x,
-            y: rect.y + 2 // Small offset for better alignment
-          };
-        }
-      } catch (error) {
-        console.warn(`Field '${fieldName}' not found for position extraction`);
-      }
-    });
-
-    // Remove all form fields to avoid conflicts
-    const fieldNames = form.getFields().map(field => field.getName());
-    fieldNames.forEach(name => {
-      try {
-        form.removeField(form.getField(name));
-      } catch (error) {
-        // Field might not exist or already removed
-      }
-    });
-
-    // Get the first page to draw text
     const pages = pdfDoc.getPages();
     const firstPage = pages[0];
-
-    // Draw text with Questrial font at exact field positions
+    const { width, height } = firstPage.getSize();
+    
+    // Create a mapping of placeholders to values
+    const placeholderMappings = {
+      '{numeroDocument}': fieldMappings.numeroDocument,
+      '{dateDocument}': fieldMappings.dateDocument,
+      '{nomEtudiant}': fieldMappings.nomEtudiant,
+      '{dateNaissance}': fieldMappings.dateNaissance,
+      '{lieuNaissance}': fieldMappings.lieuNaissance,
+      '{adresse}': fieldMappings.adresse,
+      '{telephone}': fieldMappings.telephone,
+      '{email}': fieldMappings.email,
+      '{programme}': fieldMappings.programme,
+      '{niveauEtudes}': fieldMappings.niveauEtudes,
+      '{anneeInscription}': fieldMappings.anneeInscription,
+    };
+    
+    console.log('Available placeholders for your PDF template:');
+    Object.keys(placeholderMappings).forEach(placeholder => {
+      console.log(`- ${placeholder} will be replaced with: "${placeholderMappings[placeholder as keyof typeof placeholderMappings]}"`);
+    });
+    
+    // Note: For now, we'll use the form fields if they exist, but you should replace them with placeholders in your PDF
+    // Fill form fields as fallback
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
-      const position = fieldPositions[fieldName];
-      if (position) {
-        firstPage.drawText(value, {
-          x: position.x,
-          y: position.y,
-          size: 12,
-          font: questrialFont,
-          color: rgb(0, 0, 0),
-        });
-        console.log(`Drew '${fieldName}' with Questrial font at position (${position.x}, ${position.y})`);
+      try {
+        const field = form.getTextField(fieldName);
+        field.setText(value);
+        field.updateAppearances(questrialFont);
+        field.setFontSize(12);
+        console.log(`Field '${fieldName}' filled with value: "${value}"`);
+      } catch (error) {
+        console.warn(`Field '${fieldName}' not found in PDF template - consider using placeholder {${fieldName}} instead`);
       }
     });
+
+    // Flatten the form
+    form.flatten();
 
     return await pdfDoc.save();
   } catch (error) {
