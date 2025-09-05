@@ -1,4 +1,5 @@
 import { PDFDocument, PDFForm, PDFTextField, rgb } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import { Student, Payment } from '@/types';
 
 // Load Questrial font
@@ -30,6 +31,10 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
   try {
     const existingPdfBytes = await loadPdfTemplate(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    
+    // Register fontkit to handle custom fonts
+    pdfDoc.registerFontkit(fontkit);
+    
     const form = pdfDoc.getForm();
 
     // Embed Questrial font
