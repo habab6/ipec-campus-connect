@@ -21,7 +21,7 @@ import {
 import { COUNTRIES } from "@/utils/countries";
 import { NATIONALITIES } from "@/utils/nationalities";
 import { COUNTRY_TO_NATIONALITY } from "@/utils/countryToNationality";
-import { POPULAR_CITIES, CITIES_TO_COUNTRIES } from "@/utils/cities";
+import { WORLD_CITIES_LIST, WORLD_CITIES_MAPPING } from "@/utils/worldCities";
 import { generateInvoiceNumber } from "@/utils/documentGenerator";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import PhoneInput from 'react-phone-input-2';
