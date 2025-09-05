@@ -11,6 +11,7 @@ import { UserCog, ArrowLeft, Save, Trash2 } from "lucide-react";
 import { Student } from "@/types";
 import { getStudyYearOptions } from "@/utils/studentUtils";
 import { COUNTRIES } from "@/utils/countries";
+import { NATIONALITIES } from "@/utils/nationalities";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
@@ -229,8 +230,8 @@ const StudentEdit = () => {
                         <SelectValue placeholder="Sélectionnez la nationalité" />
                       </SelectTrigger>
                       <SelectContent>
-                        {COUNTRIES.map((country) => (
-                          <SelectItem key={country} value={country}>{country}</SelectItem>
+                        {NATIONALITIES.map((nationality) => (
+                          <SelectItem key={nationality} value={nationality}>{nationality}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
