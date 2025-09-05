@@ -67,51 +67,22 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
       'anneeInscription': new Date().getFullYear().toString(),
     };
 
-    // Fill the form fields first (without custom font)
+    // Fill the form fields
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
       try {
         const field = form.getTextField(fieldName);
         field.setText(value);
+        // Set font and size properly
+        field.updateAppearances(questrialFont);
+        field.setFontSize(12);
+        console.log(`Field '${fieldName}' filled with Questrial font size 12`);
       } catch (error) {
         console.warn(`Field '${fieldName}' not found in PDF template`);
       }
     });
 
-    // Flatten the form first
+    // Flatten the form to prevent further editing
     form.flatten();
-
-    // Now add text with custom font on top of flattened fields
-    const pages = pdfDoc.getPages();
-    const firstPage = pages[0];
-    const { width, height } = firstPage.getSize();
-
-    // Define positions for each field (adjust these based on your PDF template)
-    const fieldPositions = {
-      'numeroDocument': { x: 400, y: height - 100 },
-      'dateDocument': { x: 400, y: height - 120 },
-      'nomEtudiant': { x: 200, y: height - 200 },
-      'dateNaissance': { x: 200, y: height - 220 },
-      'lieuNaissance': { x: 200, y: height - 240 },
-      'adresse': { x: 200, y: height - 260 },
-      'programme': { x: 200, y: height - 320 },
-      'niveauEtudes': { x: 200, y: height - 340 },
-      'anneeInscription': { x: 200, y: height - 360 },
-    };
-
-    // Draw text with Questrial font over the flattened form
-    Object.entries(fieldMappings).forEach(([fieldName, value]) => {
-      const position = fieldPositions[fieldName as keyof typeof fieldPositions];
-      if (position) {
-        firstPage.drawText(value, {
-          x: position.x,
-          y: position.y,
-          size: 12,
-          font: questrialFont,
-          color: rgb(0, 0, 0),
-        });
-        console.log(`Added '${fieldName}' with Questrial font at position (${position.x}, ${position.y})`);
-      }
-    });
 
     return await pdfDoc.save();
   } catch (error) {
