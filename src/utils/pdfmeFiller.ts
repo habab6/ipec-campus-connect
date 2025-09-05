@@ -296,6 +296,23 @@ export const fillInvoicePdfWithPdfme = async (student: Student, payment: Payment
   }
 };
 
+// Fill credit note PDF (temporary function until we have credit note template for pdfme)
+export const fillCreditNotePdf = async (student: Student, payment: Payment, reason: string, templatePath: string = '/templates/avoir-template.pdf'): Promise<Uint8Array> => {
+  // Pour l'instant, on crée un PDF simple en attendant le template avoir
+  console.warn('Credit note generation not yet implemented with pdfme');
+  throw new Error('Génération d\'avoir pas encore implémentée avec pdfme');
+};
+
+// Download template function replacement
+export const downloadAttestationTemplate = () => {
+  const link = document.createElement('a');
+  link.href = '/templates/attestation-template.pdf';
+  link.download = 'attestation-template.pdf';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 // Download PDF utility
 export const downloadPdf = (pdfBytes: Uint8Array, filename: string) => {
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });

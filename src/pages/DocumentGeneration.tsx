@@ -15,9 +15,7 @@ import {
   downloadDocument,
   generateCreditNoteNumber
 } from "@/utils/documentGenerator";
-import { fillRegistrationPdfWithPdfme, fillInvoicePdfWithPdfme, downloadPdf } from "@/utils/pdfmeFiller";
-import { fillCreditNotePdf } from "@/utils/pdfFiller";
-import { downloadAttestationTemplate } from "@/utils/createPdfTemplate";
+import { fillRegistrationPdfWithPdfme, fillInvoicePdfWithPdfme, fillCreditNotePdf, downloadPdf, downloadAttestationTemplate } from "@/utils/pdfmeFiller";
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
