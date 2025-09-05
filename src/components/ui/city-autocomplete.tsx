@@ -30,9 +30,9 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (value.length >= 2) {
+    if (value && value.length >= 2 && cities && Array.isArray(cities)) {
       const filtered = cities.filter(city =>
-        city.toLowerCase().includes(value.toLowerCase())
+        city && city.toLowerCase().includes(value.toLowerCase())
       ).slice(0, 10); // Limite à 10 suggestions
       setFilteredCities(filtered);
       setIsOpen(filtered.length > 0);
@@ -71,7 +71,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
     setIsOpen(false);
     
     // Si la ville a un pays associé, on déclenche le callback
-    if (onCitySelect && cityToCountryMapping[city]) {
+    if (onCitySelect && cityToCountryMapping && cityToCountryMapping[city]) {
       onCitySelect(city, cityToCountryMapping[city]);
     }
   };
@@ -113,7 +113,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onFocus={() => {
-          if (filteredCities.length > 0) {
+          if (filteredCities && filteredCities.length > 0) {
             setIsOpen(true);
           }
         }}
@@ -123,7 +123,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         autoComplete="off"
       />
       
-      {isOpen && filteredCities.length > 0 && (
+      {isOpen && filteredCities && filteredCities.length > 0 && (
         <div
           ref={dropdownRef}
           className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
@@ -141,7 +141,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
             >
               <div className="flex justify-between items-center">
                 <span>{city}</span>
-                {cityToCountryMapping[city] && (
+                {cityToCountryMapping && cityToCountryMapping[city] && (
                   <span className="text-xs text-muted-foreground">
                     {cityToCountryMapping[city]}
                   </span>
