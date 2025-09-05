@@ -1,4 +1,5 @@
 import { Student } from "@/types";
+import { COUNTRIES } from "./countries";
 
 // Prix des programmes
 export const PROGRAM_PRICES = {
@@ -25,32 +26,16 @@ export const getStudyYearOptions = (program: 'BBA' | 'MBA' | 'MBA Complémentair
 
 // Spécialités business
 export const BUSINESS_SPECIALTIES = [
-  'Économie & Finance',
-  'Marketing',
-  'Management',
-  'Relations Internationales et Études Européennes',
+  'Management des entreprises',
+  'Marketing & créativité',
+  'Economie & Finance',
   'Logistique',
-  'Entrepreneuriat',
-  'Ressources Humaines',
-  'Commerce International',
-  'Finance d\'Entreprise',
-  'Marketing Digital'
+  'Etudes Européennes et relations internationales',
+  'Informatique de gestion'
 ];
 
-// Pays disponibles
-export const COUNTRIES = [
-  'Belgique',
-  'France',
-  'Allemagne',
-  'Pays-Bas',
-  'Luxembourg',
-  'Suisse',
-  'Espagne',
-  'Italie',
-  'Portugal',
-  'Royaume-Uni',
-  'Autre'
-];
+// Pays disponibles - utilise la liste complète
+export { COUNTRIES };
 
 // Codes pays (pour la référence)
 export const COUNTRY_CODES: Record<string, string> = {

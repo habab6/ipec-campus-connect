@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { UserCog, ArrowLeft, Save, Trash2 } from "lucide-react";
 import { Student } from "@/types";
 import { getStudyYearOptions } from "@/utils/studentUtils";
+import { COUNTRIES } from "@/utils/countries";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const StudentEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -200,13 +203,16 @@ const StudentEdit = () => {
                   </div>
                   <div>
                     <Label htmlFor="countryOfBirth">Pays de naissance *</Label>
-                    <Input
-                      id="countryOfBirth"
-                      value={student.countryOfBirth}
-                      onChange={(e) => handleInputChange('countryOfBirth', e.target.value)}
-                      placeholder="Pays de naissance"
-                      required
-                    />
+                    <Select onValueChange={(value) => handleInputChange('countryOfBirth', value)} value={student.countryOfBirth}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez le pays" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>{country}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -218,13 +224,16 @@ const StudentEdit = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="nationality">Nationalité *</Label>
-                    <Input
-                      id="nationality"
-                      value={student.nationality}
-                      onChange={(e) => handleInputChange('nationality', e.target.value)}
-                      placeholder="Nationalité"
-                      required
-                    />
+                    <Select onValueChange={(value) => handleInputChange('nationality', value)} value={student.nationality}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez la nationalité" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>{country}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="identityNumber">Numéro d'identité/passeport *</Label>
@@ -329,12 +338,40 @@ const StudentEdit = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="phone">Téléphone *</Label>
-                    <Input
-                      id="phone"
+                    <PhoneInput
+                      country="be"
                       value={student.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+32 x xx xx xx xx"
-                      required
+                      onChange={(value) => handleInputChange('phone', value)}
+                      inputStyle={{
+                        width: '100%',
+                        height: '40px',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                        paddingLeft: '50px',
+                        backgroundColor: 'hsl(var(--background))',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                      buttonStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px 0 0 6px'
+                      }}
+                      dropdownStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                        color: 'hsl(var(--foreground))',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        zIndex: 1000
+                      }}
+                      searchStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                      enableSearch
+                      placeholder="Téléphone"
                     />
                   </div>
                   <div>

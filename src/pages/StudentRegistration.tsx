@@ -13,13 +13,15 @@ import { Student, Payment } from "@/types";
 import { 
   generateStudentReference, 
   BUSINESS_SPECIALTIES, 
-  COUNTRIES, 
   PROGRAM_PRICES, 
   REGISTRATION_FEE,
   canEnrollMBAComplementaire,
   getStudyYearOptions
 } from "@/utils/studentUtils";
+import { COUNTRIES } from "@/utils/countries";
 import { generateInvoiceNumber } from "@/utils/documentGenerator";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 interface StudentData {
   // Informations personnelles
@@ -355,12 +357,41 @@ const StudentRegistration = () => {
                 <h3 className="text-lg font-medium text-foreground border-b pb-2">Informations de contact</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input
-                      id="phone"
+                    <Label htmlFor="phone">Téléphone *</Label>
+                    <PhoneInput
+                      country="be"
                       value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+32 x xx xx xx xx"
+                      onChange={(value) => handleInputChange('phone', value)}
+                      inputStyle={{
+                        width: '100%',
+                        height: '40px',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                        paddingLeft: '50px',
+                        backgroundColor: 'hsl(var(--background))',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                      buttonStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px 0 0 6px'
+                      }}
+                      dropdownStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                        color: 'hsl(var(--foreground))',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        zIndex: 1000
+                      }}
+                      searchStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                      enableSearch
+                      placeholder="Téléphone"
                     />
                   </div>
                   <div>
