@@ -20,6 +20,7 @@ import {
 } from "@/utils/studentUtils";
 import { COUNTRIES } from "@/utils/countries";
 import { NATIONALITIES } from "@/utils/nationalities";
+import { COUNTRY_TO_NATIONALITY } from "@/utils/countryToNationality";
 import { generateInvoiceNumber } from "@/utils/documentGenerator";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -74,7 +75,16 @@ const StudentRegistration = () => {
   });
 
   const handleInputChange = (field: keyof StudentData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Auto-préchargement de la nationalité en fonction du pays de naissance
+      if (field === 'countryOfBirth' && value && COUNTRY_TO_NATIONALITY[value]) {
+        updated.nationality = COUNTRY_TO_NATIONALITY[value];
+      }
+      
+      return updated;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -324,7 +334,7 @@ const StudentRegistration = () => {
                   </div>
                   <div>
                     <Label htmlFor="nationality">Nationalité *</Label>
-                    <Select onValueChange={(value) => handleInputChange('nationality', value)}>
+                    <Select onValueChange={(value) => handleInputChange('nationality', value)} value={formData.nationality}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez la nationalité" />
                       </SelectTrigger>

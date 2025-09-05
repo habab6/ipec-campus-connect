@@ -12,6 +12,7 @@ import { Student } from "@/types";
 import { getStudyYearOptions } from "@/utils/studentUtils";
 import { COUNTRIES } from "@/utils/countries";
 import { NATIONALITIES } from "@/utils/nationalities";
+import { COUNTRY_TO_NATIONALITY } from "@/utils/countryToNationality";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
@@ -33,7 +34,17 @@ const StudentEdit = () => {
 
   const handleInputChange = (field: keyof Student, value: string) => {
     if (student) {
-      setStudent(prev => prev ? { ...prev, [field]: value } : null);
+      setStudent(prev => {
+        if (!prev) return null;
+        const updated = { ...prev, [field]: value };
+        
+        // Auto-préchargement de la nationalité en fonction du pays de naissance
+        if (field === 'countryOfBirth' && value && COUNTRY_TO_NATIONALITY[value]) {
+          updated.nationality = COUNTRY_TO_NATIONALITY[value];
+        }
+        
+        return updated;
+      });
     }
   };
 
