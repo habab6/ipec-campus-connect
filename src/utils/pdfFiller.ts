@@ -4,7 +4,8 @@ import { Student, Payment } from '@/types';
 // Load Questrial font
 const loadQuestrialFont = async (): Promise<Uint8Array> => {
   try {
-    const response = await fetch('/fonts/Questrial-Regular.ttf');
+    // Try the official Google Fonts version
+    const response = await fetch('/fonts/Questrial-Regular-v2.ttf');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
