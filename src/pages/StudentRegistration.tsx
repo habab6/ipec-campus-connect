@@ -21,7 +21,9 @@ import {
 import { COUNTRIES } from "@/utils/countries";
 import { NATIONALITIES } from "@/utils/nationalities";
 import { COUNTRY_TO_NATIONALITY } from "@/utils/countryToNationality";
+import { POPULAR_CITIES, CITIES_TO_COUNTRIES } from "@/utils/cities";
 import { generateInvoiceNumber } from "@/utils/documentGenerator";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
@@ -85,6 +87,15 @@ const StudentRegistration = () => {
       
       return updated;
     });
+  };
+
+  const handleCitySelect = (city: string, country: string) => {
+    setFormData(prev => ({
+      ...prev,
+      cityOfBirth: city,
+      countryOfBirth: country,
+      nationality: COUNTRY_TO_NATIONALITY[country] || prev.nationality
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -309,11 +320,13 @@ const StudentRegistration = () => {
                   </div>
                   <div>
                     <Label htmlFor="cityOfBirth">Ville de naissance *</Label>
-                    <Input
-                      id="cityOfBirth"
+                    <CityAutocomplete
                       value={formData.cityOfBirth}
-                      onChange={(e) => handleInputChange('cityOfBirth', e.target.value)}
-                      placeholder="Ville de naissance"
+                      onChange={(value) => handleInputChange('cityOfBirth', value)}
+                      onCitySelect={handleCitySelect}
+                      cities={POPULAR_CITIES}
+                      cityToCountryMapping={CITIES_TO_COUNTRIES}
+                      placeholder="Tapez pour rechercher une ville..."
                       required
                     />
                   </div>
