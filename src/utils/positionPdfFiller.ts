@@ -8,7 +8,7 @@ const FIELD_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
   dateDocument: { x: 150, y: 540 },          // Position de la date
   civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
-  nomComplet: { x: 200, y: 270 },            // Position nom complet
+  nomComplet: { x: 220, y: 290 },            // Position nom complet
   dateNaissance: { x: 120, y: 650 },         // Position date de naissance
   villeNaissance: { x: 250, y: 650 },        // Position ville de naissance
   paysNaissance: { x: 400, y: 650 },         // Position pays de naissance
