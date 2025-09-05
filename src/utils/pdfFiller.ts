@@ -67,35 +67,17 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
       'anneeInscription': new Date().getFullYear().toString(),
     };
 
-    // Process text replacement with placeholders
-    // You should put placeholders like {dateDocument}, {nomEtudiant} in your PDF template
+    // IMPORTANT: pdf-lib ne peut pas remplacer du texte existant dans un PDF
+    // Pour utiliser des placeholders comme {dateDocument}, vous devez:
+    // 1. Soit créer le PDF depuis zéro avec drawText()
+    // 2. Soit utiliser des champs de formulaire dans votre PDF
     
-    const pages = pdfDoc.getPages();
-    const firstPage = pages[0];
-    const { width, height } = firstPage.getSize();
+    console.error('ATTENTION: Le remplacement de texte par placeholders nécessite soit:');
+    console.error('1. Des champs de formulaire dans votre PDF (recommandé)');
+    console.error('2. Ou la création du PDF depuis zéro');
+    console.error('pdf-lib ne peut pas chercher/remplacer du texte dans un PDF existant');
     
-    // Create a mapping of placeholders to values
-    const placeholderMappings = {
-      '{numeroDocument}': fieldMappings.numeroDocument,
-      '{dateDocument}': fieldMappings.dateDocument,
-      '{nomEtudiant}': fieldMappings.nomEtudiant,
-      '{dateNaissance}': fieldMappings.dateNaissance,
-      '{lieuNaissance}': fieldMappings.lieuNaissance,
-      '{adresse}': fieldMappings.adresse,
-      '{telephone}': fieldMappings.telephone,
-      '{email}': fieldMappings.email,
-      '{programme}': fieldMappings.programme,
-      '{niveauEtudes}': fieldMappings.niveauEtudes,
-      '{anneeInscription}': fieldMappings.anneeInscription,
-    };
-    
-    console.log('Available placeholders for your PDF template:');
-    Object.keys(placeholderMappings).forEach(placeholder => {
-      console.log(`- ${placeholder} will be replaced with: "${placeholderMappings[placeholder as keyof typeof placeholderMappings]}"`);
-    });
-    
-    // Note: For now, we'll use the form fields if they exist, but you should replace them with placeholders in your PDF
-    // Fill form fields as fallback
+    // Utilisation des champs de formulaire uniquement
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
       try {
         const field = form.getTextField(fieldName);
