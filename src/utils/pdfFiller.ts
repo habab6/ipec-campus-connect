@@ -67,22 +67,54 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
       'anneeInscription': new Date().getFullYear().toString(),
     };
 
-    // Fill the form fields
-    Object.entries(fieldMappings).forEach(([fieldName, value]) => {
+    // Get field positions before flattening
+    const fieldPositions: Record<string, { x: number; y: number }> = {};
+    
+    Object.keys(fieldMappings).forEach((fieldName) => {
       try {
         const field = form.getTextField(fieldName);
-        field.setText(value);
-        // Set font and size properly
-        field.updateAppearances(questrialFont);
-        field.setFontSize(12);
-        console.log(`Field '${fieldName}' filled with Questrial font size 12`);
+        const widgets = field.acroField.getWidgets();
+        if (widgets.length > 0) {
+          const widget = widgets[0];
+          const rect = widget.getRectangle();
+          fieldPositions[fieldName] = {
+            x: rect.x,
+            y: rect.y + 2 // Small offset for better alignment
+          };
+        }
       } catch (error) {
-        console.warn(`Field '${fieldName}' not found in PDF template`);
+        console.warn(`Field '${fieldName}' not found for position extraction`);
       }
     });
 
-    // Flatten the form to prevent further editing
-    form.flatten();
+    // Remove all form fields to avoid conflicts
+    const fieldNames = form.getFields().map(field => field.getName());
+    fieldNames.forEach(name => {
+      try {
+        form.removeField(form.getField(name));
+      } catch (error) {
+        // Field might not exist or already removed
+      }
+    });
+
+    // Get the first page to draw text
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+
+    // Draw text with Questrial font at exact field positions
+    Object.entries(fieldMappings).forEach(([fieldName, value]) => {
+      const position = fieldPositions[fieldName];
+      if (position) {
+        firstPage.drawText(value, {
+          x: position.x,
+          y: position.y,
+          size: 12,
+          font: questrialFont,
+          color: rgb(0, 0, 0),
+        });
+        console.log(`Drew '${fieldName}' with Questrial font at position (${position.x}, ${position.y})`);
+      }
+    });
 
     return await pdfDoc.save();
   } catch (error) {
