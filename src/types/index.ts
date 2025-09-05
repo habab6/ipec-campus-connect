@@ -1,16 +1,27 @@
 export interface Student {
   id: string;
   reference: string;
+  // Informations personnelles
+  civilite: 'M.' | 'Mme' | 'Mlle' | 'Mx';
   firstName: string;
   lastName: string;
-  email: string;
-  phone: string;
+  // Informations de naissance
   dateOfBirth: string;
+  cityOfBirth: string;
   countryOfBirth: string;
+  nationality: string;
+  // Documents d'identité
+  identityNumber: string; // Numéro d'identité ou passeport
+  // Contact
+  phone: string;
+  email: string;
   address: string;
+  // Informations académiques
   program: 'BBA' | 'MBA' | 'MBA Complémentaire';
   studyYear: number;
   specialty: string;
+  academicYear: string; // Ex: "2024-2025"
+  // Système
   notes: string;
   registrationDate: string;
   registrationYear: number;
