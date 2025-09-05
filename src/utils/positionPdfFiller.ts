@@ -13,7 +13,7 @@ const FIELD_POSITIONS = {
   villeNaissance: { x: 210, y: 650 },        // Position ville de naissance
   paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
   nationalite: { x: 210, y: 309 },           // Position nationalité
-  numeroIdentite: { x: 210, y: 325 },        // Position numéro d'identité/passeport
+  numeroIdentite: { x: 210, y: 324.6 },        // Position numéro d'identité/passeport
   telephone: { x: 210, y: 600 },             // Position téléphone
   email: { x: 210, y: 550 },                 // Position email
   adresse: { x: 210, y: 500 },               // Position adresse complète
