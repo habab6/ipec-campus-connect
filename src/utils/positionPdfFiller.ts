@@ -1,0 +1,222 @@
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
+import { Student, Payment } from '@/types';
+
+// Configuration des positions pour chaque champ
+// Ajustez ces coordonnées selon votre template PDF
+const FIELD_POSITIONS = {
+  numeroDocument: { x: 450, y: 20 },    // Position du numéro de document
+  dateDocument: { x: 400, y: 750 },      // Position de la date
+  nomEtudiant: { x: 120, y: 700 },       // Position du nom
+  dateNaissance: { x: 120, y: 650 },     // Position date de naissance
+  lieuNaissance: { x: 300, y: 650 },     // Position lieu de naissance
+  adresse: { x: 120, y: 600 },           // Position adresse
+  telephone: { x: 120, y: 550 },         // Position téléphone
+  email: { x: 300, y: 550 },             // Position email
+  programme: { x: 120, y: 500 },         // Position programme
+  niveauEtudes: { x: 120, y: 450 },      // Position niveau d'études
+  anneeInscription: { x: 400, y: 450 },  // Position année inscription
+};
+
+// Charger le PDF template
+const loadPdfTemplate = async (templatePath: string): Promise<ArrayBuffer> => {
+  const response = await fetch(templatePath);
+  if (!response.ok) {
+    throw new Error(`Failed to load PDF template: ${templatePath}`);
+  }
+  return response.arrayBuffer();
+};
+
+// Charger la police Questrial
+const loadQuestrialFont = async (): Promise<Uint8Array> => {
+  try {
+    const response = await fetch('/fonts/Questrial-Regular-v2.ttf');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    console.error('Error loading Questrial font:', error);
+    throw error;
+  }
+};
+
+// Remplir le PDF avec positionnement x,y
+export const fillRegistrationPdfWithPositions = async (student: Student, templatePath: string = '/templates/attestation-template.pdf'): Promise<Uint8Array> => {
+  try {
+    console.log('📍 Génération PDF avec positionnement x,y');
+    
+    // Charger le PDF template
+    const existingPdfBytes = await loadPdfTemplate(templatePath);
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    
+    // Enregistrer fontkit pour les polices personnalisées
+    pdfDoc.registerFontkit(fontkit);
+    
+    // Obtenir la première page
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+    const { height } = firstPage.getSize();
+    
+    // Charger la police Questrial
+    let font;
+    try {
+      const questrialFontBytes = await loadQuestrialFont();
+      font = await pdfDoc.embedFont(questrialFontBytes);
+      console.log('✅ Police Questrial chargée avec succès');
+    } catch (error) {
+      console.warn('⚠️  Questrial non trouvée, utilisation de Helvetica:', error);
+      font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
+    
+    // Préparer les données
+    const currentDate = new Date().toLocaleDateString('fr-FR');
+    const documentNumber = `ATT-${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}-${Date.now().toString().slice(-4)}`;
+
+    const fieldData = {
+      numeroDocument: documentNumber,
+      dateDocument: currentDate,
+      nomEtudiant: `${student.firstName} ${student.lastName}`,
+      dateNaissance: student.dateOfBirth || '',
+      lieuNaissance: student.countryOfBirth || '',
+      adresse: student.address || '',
+      telephone: student.phone || '',
+      email: student.email || '',
+      programme: student.program || '',
+      niveauEtudes: student.program || '',
+      anneeInscription: new Date().getFullYear().toString(),
+    };
+
+    // Ajouter le texte à chaque position
+    Object.entries(fieldData).forEach(([fieldName, value]) => {
+      const position = FIELD_POSITIONS[fieldName as keyof typeof FIELD_POSITIONS];
+      if (position && value) {
+        console.log(`✏️  ${fieldName}: "${value}" à (${position.x}, ${position.y})`);
+        
+        firstPage.drawText(value, {
+          x: position.x,
+          y: height - position.y, // PDF coordonnées inversées (0,0 en bas à gauche)
+          size: 12,
+          font: font,
+          color: rgb(0, 0, 0), // Noir
+        });
+      }
+    });
+
+    console.log('💡 Positions actuelles:');
+    console.table(FIELD_POSITIONS);
+    console.log('🔧 Pour ajuster, modifiez FIELD_POSITIONS dans le fichier');
+
+    return await pdfDoc.save();
+  } catch (error) {
+    console.error('Erreur lors du remplissage PDF avec positions:', error);
+    throw new Error('Impossible de générer le PDF avec positions x,y.');
+  }
+};
+
+// Version pour les factures
+export const fillInvoicePdfWithPositions = async (student: Student, payment: Payment, templatePath: string = '/templates/facture-template.pdf'): Promise<Uint8Array> => {
+  try {
+    const existingPdfBytes = await loadPdfTemplate(templatePath);
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    pdfDoc.registerFontkit(fontkit);
+    
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+    const { height } = firstPage.getSize();
+    
+    // Charger la police Questrial
+    let font;
+    try {
+      const questrialFontBytes = await loadQuestrialFont();
+      font = await pdfDoc.embedFont(questrialFontBytes);
+    } catch (error) {
+      font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
+
+    const currentDate = new Date().toLocaleDateString('fr-FR');
+    const invoiceNumber = `IPEC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-6)}`;
+
+    // Positions pour la facture (ajustez selon votre template)
+    const invoicePositions = {
+      numeroFacture: { x: 120, y: 100 },
+      dateFacture: { x: 400, y: 100 },
+      nomClient: { x: 120, y: 200 },
+      montant: { x: 400, y: 300 },
+    };
+
+    const invoiceData = {
+      numeroFacture: invoiceNumber,
+      dateFacture: currentDate,
+      nomClient: `${student.firstName} ${student.lastName}`,
+      montant: `${payment.amount} €`,
+    };
+
+    Object.entries(invoiceData).forEach(([fieldName, value]) => {
+      const position = invoicePositions[fieldName as keyof typeof invoicePositions];
+      if (position) {
+        firstPage.drawText(value, {
+          x: position.x,
+          y: height - position.y,
+          size: 12,
+          font: font,
+          color: rgb(0, 0, 0),
+        });
+      }
+    });
+
+    return await pdfDoc.save();
+  } catch (error) {
+    console.error('Erreur facture:', error);
+    throw new Error('Impossible de générer la facture.');
+  }
+};
+
+// Fonction temporaire pour les avoirs
+export const fillCreditNotePdf = async (student: Student, payment: Payment, reason: string): Promise<Uint8Array> => {
+  throw new Error('Avoir pas encore implémenté avec positions x,y');
+};
+
+// Fonction pour télécharger les templates
+export const downloadAttestationTemplate = () => {
+  const link = document.createElement('a');
+  link.href = '/templates/attestation-template.pdf';
+  link.download = 'attestation-template.pdf';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Fonction de téléchargement
+export const downloadPdf = (pdfBytes: Uint8Array, filename: string) => {
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+// Fonction utile pour trouver les bonnes positions
+export const debugPositions = () => {
+  console.log(`
+🎯 GUIDE POUR AJUSTER LES POSITIONS:
+
+1. Ouvrez votre PDF template
+2. Mesurez approximativement où placer chaque champ
+3. Ajustez les valeurs dans FIELD_POSITIONS
+4. Testez et réajustez
+
+📏 Système de coordonnées PDF:
+- (0, 0) = coin en bas à gauche
+- x augmente vers la droite
+- y augmente vers le haut
+- Page A4 ≈ 595 x 842 points
+
+💡 Astuce: Commencez avec de grandes valeurs y (750, 700, 650...)
+et ajustez progressivement.
+  `);
+};
