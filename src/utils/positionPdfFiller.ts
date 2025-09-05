@@ -9,11 +9,11 @@ const FIELD_POSITIONS = {
   dateDocument: { x: 160, y: 547.5 },          // Position de la date
   civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
   nomComplet: { x: 210, y: 274.9 },            // Position nom complet
-  dateNaissance: { x: 210, y: 291 },         // Position date de naissance
+  dateNaissance: { x: 210, y: 291.1 },         // Position date de naissance
   villeNaissance: { x: 210, y: 650 },        // Position ville de naissance
   paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
-  nationalite: { x: 210, y: 309 },           // Position nationalité
-  numeroIdentite: { x: 210, y: 324.6 },        // Position numéro d'identité/passeport
+  nationalite: { x: 210, y: 308.7 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 324.5 },        // Position numéro d'identité/passeport
   telephone: { x: 210, y: 600 },             // Position téléphone
   email: { x: 210, y: 550 },                 // Position email
   adresse: { x: 210, y: 500 },               // Position adresse complète
