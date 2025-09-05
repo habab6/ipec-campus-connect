@@ -3,11 +3,16 @@ import { Student, Payment } from '@/types';
 
 // Load Questrial font
 const loadQuestrialFont = async (): Promise<Uint8Array> => {
-  const response = await fetch('/fonts/Questrial-Regular.ttf');
-  if (!response.ok) {
-    throw new Error('Failed to load Questrial font');
+  try {
+    const response = await fetch('/fonts/Questrial-Regular.ttf');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    console.error('Error loading Questrial font:', error);
+    throw error;
   }
-  return new Uint8Array(await response.arrayBuffer());
 };
 
 // Utility function to load PDF from public folder
@@ -31,8 +36,9 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
     try {
       const questrialFontBytes = await loadQuestrialFont();
       questrialFont = await pdfDoc.embedFont(questrialFontBytes);
+      console.log('Questrial font loaded successfully');
     } catch (error) {
-      console.warn('Failed to load Questrial font, using default font:', error);
+      console.warn('Failed to load Questrial font, using Helvetica:', error);
       questrialFont = await pdfDoc.embedFont('Helvetica');
     }
 
@@ -60,9 +66,10 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
       try {
         const field = form.getTextField(fieldName);
         field.setText(value);
-        if (questrialFont) {
-          field.updateAppearances(questrialFont);
-        }
+        // Set font only (size will be determined by PDF template)
+        field.updateAppearances(questrialFont);
+        field.setFontSize(12);
+        console.log(`Field '${fieldName}' filled with Questrial font size 12`);
       } catch (error) {
         console.warn(`Field '${fieldName}' not found in PDF template`);
       }
