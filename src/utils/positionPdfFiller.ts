@@ -5,17 +5,23 @@ import { Student, Payment } from '@/types';
 // Configuration des positions pour chaque champ
 // Ajustez ces coordonnées selon votre template PDF
 const FIELD_POSITIONS = {
-  numeroDocument: { x: 425, y: 38.5 },    // Position du numéro de document
-  dateDocument: { x: 400, y: 750 },      // Position de la date
-  nomEtudiant: { x: 120, y: 700 },       // Position du nom
-  dateNaissance: { x: 120, y: 650 },     // Position date de naissance
-  lieuNaissance: { x: 300, y: 650 },     // Position lieu de naissance
-  adresse: { x: 120, y: 600 },           // Position adresse
-  telephone: { x: 120, y: 550 },         // Position téléphone
-  email: { x: 300, y: 550 },             // Position email
-  programme: { x: 120, y: 500 },         // Position programme
-  niveauEtudes: { x: 120, y: 450 },      // Position niveau d'études
-  anneeInscription: { x: 400, y: 450 },  // Position année inscription
+  numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
+  dateDocument: { x: 400, y: 750 },          // Position de la date
+  civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
+  nomComplet: { x: 170, y: 700 },            // Position nom complet
+  dateNaissance: { x: 120, y: 650 },         // Position date de naissance
+  villeNaissance: { x: 250, y: 650 },        // Position ville de naissance
+  paysNaissance: { x: 400, y: 650 },         // Position pays de naissance
+  nationalite: { x: 120, y: 600 },           // Position nationalité
+  numeroIdentite: { x: 300, y: 600 },        // Position numéro d'identité/passeport
+  telephone: { x: 120, y: 550 },             // Position téléphone
+  email: { x: 300, y: 550 },                 // Position email
+  adresse: { x: 120, y: 500 },               // Position adresse complète
+  programme: { x: 120, y: 450 },             // Position programme d'études
+  niveau: { x: 300, y: 450 },                // Position niveau (1ère, 2ème...)
+  specialite: { x: 120, y: 400 },            // Position spécialité
+  anneeAcademique: { x: 350, y: 400 },       // Position année académique
+  dateInscription: { x: 120, y: 350 },       // Position date d'inscription
 };
 
 // Charger le PDF template
@@ -69,22 +75,35 @@ export const fillRegistrationPdfWithPositions = async (student: Student, templat
       font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     }
     
-    // Préparer les données
+    // Préparer les données avec tous les nouveaux champs
     const currentDate = new Date().toLocaleDateString('fr-FR');
     const documentNumber = `ATT-${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}-${Date.now().toString().slice(-4)}`;
+    
+    // Formatage du niveau d'études
+    const formatNiveau = (studyYear: number) => {
+      if (studyYear === 1) return "1ère année";
+      if (studyYear === 2) return "2ème année";
+      return `${studyYear}ème année`;
+    };
 
     const fieldData = {
       numeroDocument: documentNumber,
       dateDocument: currentDate,
-      nomEtudiant: `${student.firstName} ${student.lastName}`,
-      dateNaissance: student.dateOfBirth || '',
-      lieuNaissance: student.countryOfBirth || '',
-      adresse: student.address || '',
+      civilite: student.civilite || '',
+      nomComplet: `${student.firstName} ${student.lastName}`,
+      dateNaissance: new Date(student.dateOfBirth).toLocaleDateString('fr-FR') || '',
+      villeNaissance: student.cityOfBirth || '',
+      paysNaissance: student.countryOfBirth || '',
+      nationalite: student.nationality || '',
+      numeroIdentite: student.identityNumber || '',
       telephone: student.phone || '',
       email: student.email || '',
+      adresse: student.address || '',
       programme: student.program || '',
-      niveauEtudes: student.program || '',
-      anneeInscription: new Date().getFullYear().toString(),
+      niveau: formatNiveau(student.studyYear),
+      specialite: student.specialty || '',
+      anneeAcademique: student.academicYear || '',
+      dateInscription: new Date(student.registrationDate).toLocaleDateString('fr-FR') || '',
     };
 
     // Ajouter le texte à chaque position
