@@ -131,142 +131,278 @@ const StudentEdit = () => {
 
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Informations personnelles */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Informations personnelles</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="civilite">Civilité *</Label>
+                    <Select onValueChange={(value) => handleInputChange('civilite', value)} value={student.civilite}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M.">M.</SelectItem>
+                        <SelectItem value="Mme">Mme</SelectItem>
+                        <SelectItem value="Mlle">Mlle</SelectItem>
+                        <SelectItem value="Mx">Mx</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="firstName">Prénom *</Label>
+                    <Input
+                      id="firstName"
+                      value={student.firstName}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      placeholder="Entrez le prénom"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Nom *</Label>
+                    <Input
+                      id="lastName"
+                      value={student.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      placeholder="Entrez le nom"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations de naissance */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Informations de naissance</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="dateOfBirth">Date de naissance *</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={student.dateOfBirth}
+                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cityOfBirth">Ville de naissance *</Label>
+                    <Input
+                      id="cityOfBirth"
+                      value={student.cityOfBirth}
+                      onChange={(e) => handleInputChange('cityOfBirth', e.target.value)}
+                      placeholder="Ville de naissance"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="countryOfBirth">Pays de naissance *</Label>
+                    <Input
+                      id="countryOfBirth"
+                      value={student.countryOfBirth}
+                      onChange={(e) => handleInputChange('countryOfBirth', e.target.value)}
+                      placeholder="Pays de naissance"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Documents d'identité */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Documents d'identité</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="nationality">Nationalité *</Label>
+                    <Input
+                      id="nationality"
+                      value={student.nationality}
+                      onChange={(e) => handleInputChange('nationality', e.target.value)}
+                      placeholder="Nationalité"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="identityNumber">Numéro d'identité/passeport *</Label>
+                    <Input
+                      id="identityNumber"
+                      value={student.identityNumber}
+                      onChange={(e) => handleInputChange('identityNumber', e.target.value)}
+                      placeholder="Numéro d'identité ou passeport"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations académiques */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Informations académiques</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="program">Programme *</Label>
+                    <Select onValueChange={(value) => handleInputChange('program', value)} value={student.program}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un programme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BBA">BBA</SelectItem>
+                        <SelectItem value="MBA">MBA</SelectItem>
+                        <SelectItem value="MBA Complémentaire">MBA Complémentaire</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="studyYear">Année d'étude *</Label>
+                    <Select onValueChange={(value) => handleInputChange('studyYear', value)} value={student.studyYear.toString()}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez l'année" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getStudyYearOptions(student.program).map((year) => (
+                          <SelectItem key={year} value={year.toString()}>{year}ème année</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="specialty">Spécialité *</Label>
+                    <Select onValueChange={(value) => handleInputChange('specialty', value)} value={student.specialty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez la spécialité" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Management des entreprises">Management des entreprises</SelectItem>
+                        <SelectItem value="Marketing & créativité">Marketing & créativité</SelectItem>
+                        <SelectItem value="Economie & Finance">Economie & Finance</SelectItem>
+                        <SelectItem value="Logistique">Logistique</SelectItem>
+                        <SelectItem value="Etudes Européennes et relations internationales">Etudes Européennes et relations internationales</SelectItem>
+                        <SelectItem value="Informatique de gestion">Informatique de gestion</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="academicYear">Année académique *</Label>
+                    <Select onValueChange={(value) => handleInputChange('academicYear', value)} value={student.academicYear}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez l'année académique" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2023-2024">2023-2024</SelectItem>
+                        <SelectItem value="2024-2025">2024-2025</SelectItem>
+                        <SelectItem value="2025-2026">2025-2026</SelectItem>
+                        <SelectItem value="2026-2027">2026-2027</SelectItem>
+                        <SelectItem value="2027-2028">2027-2028</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {student.program === 'MBA Complémentaire' && (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="hasMBA2Diploma"
+                      checked={student.hasMBA2Diploma || false}
+                      onChange={(e) => handleInputChange('hasMBA2Diploma', e.target.checked.toString())}
+                      className="rounded border-gray-300"
+                    />
+                    <Label htmlFor="hasMBA2Diploma">
+                      Je confirme être titulaire d'un diplôme MBA2 ou équivalent
+                    </Label>
+                  </div>
+                )}
+              </div>
+
+              {/* Informations de contact */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Informations de contact</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone">Téléphone *</Label>
+                    <Input
+                      id="phone"
+                      value={student.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder="+32 x xx xx xx xx"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={student.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="email@exemple.com"
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="firstName">Prénom *</Label>
-                  <Input
-                    id="firstName"
-                    value={student.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    placeholder="Entrez le prénom"
+                  <Label htmlFor="address">Adresse complète *</Label>
+                  <Textarea
+                    id="address"
+                    value={student.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    placeholder="Rue, numéro, code postal, ville, pays"
+                    rows={3}
                     required
                   />
                 </div>
+              </div>
+
+              {/* Informations système */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Informations système</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="status">Statut</Label>
+                    <Select onValueChange={(value: 'Actif' | 'Inactif' | 'Suspendu') => handleInputChange('status', value)} value={student.status}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez le statut" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Actif">Actif</SelectItem>
+                        <SelectItem value="Inactif">Inactif</SelectItem>
+                        <SelectItem value="Suspendu">Suspendu</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="reference">Référence étudiant</Label>
+                    <Input
+                      id="reference"
+                      value={student.reference}
+                      onChange={(e) => handleInputChange('reference', e.target.value)}
+                      placeholder="Référence automatique"
+                      disabled
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="lastName">Nom *</Label>
-                  <Input
-                    id="lastName"
-                    value={student.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    placeholder="Entrez le nom"
-                    required
+                  <Label htmlFor="notes">Notes additionnelles</Label>
+                  <Textarea
+                    id="notes"
+                    value={student.notes}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    placeholder="Informations supplémentaires..."
+                    rows={3}
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={student.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="email@exemple.com"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    value={student.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="+32 x xx xx xx xx"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="dateOfBirth">Date de naissance</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={student.dateOfBirth}
-                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="status">Statut</Label>
-                  <Select onValueChange={(value: 'Actif' | 'Inactif' | 'Suspendu') => handleInputChange('status', value)} value={student.status}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez le statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Actif">Actif</SelectItem>
-                      <SelectItem value="Inactif">Inactif</SelectItem>
-                      <SelectItem value="Suspendu">Suspendu</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="program">Programme *</Label>
-                  <Select onValueChange={(value) => handleInputChange('program', value)} value={student.program}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un programme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="BBA">BBA</SelectItem>
-                      <SelectItem value="MBA">MBA</SelectItem>
-                      <SelectItem value="MBA Complémentaire">MBA Complémentaire</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="studyYear">Année d'étude</Label>
-                  <Select onValueChange={(value) => handleInputChange('studyYear', value)} value={student.studyYear.toString()}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez l'année" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getStudyYearOptions(student.program).map((year) => (
-                        <SelectItem key={year} value={year.toString()}>Année {year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="specialty">Spécialité</Label>
-                <Select onValueChange={(value) => handleInputChange('specialty', value)} value={student.specialty}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez la spécialité" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Économie & Finance">Économie & Finance</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Management">Management</SelectItem>
-                    <SelectItem value="Relations Internationales et Études Européennes">Relations Internationales</SelectItem>
-                    <SelectItem value="Logistique">Logistique</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="address">Adresse</Label>
-                <Textarea
-                  id="address"
-                  value={student.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  placeholder="Adresse complète"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="notes">Notes additionnelles</Label>
-                <Textarea
-                  id="notes"
-                  value={student.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  placeholder="Informations supplémentaires..."
-                  rows={3}
-                />
               </div>
 
               <div className="flex gap-4 pt-4">
