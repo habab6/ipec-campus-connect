@@ -225,8 +225,8 @@ const StudentEdit = () => {
                       value={student.cityOfBirth}
                       onChange={(value) => handleInputChange('cityOfBirth', value)}
                       onCitySelect={handleCitySelect}
-                      cities={POPULAR_CITIES}
-                      cityToCountryMapping={CITIES_TO_COUNTRIES}
+                      cities={WORLD_CITIES_LIST}
+                      cityToCountryMapping={WORLD_CITIES_MAPPING}
                       placeholder="Tapez pour rechercher une ville..."
                       required
                     />
