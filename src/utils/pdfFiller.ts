@@ -1,6 +1,15 @@
 import { PDFDocument, PDFForm, PDFTextField, rgb } from 'pdf-lib';
 import { Student, Payment } from '@/types';
 
+// Load Questrial font
+const loadQuestrialFont = async (): Promise<Uint8Array> => {
+  const response = await fetch('https://fonts.gstatic.com/s/questrial/v18/QdVUSTchPBm7nuUeVf7EuStkm20oJA.woff2');
+  if (!response.ok) {
+    throw new Error('Failed to load Questrial font');
+  }
+  return new Uint8Array(await response.arrayBuffer());
+};
+
 // Utility function to load PDF from public folder
 const loadPdfTemplate = async (templatePath: string): Promise<ArrayBuffer> => {
   const response = await fetch(templatePath);
@@ -16,6 +25,16 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
     const existingPdfBytes = await loadPdfTemplate(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const form = pdfDoc.getForm();
+
+    // Embed Questrial font
+    let questrialFont;
+    try {
+      const questrialFontBytes = await loadQuestrialFont();
+      questrialFont = await pdfDoc.embedFont(questrialFontBytes);
+    } catch (error) {
+      console.warn('Failed to load Questrial font, using default font:', error);
+      questrialFont = await pdfDoc.embedFont('Helvetica');
+    }
 
     // Current date for the document
     const currentDate = new Date().toLocaleDateString('fr-FR');
@@ -41,6 +60,9 @@ export const fillRegistrationPdf = async (student: Student, templatePath: string
       try {
         const field = form.getTextField(fieldName);
         field.setText(value);
+        if (questrialFont) {
+          field.updateAppearances(questrialFont);
+        }
       } catch (error) {
         console.warn(`Field '${fieldName}' not found in PDF template`);
       }
