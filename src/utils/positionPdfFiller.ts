@@ -1,4 +1,5 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import { Student, Payment } from '@/types';
 
 // Configuration des positions pour chaque champ
@@ -26,6 +27,20 @@ const loadPdfTemplate = async (templatePath: string): Promise<ArrayBuffer> => {
   return response.arrayBuffer();
 };
 
+// Charger la police Questrial
+const loadQuestrialFont = async (): Promise<Uint8Array> => {
+  try {
+    const response = await fetch('/fonts/Questrial-Regular-v2.ttf');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    console.error('Error loading Questrial font:', error);
+    throw error;
+  }
+};
+
 // Remplir le PDF avec positionnement x,y
 export const fillRegistrationPdfWithPositions = async (student: Student, templatePath: string = '/templates/attestation-template.pdf'): Promise<Uint8Array> => {
   try {
@@ -35,13 +50,24 @@ export const fillRegistrationPdfWithPositions = async (student: Student, templat
     const existingPdfBytes = await loadPdfTemplate(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     
+    // Enregistrer fontkit pour les polices personnalisées
+    pdfDoc.registerFontkit(fontkit);
+    
     // Obtenir la première page
     const pages = pdfDoc.getPages();
     const firstPage = pages[0];
     const { height } = firstPage.getSize();
     
-    // Charger une police
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    // Charger la police Questrial
+    let font;
+    try {
+      const questrialFontBytes = await loadQuestrialFont();
+      font = await pdfDoc.embedFont(questrialFontBytes);
+      console.log('✅ Police Questrial chargée avec succès');
+    } catch (error) {
+      console.warn('⚠️  Questrial non trouvée, utilisation de Helvetica:', error);
+      font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
     
     // Préparer les données
     const currentDate = new Date().toLocaleDateString('fr-FR');
@@ -93,10 +119,20 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
   try {
     const existingPdfBytes = await loadPdfTemplate(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    pdfDoc.registerFontkit(fontkit);
+    
     const pages = pdfDoc.getPages();
     const firstPage = pages[0];
     const { height } = firstPage.getSize();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    
+    // Charger la police Questrial
+    let font;
+    try {
+      const questrialFontBytes = await loadQuestrialFont();
+      font = await pdfDoc.embedFont(questrialFontBytes);
+    } catch (error) {
+      font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
 
     const currentDate = new Date().toLocaleDateString('fr-FR');
     const invoiceNumber = `IPEC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-6)}`;
