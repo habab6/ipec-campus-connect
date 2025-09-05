@@ -196,15 +196,6 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
   throw new Error('Avoir pas encore implémenté avec positions x,y');
 };
 
-// Fonction pour télécharger les templates
-export const downloadAttestationTemplate = () => {
-  const link = document.createElement('a');
-  link.href = '/templates/attestation-template.pdf';
-  link.download = 'attestation-template.pdf';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
 
 // Fonction de téléchargement
 export const downloadPdf = (pdfBytes: Uint8Array, filename: string) => {
