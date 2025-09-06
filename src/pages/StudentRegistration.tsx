@@ -451,9 +451,6 @@ const StudentRegistration = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="program">Programme * 
-                      <span className="text-sm text-muted-foreground ml-2">
-                        (BBA: 5000€, MBA: 6000€, MBA Comp.: 3000€)
-                      </span>
                     </Label>
                     <Select onValueChange={(value) => handleInputChange('program', value)}>
                       <SelectTrigger>
