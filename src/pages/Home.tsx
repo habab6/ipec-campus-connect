@@ -1,10 +1,37 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, BookOpen, CreditCard } from "lucide-react";
+import { Users, BookOpen, CreditCard, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import GlobalSearch from "@/components/GlobalSearch";
 
 const Home = () => {
   return (
     <div className="min-h-screen bg-background">
+      {/* Hero Section with Search */}
+      <section className="py-16 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="container mx-auto text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
+            IPEC Bruxelles
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Système de gestion des étudiants et documents académiques
+          </p>
+          
+          {/* Grande barre de recherche */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <GlobalSearch 
+              variant="full"
+              placeholder="Rechercher un étudiant, une attestation, une facture..."
+              autoFocus
+            />
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Search className="h-4 w-4" />
+            <span>Recherchez par nom, référence, numéro d'attestation ou de facture</span>
+          </div>
+        </div>
+      </section>
+
       {/* Quick Actions */}
       <section className="py-16 px-4">
         <div className="container mx-auto text-center">
