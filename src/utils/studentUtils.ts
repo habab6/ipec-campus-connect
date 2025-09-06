@@ -1,5 +1,6 @@
 import { Student } from "@/types";
 import { COUNTRIES } from "./countries";
+import { COUNTRY_NAME_TO_CODE } from "./countryCodes";
 
 // Prix des programmes
 export const PROGRAM_PRICES = {
@@ -78,7 +79,7 @@ export const generateStudentReference = (
   const regYear = String(registrationYear).slice(-2);
   
   // Code pays
-  const countryCode = COUNTRY_CODES[countryOfBirth] || 'XX';
+  const countryCode = COUNTRY_NAME_TO_CODE[countryOfBirth] || 'XX';
   
   return `${initials}${birthFormatted}/IPEC/${regYear}/${countryCode}`;
 };
