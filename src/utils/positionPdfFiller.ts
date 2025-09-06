@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { Student, Payment, RegistrationAttestation } from '@/types';
+import { Student, Payment, RegistrationAttestation, Invoice } from '@/types';
 
 // Configuration des positions pour chaque champ
 // Ajustez ces coordonnées selon votre template PDF
@@ -140,8 +140,18 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
   }
 };
 
+// Générer un numéro de facture unique
+const generateInvoiceNumber = (student: Student, payment: Payment): string => {
+  const year = new Date().getFullYear();
+  const month = String(new Date().getMonth() + 1).padStart(2, '0');
+  const studentCode = student.reference.split('-')[0] || student.id.slice(0, 4).toUpperCase();
+  const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
+                   payment.type === 'Minerval' ? 'MIN' : 'FAC';
+  return `IPEC-${year}${month}-${studentCode}-${typeCode}`;
+};
+
 // Version pour les factures
-export const fillInvoicePdfWithPositions = async (student: Student, payment: Payment, templatePath: string = '/templates/facture-template.pdf'): Promise<Uint8Array> => {
+export const fillInvoicePdfWithPositions = async (student: Student, payment: Payment, invoiceNumber?: string, templatePath: string = '/templates/facture-template.pdf'): Promise<Uint8Array> => {
   try {
     const existingPdfBytes = await loadPdfTemplate(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
@@ -161,7 +171,7 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
     }
 
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    const invoiceNumber = `IPEC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-6)}`;
+    const invoiceNumberToUse = invoiceNumber || generateInvoiceNumber(student, payment);
 
     // Positions pour la facture (ajustez selon votre template)
     const invoicePositions = {
@@ -172,7 +182,7 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
     };
 
     const invoiceData = {
-      numeroFacture: invoiceNumber,
+      numeroFacture: invoiceNumberToUse,
       dateFacture: currentDate,
       nomClient: `${student.firstName} ${student.lastName}`,
       montant: `${payment.amount} €`,

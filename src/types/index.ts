@@ -42,6 +42,8 @@ export interface Payment {
   invoiceNumber?: string;
   invoiceDate?: string; // Date de génération de la facture
   installments?: PaymentInstallment[]; // Pour les paiements échelonnés
+  academicYear?: string; // Année académique pour le paiement
+  studyYear?: number; // Année d'études pour le paiement
 }
 
 export interface PaymentInstallment {
@@ -81,4 +83,16 @@ export interface RegistrationAttestation {
   generateDate: string;
   program: string;
   specialty: string;
+}
+
+export interface Invoice {
+  id: string;
+  studentId: string;
+  paymentId: string;
+  number: string; // IPEC-XXXX unique
+  generateDate: string;
+  amount: number;
+  type: string;
+  academicYear?: string;
+  studyYear?: number;
 }
