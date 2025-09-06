@@ -53,19 +53,18 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         inputRef.current &&
         !inputRef.current.contains(target)
       ) {
-        setIsOpen(false);
-        setHighlightedIndex(-1);
+        setTimeout(() => {
+          setIsOpen(false);
+          setHighlightedIndex(-1);
+        }, 0);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
-    }
-    
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -75,10 +74,16 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   const handleCitySelect = (city: string) => {
     onChange(city);
     setIsOpen(false);
+    setHighlightedIndex(-1);
     
     // Si la ville a un pays associé, on déclenche le callback
     if (onCitySelect && cityToCountryMapping && cityToCountryMapping[city]) {
       onCitySelect(city, cityToCountryMapping[city]);
+    }
+    
+    // Fermer le focus de l'input pour éviter la réouverture
+    if (inputRef.current) {
+      inputRef.current.blur();
     }
   };
 
@@ -142,7 +147,8 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
                 "hover:bg-accent hover:text-accent-foreground",
                 highlightedIndex === index && "bg-accent text-accent-foreground"
               )}
-              onClick={(e) => {
+              onMouseDown={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 handleCitySelect(city);
               }}
