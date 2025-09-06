@@ -16,6 +16,7 @@ import {
   generateCreditNoteNumber
 } from "@/utils/documentGenerator";
 import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCreditNotePdf, downloadPdf } from "@/utils/positionPdfFiller";
+import { generatePaymentSummaryPdf, downloadPaymentSummary } from "@/utils/paymentSummaryGenerator";
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -429,12 +430,6 @@ const DocumentGeneration = () => {
                         </div>
                       </div>
                     ))}
-                  
-                  {attestations.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">
-                      Aucune attestation générée pour cet étudiant.
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -451,138 +446,109 @@ const DocumentGeneration = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {payments.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">
-                    Aucun paiement enregistré pour cet étudiant.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {payments.map((payment) => {
-                      const existingInvoice = getExistingInvoice(payment);
-                      const hasInvoice = !!existingInvoice;
-                      
-                      return (
-                        <div key={payment.id} className="p-3 border rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">{payment.description}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {payment.amount}€ - {payment.type} - {payment.status}
-                              </p>
-                              {existingInvoice && (
-                                <p className="text-xs text-muted-foreground">
-                                  Facture : {existingInvoice.number}
-                                  {existingInvoice.generateDate && 
-                                    ` - Générée le ${new Date(existingInvoice.generateDate).toLocaleDateString('fr-FR')}`
-                                  }
-                                </p>
-                              )}
-                              {payment.type === 'Frais de dossier' && hasInvoice && (
-                                <p className="text-xs text-blue-600">
-                                  ⓘ Frais de dossier unique - pas de nouvelle génération
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              {hasInvoice ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => generateInvoiceDoc(payment, true)}
-                                >
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Duplicata
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => generateInvoiceDoc(payment, false)}
-                                >
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Générer
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    
-                    {/* Factures des années précédentes */}
-                    {(() => {
-                      const oldInvoices = invoices.filter(invoice => {
-                        if (invoice.type === 'Frais de dossier') return false; // Déjà affiché avec le paiement
-                        return !(invoice.academicYear === student?.academicYear && invoice.studyYear === student?.studyYear);
-                      });
-                      
-                      if (oldInvoices.length > 0) {
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Link to={`/payments?studentId=${studentId}`}>
+                      <Button variant="outline">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Ajouter un paiement
+                      </Button>
+                    </Link>
+                  </div>
+                  
+                  {payments.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">
+                      Aucun paiement enregistré pour cet étudiant.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {payments.map((payment) => {
+                        const existingInvoice = getExistingInvoice(payment);
+                        const hasInvoice = !!existingInvoice;
+                        
                         return (
-                          <div className="mt-6 pt-4 border-t">
-                            <h4 className="font-medium mb-3 text-muted-foreground">Factures des années précédentes</h4>
-                            {oldInvoices
-                              .sort((a, b) => new Date(b.generateDate).getTime() - new Date(a.generateDate).getTime())
-                              .map((invoice) => (
-                                <div key={invoice.id} className="p-3 border rounded-lg mb-2">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <p className="font-medium">{invoice.type}</p>
-                                      <p className="text-sm text-muted-foreground">
-                                        {invoice.amount}€ - {invoice.academicYear} - {invoice.studyYear}ème année
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        Facture : {invoice.number} - 
-                                        Générée le {new Date(invoice.generateDate).toLocaleDateString('fr-FR')}
-                                      </p>
-                                    </div>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        // Créer un payment temporaire pour la génération
-                                        const tempPayment: Payment = {
-                                          id: invoice.paymentId,
-                                          studentId: invoice.studentId,
-                                          amount: invoice.amount,
-                                          dueDate: '',
-                                          status: 'Payé',
-                                          type: invoice.type as Payment['type'],
-                                          description: invoice.type,
-                                          academicYear: invoice.academicYear,
-                                          studyYear: invoice.studyYear
-                                        };
-                                        
-                                        fillInvoicePdfWithPositions(student!, tempPayment, invoice.number)
-                                          .then(pdfBytes => {
-                                            const filename = `duplicata-facture-${student?.firstName}-${student?.lastName}-${invoice.number}.pdf`;
-                                            downloadPdf(pdfBytes, filename);
-                                            toast({
-                                              title: "Duplicata téléchargé",
-                                              description: `Duplicata de la facture ${invoice.number} téléchargé.`,
-                                            });
-                                          })
-                                          .catch(error => {
-                                            toast({
-                                              title: "Erreur",
-                                              description: "Impossible de télécharger le duplicata",
-                                              variant: "destructive",
-                                            });
-                                          });
-                                      }}
-                                    >
-                                      <Download className="mr-2 h-4 w-4" />
-                                      Duplicata
-                                    </Button>
-                                  </div>
+                          <div key={payment.id} className="p-4 border rounded-lg bg-muted/50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="font-medium text-foreground">{payment.type}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {payment.description}
+                                </p>
+                                <div className="flex items-center gap-4 mt-1">
+                                  <span className="text-sm">
+                                    <strong>Montant:</strong> {payment.amount}€
+                                  </span>
+                                  <span className="text-sm">
+                                    <strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
+                                  </span>
+                                  <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${ 
+                                    payment.status === 'Payé' ? 'bg-green-100 text-green-800' :
+                                    payment.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
+                                    payment.status === 'En retard' ? 'bg-red-100 text-red-800' :
+                                    'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {payment.status}
+                                  </span>
                                 </div>
-                              ))}
+                                {payment.academicYear && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Année académique : {payment.academicYear} - {payment.studyYear}ème année
+                                  </p>
+                                )}
+                                {existingInvoice && (
+                                  <p className="text-xs text-primary font-medium mt-1">
+                                    <strong>Facture : {existingInvoice.number}</strong> - 
+                                    Générée le {new Date(existingInvoice.generateDate).toLocaleDateString('fr-FR')}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                {hasInvoice ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => generateInvoiceDoc(payment, true)}
+                                  >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Duplicata
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => generateInvoiceDoc(payment, false)}
+                                  >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Télécharger
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         );
-                      }
-                      return null;
-                    })()}
-                  </div>
-                )}
+                      })}
+                      
+                      <div className="mt-4 pt-4 border-t">
+                        <Button
+                          onClick={() => {
+                            const summaryContent = generatePaymentSummaryPdf(student, payments);
+                            const filename = `recapitulatif-paiements-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
+                            downloadPaymentSummary(summaryContent, filename);
+                            toast({
+                              title: "Récapitulatif généré",
+                              description: "Le récapitulatif des paiements a été téléchargé.",
+                            });
+                          }}
+                          variant="secondary"
+                          className="w-full"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Générer le récapitulatif des paiements
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -591,10 +557,10 @@ const DocumentGeneration = () => {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center">
                   <CreditCard className="mr-2 h-5 w-5 text-destructive" />
-                  Notes de crédit
+                  Notes de crédit (Avoirs)
                 </CardTitle>
                 <CardDescription>
-                  Générer des notes de crédit pour les remboursements
+                  Générer des avoirs pour remboursements
                 </CardDescription>
               </CardHeader>
               <CardContent>
