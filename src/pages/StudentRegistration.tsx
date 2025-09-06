@@ -71,7 +71,7 @@ const StudentRegistration = () => {
     const payments = [
       {
         student_id: student.id,
-        amount: 200, // Frais de dossier
+        amount: 500, // Frais de dossier
         due_date: fraisDossierDueDate.toISOString().split('T')[0],
         status: 'En attente',
         type: 'Frais de dossier',
@@ -81,7 +81,7 @@ const StudentRegistration = () => {
       },
       {
         student_id: student.id,
-        amount: 3000, // Minerval
+        amount: 5000, // Minerval BBA
         due_date: minervalDueDate.toISOString().split('T')[0],
         status: 'En attente',
         type: 'Minerval',
