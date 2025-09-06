@@ -137,7 +137,10 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
                 "hover:bg-accent hover:text-accent-foreground",
                 highlightedIndex === index && "bg-accent text-accent-foreground"
               )}
-              onClick={() => handleCitySelect(city)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleCitySelect(city);
+              }}
               onMouseEnter={() => setHighlightedIndex(index)}
             >
               <div className="flex justify-between items-center">
