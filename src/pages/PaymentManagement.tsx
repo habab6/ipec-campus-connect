@@ -14,11 +14,12 @@ import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer } fr
 import { Link } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { generateInvoiceNumber, generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
+import { supabase } from "@/integrations/supabase/client";
 
 const PaymentManagement = () => {
   const { toast } = useToast();
   const { students } = useStudents();
-  const { payments, createPayment, updatePayment } = usePayments();
+  const { payments, createPayment, updatePayment, fetchPayments } = usePayments();
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [newPayment, setNewPayment] = useState({
@@ -93,8 +94,7 @@ const PaymentManagement = () => {
         method: newPayment.paidMethod as Payment['method'],
         invoiceNumber: generateInvoiceNumber(),
         invoiceDate: new Date().toISOString().split('T')[0],
-        paidDate: newPayment.paidDate || undefined,
-        installments: newPayment.type === 'Minerval' ? [] : undefined
+        paidDate: newPayment.paidDate || undefined
       };
 
       await createPayment(payment);
@@ -209,25 +209,34 @@ const PaymentManagement = () => {
       const payment = payments.find(p => p.id === installmentDialog.paymentId);
       if (!payment) return;
 
+      // Add installment to the payment_installments table
+      const { error: installmentError } = await supabase
+        .from('payment_installments')
+        .insert({
+          payment_id: installmentDialog.paymentId,
+          amount,
+          paid_date: installmentDialog.paidDate,
+          method: installmentDialog.method
+        });
+
+      if (installmentError) throw installmentError;
+
+      // Calculate total paid including new installment
       const currentInstallments = payment.installments || [];
       const totalPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0) + amount;
-      
-      const newInstallment = {
-        id: Date.now().toString(),
-        amount,
-        paidDate: installmentDialog.paidDate,
-        method: installmentDialog.method as Payment['method']
-      };
-
-      const updatedInstallments = [...currentInstallments, newInstallment];
       const isFullyPaid = totalPaid >= payment.amount;
 
-      await updatePayment(installmentDialog.paymentId, {
-        installments: updatedInstallments,
-        status: isFullyPaid ? 'Payé' as Payment['status'] : 'En attente' as Payment['status'],
-        paidDate: isFullyPaid ? installmentDialog.paidDate : undefined,
-        method: isFullyPaid ? installmentDialog.method as Payment['method'] : payment.method
-      });
+      // Update payment status if fully paid
+      if (isFullyPaid) {
+        await updatePayment(installmentDialog.paymentId, {
+          status: 'Payé' as Payment['status'],
+          paidDate: installmentDialog.paidDate,
+          method: installmentDialog.method as Payment['method']
+        });
+      }
+
+      // Refresh payments to get updated installments
+      await fetchPayments();
       
       toast({
         title: "Acompte ajouté",
@@ -264,7 +273,7 @@ const PaymentManagement = () => {
     return payment.amount - getTotalPaidForPayment(payment);
   };
 
-  const generateInvoiceDocument = (payment: Payment) => {
+  const generateInvoiceDocument = async (payment: Payment) => {
     const student = getStudent(payment.studentId);
     if (!student) {
       toast({
@@ -275,13 +284,26 @@ const PaymentManagement = () => {
       return;
     }
 
-    const invoiceHtml = generateInvoice(student, payment);
-    downloadDocument(invoiceHtml, `Facture_${payment.invoiceNumber}_${student.lastName}.html`);
-    
-    toast({
-      title: "Facture générée",
-      description: "La facture a été téléchargée avec succès.",
-    });
+    try {
+      // Import the PDF filler function
+      const { fillInvoicePdfWithPositions, downloadPdf } = await import('@/utils/positionPdfFiller');
+      
+      // Generate PDF invoice using the same logic as DocumentGeneration
+      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, payment.invoiceNumber);
+      downloadPdf(pdfBytes, `Facture_${payment.invoiceNumber}_${student.lastName}.pdf`);
+      
+      toast({
+        title: "Facture générée",
+        description: "La facture PDF a été téléchargée avec succès.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF invoice:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer la facture PDF.",
+        variant: "destructive",
+      });
+    }
   };
 
   const generatePaymentSummaryDocument = (payment: Payment) => {

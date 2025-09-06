@@ -12,7 +12,15 @@ export function usePayments() {
       setLoading(true);
       const { data, error } = await supabase
         .from('payments')
-        .select('*')
+        .select(`
+          *,
+          payment_installments (
+            id,
+            amount,
+            paid_date,
+            method
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -31,7 +39,13 @@ export function usePayments() {
         invoiceNumber: p.invoice_number,
         invoiceDate: p.invoice_date,
         academicYear: p.academic_year,
-        studyYear: p.study_year
+        studyYear: p.study_year,
+        installments: p.payment_installments?.map((inst: any) => ({
+          id: inst.id,
+          amount: inst.amount,
+          paidDate: inst.paid_date,
+          method: inst.method
+        })) || undefined,
       }));
       setPayments(frontendPayments);
     } catch (err) {
@@ -105,7 +119,15 @@ export function usePayments() {
     try {
       const { data, error } = await supabase
         .from('payments')
-        .select('*')
+        .select(`
+          *,
+          payment_installments (
+            id,
+            amount,
+            paid_date,
+            method
+          )
+        `)
         .eq('student_id', studentId);
 
       if (error) throw error;
@@ -124,7 +146,13 @@ export function usePayments() {
         invoiceNumber: p.invoice_number,
         invoiceDate: p.invoice_date,
         academicYear: p.academic_year,
-        studyYear: p.study_year
+        studyYear: p.study_year,
+        installments: p.payment_installments?.map((inst: any) => ({
+          id: inst.id,
+          amount: inst.amount,
+          paidDate: inst.paid_date,
+          method: inst.method
+        })) || undefined,
       }));
       return frontendPayments;
     } catch (err) {
