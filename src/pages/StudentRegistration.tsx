@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { 
   generateStudentReference, 
@@ -55,6 +55,7 @@ interface StudentData {
 
 const StudentRegistration = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   const [formData, setFormData] = useState<StudentData>({
     civilite: "",
@@ -218,29 +219,11 @@ const StudentRegistration = () => {
 
     toast({
       title: "Inscription réussie !",
-      description: `${formData.firstName} ${formData.lastName} a été inscrit avec la référence ${reference}. Deux factures ont été générées.`,
+      description: `${formData.firstName} ${formData.lastName} a été inscrit avec la référence ${reference}. Redirection vers la génération de documents...`,
     });
 
-    // Reset du formulaire
-    setFormData({
-      civilite: "",
-      firstName: "",
-      lastName: "",
-      dateOfBirth: "",
-      cityOfBirth: "",
-      countryOfBirth: "",
-      nationality: "",
-      identityNumber: "",
-      phone: "",
-      email: "",
-      address: "",
-      program: "",
-      studyYear: 1,
-      specialty: "",
-      academicYear: `${currentYear}-${currentYear + 1}`,
-      notes: "",
-      hasMBA2Diploma: false,
-    });
+    // Redirection vers la page documents
+    navigate(`/documents/${newStudent.id}`);
   };
 
   return (
