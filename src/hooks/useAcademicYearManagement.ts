@@ -11,7 +11,25 @@ export function useAcademicYearManagement() {
       .select('year')
       .eq('is_current', true)
       .single();
-    return data?.year || '2024-2025';
+    
+    if (data?.year) {
+      return data.year;
+    }
+    
+    // If no current academic year is set, create one based on current date
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth(); // 0-11
+    
+    // Academic year starts in September (month 8)
+    let academicYear;
+    if (currentMonth >= 8) { // September to December
+      academicYear = `${currentYear}-${currentYear + 1}`;
+    } else { // January to August
+      academicYear = `${currentYear - 1}-${currentYear}`;
+    }
+    
+    return academicYear;
   };
 
   const getNextAcademicYear = (currentYear: string) => {
@@ -226,12 +244,28 @@ export function useAcademicYearManagement() {
     studyYear: number, 
     program: string
   ) => {
+    // Check if payment already exists for this exact combination
+    const { data: existingPayment } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('academic_year', academicYear)
+      .eq('study_year', studyYear)
+      .eq('type', 'Minerval')
+      .single();
+
+    // If payment already exists, don't create a duplicate
+    if (existingPayment) {
+      console.log('Minerval payment already exists for this year/program combination');
+      return existingPayment;
+    }
+
     // Calculate minerval amount based on program and year
     let amount = 5000; // BBA par défaut
     if (program === 'MBA') amount = 6000;
     if (program === 'MBA Complémentaire') amount = 3000;
 
-    const { error } = await supabase
+    const { data: newPayment, error } = await supabase
       .from('payments')
       .insert({
         student_id: studentId,
@@ -242,9 +276,12 @@ export function useAcademicYearManagement() {
         description: `Minerval ${program} - Année ${studyYear} (${academicYear})`,
         academic_year: academicYear,
         study_year: studyYear
-      });
+      })
+      .select()
+      .single();
 
     if (error) throw error;
+    return newPayment;
   };
 
   const generateRegistrationAttestation = async (
@@ -254,6 +291,22 @@ export function useAcademicYearManagement() {
     program: string,
     specialty: string
   ) => {
+    // Check if attestation already exists for this exact combination
+    const { data: existingAttestation } = await supabase
+      .from('registration_attestations')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('academic_year', academicYear)
+      .eq('study_year', studyYear)
+      .eq('program', program)
+      .single();
+
+    // If attestation already exists, don't create a duplicate
+    if (existingAttestation) {
+      console.log('Attestation already exists for this year/program combination');
+      return existingAttestation;
+    }
+
     // Generate unique attestation number
     const { count } = await supabase
       .from('registration_attestations')
@@ -261,7 +314,7 @@ export function useAcademicYearManagement() {
 
     const number = `ATT-${String((count || 0) + 1).padStart(4, '0')}`;
 
-    const { error } = await supabase
+    const { data: newAttestation, error } = await supabase
       .from('registration_attestations')
       .insert({
         student_id: studentId,
@@ -270,9 +323,12 @@ export function useAcademicYearManagement() {
         study_year: studyYear,
         program: program,
         specialty: specialty
-      });
+      })
+      .select()
+      .single();
 
     if (error) throw error;
+    return newAttestation;
   };
 
   const getStudentAcademicHistory = async (studentId: string) => {
