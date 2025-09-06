@@ -341,15 +341,26 @@ const PaymentManagement = () => {
   };
 
   const getPaidAmount = () => {
-    return payments
-      .filter(p => p.status === 'Payé')
-      .reduce((total, payment) => total + payment.amount, 0);
+    return payments.reduce((total, payment) => {
+      if (payment.status === 'Payé') {
+        return total + payment.amount;
+      } else if (payment.installments && payment.installments.length > 0) {
+        // Ajouter les acomptes pour les paiements partiels
+        return total + getTotalPaidForPayment(payment);
+      }
+      return total;
+    }, 0);
   };
 
   const getPendingAmount = () => {
-    return payments
-      .filter(p => p.status === 'En attente')
-      .reduce((total, payment) => total + payment.amount, 0);
+    return payments.reduce((total, payment) => {
+      if (payment.status === 'En attente') {
+        // Pour les paiements en attente, soustraire les acomptes déjà payés
+        const remainingAmount = getRemainingAmount(payment);
+        return total + remainingAmount;
+      }
+      return total;
+    }, 0);
   };
 
   return (
