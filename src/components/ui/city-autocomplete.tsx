@@ -3,6 +3,41 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { COUNTRY_CODES } from '@/utils/countryCodes';
 
+// Fonction pour normaliser les chaînes (enlever accents, cédilles, etc.)
+const normalizeString = (str: string): string => {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+};
+
+// Fonction pour calculer la distance de Levenshtein (similarité)
+const levenshteinDistance = (str1: string, str2: string): number => {
+  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+
+  for (let i = 0; i <= str1.length; i++) {
+    matrix[0][i] = i;
+  }
+
+  for (let j = 0; j <= str2.length; j++) {
+    matrix[j][0] = j;
+  }
+
+  for (let j = 1; j <= str2.length; j++) {
+    for (let i = 1; i <= str1.length; i++) {
+      const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1, // deletion
+        matrix[j - 1][i] + 1, // insertion
+        matrix[j - 1][i - 1] + indicator // substitution
+      );
+    }
+  }
+
+  return matrix[str2.length][str1.length];
+};
+
 interface CityAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
@@ -32,13 +67,50 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
 
   useEffect(() => {
     if (value && value.length >= 2 && cities && Array.isArray(cities)) {
-      const filtered = cities.filter(city =>
-        city && city.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 10); // Limite à 10 suggestions
+      const normalizedInput = normalizeString(value);
+      
+      // Recherche exacte et par inclusion d'abord
+      const exactMatches: string[] = [];
+      const includesMatches: string[] = [];
+      const fuzzyMatches: { city: string; distance: number }[] = [];
+      
+      cities.forEach(city => {
+        if (!city) return;
+        
+        const normalizedCity = normalizeString(city);
+        
+        // Correspondance exacte
+        if (normalizedCity === normalizedInput) {
+          exactMatches.push(city);
+        }
+        // Contient la recherche
+        else if (normalizedCity.includes(normalizedInput)) {
+          includesMatches.push(city);
+        }
+        // Recherche floue pour les similarités
+        else {
+          const distance = levenshteinDistance(normalizedInput, normalizedCity);
+          const maxDistance = Math.max(2, Math.floor(normalizedInput.length * 0.4));
+          if (distance <= maxDistance) {
+            fuzzyMatches.push({ city, distance });
+          }
+        }
+      });
+      
+      // Trier les correspondances floues par distance
+      fuzzyMatches.sort((a, b) => a.distance - b.distance);
+      
+      // Combiner les résultats : exact -> includes -> fuzzy
+      const allMatches = [
+        ...exactMatches,
+        ...includesMatches,
+        ...fuzzyMatches.slice(0, 5).map(m => m.city) // Limiter les correspondances floues
+      ];
+      
+      const filtered = allMatches.slice(0, 10);
       
       // Ne pas afficher le dropdown si la valeur correspond exactement à une ville
-      const exactMatch = cities.find(city => city.toLowerCase() === value.toLowerCase());
-      if (exactMatch) {
+      if (exactMatches.length > 0 && exactMatches[0].toLowerCase() === value.toLowerCase()) {
         setFilteredCities([]);
         setIsOpen(false);
       } else {
