@@ -218,17 +218,18 @@ const DocumentGeneration = () => {
       
       if (!invoice) return;
       
-      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoice.number);
+      const invoiceNumber = invoice.number || 'SANS-NUMERO';
+      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
       const filename = isDuplicate 
-        ? `duplicata-facture-${student.firstName}-${student.lastName}-${invoice.number}.pdf`
-        : `facture-${student.firstName}-${student.lastName}-${invoice.number}.pdf`;
+        ? `duplicata-facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`
+        : `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
       downloadPdf(pdfBytes, filename);
       
       toast({
         title: isDuplicate ? "Duplicata téléchargé" : "Facture générée",
         description: isDuplicate 
-          ? `Duplicata de la facture ${invoice.number} téléchargé.`
-          : `Facture ${invoice.number} générée pour ${payment.amount}€.`,
+          ? `Duplicata de la facture ${invoiceNumber} téléchargé.`
+          : `Facture ${invoiceNumber} générée pour ${payment.amount}€.`,
       });
     } catch (error) {
       toast({
