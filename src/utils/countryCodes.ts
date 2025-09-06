@@ -1,4 +1,16 @@
+// Mapping des codes pays vers leur nom et codes ISO
 export const COUNTRY_CODES: Record<string, string> = {
+  // Codes courts utilisés dans le mapping des villes
+  "MA": "🇲🇦", "DZ": "🇩🇿", "TN": "🇹🇳", "SN": "🇸🇳", "CM": "🇨🇲", "CG": "🇨🇬", "CD": "🇨🇩", "GA": "🇬🇦", "GN": "🇬🇳",
+  "FR": "🇫🇷", "DE": "🇩🇪", "GB": "🇬🇧", "IT": "🇮🇹", "ES": "🇪🇸", "NL": "🇳🇱", "BE": "🇧🇪",
+  "US": "🇺🇸", "CA": "🇨🇦",
+  "JP": "🇯🇵", "CN": "🇨🇳", "KR": "🇰🇷", "IN": "🇮🇳", "TH": "🇹🇭", "ID": "🇮🇩", "PH": "🇵🇭", "SG": "🇸🇬", "MY": "🇲🇾", "VN": "🇻🇳",
+  "BR": "🇧🇷", "AR": "🇦🇷", "PE": "🇵🇪", "CO": "🇨🇴", "CL": "🇨🇱", "VE": "🇻🇪", "BO": "🇧🇴", "EC": "🇪🇨", "UY": "🇺🇾", "PY": "🇵🇾", "GY": "🇬🇾", "SR": "🇸🇷", "GF": "🇬🇫",
+  "AU": "🇦🇺", "NZ": "🇳🇿", "PG": "🇵🇬"
+};
+
+// Mapping complet des noms de pays vers leurs codes ISO (pour compatibilité)
+export const COUNTRY_NAME_TO_CODE: Record<string, string> = {
   "Afghanistan": "AF", "Afrique du Sud": "ZA", "Albanie": "AL", "Algérie": "DZ", "Allemagne": "DE", "Andorre": "AD", "Angola": "AO", "Antigua-et-Barbuda": "AG", "Arabie saoudite": "SA", "Argentine": "AR", "Arménie": "AM", "Australie": "AU", "Autriche": "AT", "Azerbaïdjan": "AZ",
   "Bahamas": "BS", "Bahreïn": "BH", "Bangladesh": "BD", "Barbade": "BB", "Bélarus": "BY", "Belgique": "BE", "Belize": "BZ", "Bénin": "BJ", "Bhoutan": "BT", "Birmanie": "MM", "Bolivie": "BO", "Bosnie-Herzégovine": "BA", "Botswana": "BW", "Brésil": "BR", "Brunei": "BN", "Bulgarie": "BG", "Burkina Faso": "BF", "Burundi": "BI",
   "Cambodge": "KH", "Cameroun": "CM", "Canada": "CA", "Cap-Vert": "CV", "Centrafrique": "CF", "Chili": "CL", "Chine": "CN", "Chypre": "CY", "Colombie": "CO", "Comores": "KM", "République du Congo": "CG", "République démocratique du Congo": "CD", "Corée du Nord": "KP", "Corée du Sud": "KR", "Costa Rica": "CR", "Côte d'Ivoire": "CI", "Croatie": "HR", "Cuba": "CU",
