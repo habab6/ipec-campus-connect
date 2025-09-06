@@ -166,6 +166,7 @@ const StudentRegistration = () => {
       };
 
       const createdStudent = await createStudent(newStudent);
+      console.log('Étudiant créé avec Supabase:', createdStudent);
 
       toast({
         title: "Inscription réussie !",
@@ -173,6 +174,7 @@ const StudentRegistration = () => {
       });
 
       // Redirection vers la page documents avec l'UUID généré par Supabase
+      console.log('Redirection vers:', `/documents/${createdStudent.id}`);
       navigate(`/documents/${createdStudent.id}`);
     } catch (error) {
       toast({

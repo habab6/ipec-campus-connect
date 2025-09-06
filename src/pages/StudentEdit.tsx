@@ -30,10 +30,14 @@ const StudentEdit = () => {
 
   const loadStudent = async () => {
     if (!id) return;
+    console.log('Tentative de chargement étudiant avec ID:', id);
     setLoading(true);
     const foundStudent = await getStudentById(id);
+    console.log('Étudiant trouvé:', foundStudent);
     if (foundStudent) {
       setStudent(foundStudent);
+    } else {
+      console.log('Aucun étudiant trouvé avec cet ID');
     }
     setLoading(false);
   };

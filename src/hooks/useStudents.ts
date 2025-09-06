@@ -28,17 +28,26 @@ export function useStudents() {
 
   const createStudent = async (studentData: Omit<Student, 'id'>) => {
     try {
+      console.log('Création étudiant avec données:', studentData);
       const dbStudentData = studentToDbStudent(studentData);
+      console.log('Données transformées pour DB:', dbStudentData);
+      
       const { data, error } = await supabase
         .from('students')
         .insert([dbStudentData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase lors de la création:', error);
+        throw error;
+      }
+      
+      console.log('Étudiant créé dans Supabase:', data);
       await fetchStudents(); // Refresh list
       return dbStudentToStudent(data as DbStudent);
     } catch (err) {
+      console.error('Erreur complète:', err);
       throw new Error(err instanceof Error ? err.message : 'Erreur lors de la création de l\'étudiant');
     }
   };
