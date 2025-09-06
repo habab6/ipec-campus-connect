@@ -35,7 +35,25 @@ export function useAcademicYearManagement() {
 
       const currentAcademicYear = await getCurrentAcademicYear();
       const nextAcademicYear = getNextAcademicYear(currentAcademicYear);
-      const nextStudyYear = student.study_year + 1;
+      
+      let nextStudyYear = student.study_year + 1;
+      let nextProgram = student.program;
+
+      // Logique de progression selon le programme actuel
+      if (student.program === 'BBA') {
+        if (student.study_year === 3) {
+          // BBA3 → MBA1
+          nextProgram = 'MBA';
+          nextStudyYear = 1;
+        }
+      } else if (student.program === 'MBA') {
+        if (student.study_year === 2) {
+          // MBA2 → MBA Complémentaire 1
+          nextProgram = 'MBA Complémentaire';
+          nextStudyYear = 1;
+        }
+      }
+      // MBA Complémentaire reste en année 1 (pas de progression possible)
 
       // Update student academic history - mark current year as passed
       await supabase
@@ -50,12 +68,13 @@ export function useAcademicYearManagement() {
           passed_to_next_year: true
         });
 
-      // Update student to next year
+      // Update student to next year/program
       const { error: updateError } = await supabase
         .from('students')
         .update({
           study_year: nextStudyYear,
-          academic_year: nextAcademicYear
+          academic_year: nextAcademicYear,
+          program: nextProgram
         })
         .eq('id', studentId);
 
@@ -68,21 +87,66 @@ export function useAcademicYearManagement() {
           student_id: studentId,
           academic_year: nextAcademicYear,
           study_year: nextStudyYear,
-          program: student.program,
+          program: nextProgram,
           specialty: student.specialty,
           status: 'En cours',
           passed_to_next_year: false
         });
 
       // Generate new minerval payment for next year
-      await generateMinervalPayment(studentId, nextAcademicYear, nextStudyYear, student.program);
+      await generateMinervalPayment(studentId, nextAcademicYear, nextStudyYear, nextProgram);
 
       // Generate new registration attestation
-      await generateRegistrationAttestation(studentId, nextAcademicYear, nextStudyYear, student.program, student.specialty);
+      await generateRegistrationAttestation(studentId, nextAcademicYear, nextStudyYear, nextProgram, student.specialty);
 
       return { success: true };
     } catch (error) {
       console.error('Erreur lors du passage à l\'année supérieure:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const archiveStudent = async (studentId: string, reason: string = 'Abandon d\'études') => {
+    try {
+      setLoading(true);
+      
+      // Get current student data
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', studentId)
+        .single();
+
+      if (studentError) throw studentError;
+
+      // Update student academic history - mark current year as archived
+      await supabase
+        .from('student_academic_history')
+        .insert({
+          student_id: studentId,
+          academic_year: student.academic_year,
+          study_year: student.study_year,
+          program: student.program,
+          specialty: student.specialty,
+          status: reason,
+          passed_to_next_year: false
+        });
+
+      // Update student status to archived
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({
+          status: 'Archivé'
+        })
+        .eq('id', studentId);
+
+      if (updateError) throw updateError;
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur lors de l\'archivage:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -226,6 +290,7 @@ export function useAcademicYearManagement() {
     loading,
     promoteToNextYear,
     repeatYear,
+    archiveStudent,
     getStudentAcademicHistory,
     getCurrentAcademicYear
   };

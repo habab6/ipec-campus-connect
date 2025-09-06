@@ -5,7 +5,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { useAcademicYearManagement } from '@/hooks/useAcademicYearManagement';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowUp, RotateCcw, GraduationCap, FileText } from 'lucide-react';
+import { ArrowUp, RotateCcw, GraduationCap, FileText, Archive } from 'lucide-react';
 import type { Student } from '@/types';
 
 interface AcademicYearActionsProps {
@@ -15,7 +15,7 @@ interface AcademicYearActionsProps {
 
 export function AcademicYearActions({ student, onUpdate }: AcademicYearActionsProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const { promoteToNextYear, repeatYear, loading } = useAcademicYearManagement();
+  const { promoteToNextYear, repeatYear, archiveStudent, loading } = useAcademicYearManagement();
   const { toast } = useToast();
 
   const handlePromoteToNextYear = async () => {
@@ -58,7 +58,47 @@ export function AcademicYearActions({ student, onUpdate }: AcademicYearActionsPr
     }
   };
 
-  const getNextStudyYear = () => student.studyYear + 1;
+  const handleArchiveStudent = async () => {
+    try {
+      setActionLoading('archive');
+      await archiveStudent(student.id);
+      toast({
+        title: "Étudiant archivé",
+        description: `${student.firstName} ${student.lastName} a été archivé avec succès.`,
+      });
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'archiver l'étudiant.",
+        variant: "destructive"
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const getNextProgression = () => {
+    if (student.program === 'BBA') {
+      if (student.studyYear === 3) {
+        return { program: 'MBA', studyYear: 1 };
+      }
+      return { program: 'BBA', studyYear: student.studyYear + 1 };
+    }
+    
+    if (student.program === 'MBA') {
+      if (student.studyYear === 2) {
+        return { program: 'MBA Complémentaire', studyYear: 1 };
+      }
+      return { program: 'MBA', studyYear: student.studyYear + 1 };
+    }
+
+    // MBA Complémentaire n'a pas de progression
+    return { program: 'MBA Complémentaire', studyYear: 1 };
+  };
+
+  const getNextStudyYear = () => getNextProgression().studyYear;
+  const getNextProgram = () => getNextProgression().program;
   const getNextAcademicYear = () => {
     const [startYear] = student.academicYear.split('-');
     const nextStartYear = parseInt(startYear) + 1;
@@ -94,83 +134,136 @@ export function AcademicYearActions({ student, onUpdate }: AcademicYearActionsPr
           </div>
 
           <div className="space-y-3">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  className="w-full" 
-                  disabled={loading || actionLoading !== null}
-                  variant="default"
-                >
-                  <ArrowUp className="mr-2 h-4 w-4" />
-                  {actionLoading === 'promote' ? 'Traitement...' : 'Passer à l\'année supérieure'}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmer le passage à l'année supérieure</AlertDialogTitle>
-                  <AlertDialogDescription className="space-y-2">
-                    <p>
-                      Voulez-vous faire passer <strong>{student.firstName} {student.lastName}</strong> à l'année supérieure ?
-                    </p>
-                    <div className="bg-muted p-3 rounded-md text-sm">
-                      <p><strong>Changements qui seront effectués :</strong></p>
-                      <ul className="list-disc list-inside mt-2 space-y-1">
-                        <li>Année d'études : {student.studyYear} → {getNextStudyYear()}</li>
-                        <li>Année académique : {student.academicYear} → {getNextAcademicYear()}</li>
-                        <li>Génération automatique du minerval pour la nouvelle année</li>
-                        <li>Génération automatique de la nouvelle attestation d'inscription</li>
-                        <li>Mise à jour de l'historique académique</li>
-                      </ul>
-                    </div>
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handlePromoteToNextYear}>
-                    Confirmer le passage
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {student.status !== 'Archivé' && (
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      className="w-full" 
+                      disabled={loading || actionLoading !== null || (student.program === 'MBA Complémentaire' && student.studyYear === 1)}
+                      variant="default"
+                    >
+                      <ArrowUp className="mr-2 h-4 w-4" />
+                      {actionLoading === 'promote' ? 'Traitement...' : 'Passer à l\'année supérieure'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmer le passage à l'année supérieure</AlertDialogTitle>
+                      <AlertDialogDescription className="space-y-2">
+                        <p>
+                          Voulez-vous faire passer <strong>{student.firstName} {student.lastName}</strong> à l'année supérieure ?
+                        </p>
+                        <div className="bg-muted p-3 rounded-md text-sm">
+                          <p><strong>Changements qui seront effectués :</strong></p>
+                          <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li>Programme : {student.program} → {getNextProgram()}</li>
+                            <li>Année d'études : {student.studyYear} → {getNextStudyYear()}</li>
+                            <li>Année académique : {student.academicYear} → {getNextAcademicYear()}</li>
+                            <li>Génération automatique du minerval pour la nouvelle année</li>
+                            <li>Génération automatique de la nouvelle attestation d'inscription</li>
+                            <li>Mise à jour de l'historique académique</li>
+                          </ul>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handlePromoteToNextYear}>
+                        Confirmer le passage
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
 
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  disabled={loading || actionLoading !== null}
-                >
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  {actionLoading === 'repeat' ? 'Traitement...' : 'Redoubler l\'année'}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmer le redoublement</AlertDialogTitle>
-                  <AlertDialogDescription className="space-y-2">
-                    <p>
-                      Voulez-vous faire redoubler <strong>{student.firstName} {student.lastName}</strong> ?
-                    </p>
-                    <div className="bg-muted p-3 rounded-md text-sm">
-                      <p><strong>Changements qui seront effectués :</strong></p>
-                      <ul className="list-disc list-inside mt-2 space-y-1">
-                        <li>Année d'études : {student.studyYear} (maintenue)</li>
-                        <li>Année académique : {student.academicYear} → {getNextAcademicYear()}</li>
-                        <li>Génération automatique du minerval pour la nouvelle année académique</li>
-                        <li>Génération automatique de la nouvelle attestation d'inscription</li>
-                        <li>Mise à jour de l'historique académique (statut redoublant)</li>
-                      </ul>
-                    </div>
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleRepeatYear}>
-                    Confirmer le redoublement
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      disabled={loading || actionLoading !== null}
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      {actionLoading === 'repeat' ? 'Traitement...' : 'Redoubler l\'année'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmer le redoublement</AlertDialogTitle>
+                      <AlertDialogDescription className="space-y-2">
+                        <p>
+                          Voulez-vous faire redoubler <strong>{student.firstName} {student.lastName}</strong> ?
+                        </p>
+                        <div className="bg-muted p-3 rounded-md text-sm">
+                          <p><strong>Changements qui seront effectués :</strong></p>
+                          <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li>Année d'études : {student.studyYear} (maintenue)</li>
+                            <li>Année académique : {student.academicYear} → {getNextAcademicYear()}</li>
+                            <li>Génération automatique du minerval pour la nouvelle année académique</li>
+                            <li>Génération automatique de la nouvelle attestation d'inscription</li>
+                            <li>Mise à jour de l'historique académique (statut redoublant)</li>
+                          </ul>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRepeatYear}>
+                        Confirmer le redoublement
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      className="w-full"
+                      disabled={loading || actionLoading !== null}
+                    >
+                      <Archive className="mr-2 h-4 w-4" />
+                      {actionLoading === 'archive' ? 'Traitement...' : 'Archiver l\'étudiant'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmer l'archivage</AlertDialogTitle>
+                      <AlertDialogDescription className="space-y-2">
+                        <p>
+                          Voulez-vous archiver <strong>{student.firstName} {student.lastName}</strong> ?
+                        </p>
+                        <div className="bg-muted p-3 rounded-md text-sm">
+                          <p><strong>Cette action :</strong></p>
+                          <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li>Marque l'étudiant comme "Archivé"</li>
+                            <li>Enregistre l'abandon dans l'historique académique</li>
+                            <li>L'étudiant n'apparaîtra plus dans les listes actives</li>
+                            <li>Cette action peut être annulée en modifiant le statut manuellement</li>
+                          </ul>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleArchiveStudent} className="bg-destructive text-destructive-foreground">
+                        Confirmer l'archivage
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
+
+            {student.status === 'Archivé' && (
+              <div className="p-3 bg-muted rounded-md text-center">
+                <Archive className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Étudiant archivé</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Modifiez le statut dans l'édition pour réactiver
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

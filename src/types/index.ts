@@ -20,7 +20,7 @@ export interface DbStudent {
   notes: string;
   registration_date: string;
   registration_year: number;
-  status: 'Actif' | 'Inactif' | 'Suspendu';
+  status: 'Actif' | 'Inactif' | 'Suspendu' | 'Archivé';
   has_mba2_diploma?: boolean;
   created_at: string;
   updated_at: string;
@@ -54,7 +54,7 @@ export interface Student {
   notes: string;
   registrationDate: string;
   registrationYear: number;
-  status: 'Actif' | 'Inactif' | 'Suspendu';
+  status: 'Actif' | 'Inactif' | 'Suspendu' | 'Archivé';
   hasMBA2Diploma?: boolean; // Pour MBA Complémentaire
 }
 
