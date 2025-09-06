@@ -337,7 +337,7 @@ const StudentRegistration = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="countryOfBirth">Pays de naissance *</Label>
-                    <Select onValueChange={(value) => handleInputChange('countryOfBirth', value)}>
+                    <Select onValueChange={(value) => handleInputChange('countryOfBirth', value)} value={formData.countryOfBirth}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez le pays" />
                       </SelectTrigger>
