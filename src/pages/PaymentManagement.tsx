@@ -19,7 +19,13 @@ import { supabase } from "@/integrations/supabase/client";
 const PaymentManagement = () => {
   const { toast } = useToast();
   const { students } = useStudents();
-  const { payments, createPayment, updatePayment, fetchPayments } = usePayments();
+  const { 
+    payments, 
+    createPayment, 
+    updatePayment, 
+    fetchPayments,
+    getInvoicesByStudentId 
+  } = usePayments();
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [newPayment, setNewPayment] = useState({
@@ -46,6 +52,30 @@ const PaymentManagement = () => {
     method: '',
     paidDate: new Date().toISOString().split('T')[0]
   });
+  const [invoices, setInvoices] = useState<any[]>([]);
+
+  // Charger les factures pour tous les étudiants ayant des paiements
+  useEffect(() => {
+    const loadInvoices = async () => {
+      const uniqueStudentIds = [...new Set(payments.map(p => p.studentId))];
+      const allInvoices = [];
+      
+      for (const studentId of uniqueStudentIds) {
+        try {
+          const studentInvoices = await getInvoicesByStudentId(studentId);
+          allInvoices.push(...studentInvoices);
+        } catch (error) {
+          console.error('Erreur lors du chargement des factures:', error);
+        }
+      }
+      
+      setInvoices(allInvoices);
+    };
+
+    if (payments.length > 0) {
+      loadInvoices();
+    }
+  }, [payments, getInvoicesByStudentId]);
 
   // Les données sont maintenant chargées via les hooks useStudents et usePayments
 
@@ -306,6 +336,26 @@ const PaymentManagement = () => {
     }
   };
 
+  // Fonction pour récupérer la facture associée à un paiement
+  const getExistingInvoice = (payment: Payment) => {
+    const student = getStudent(payment.studentId);
+    if (!student) return null;
+
+    if (payment.type === 'Frais de dossier') {
+      return invoices.find(i => 
+        i.student_id === student.id && 
+        i.type === payment.type
+      );
+    }
+    
+    return invoices.find(i => 
+      i.student_id === student.id && 
+      i.type === payment.type &&
+      i.academic_year === student.academicYear &&
+      i.study_year === student.studyYear
+    );
+  };
+
   const generatePaymentSummaryDocument = (payment: Payment) => {
     const student = getStudent(payment.studentId);
     if (!student) {
@@ -318,7 +368,9 @@ const PaymentManagement = () => {
     }
 
     const summaryHtml = generatePaymentSummary(student, payment);
-    downloadDocument(summaryHtml, `Recapitulatif_Paiement_${payment.invoiceNumber}_${student.lastName}.html`);
+    const existingInvoice = getExistingInvoice(payment);
+    const invoiceNumber = existingInvoice?.number || payment.invoiceNumber || 'N/A';
+    downloadDocument(summaryHtml, `Recapitulatif_Paiement_${invoiceNumber}_${student.lastName}.html`);
     
     toast({
       title: "Récapitulatif généré",
@@ -579,17 +631,56 @@ const PaymentManagement = () => {
                             <Badge variant="outline">{payment.type}</Badge>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
-                            <p><strong>Montant:</strong> {payment.amount}€</p>
-                            <p><strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}</p>
-                            <p><strong>N° Facture:</strong> {payment.invoiceNumber}</p>
-                            {payment.paidDate && (
-                              <p><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}</p>
-                            )}
-                            {payment.method && (
-                              <p><strong>Moyen:</strong> {payment.method}</p>
-                            )}
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {payment.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-sm">
+                              <strong>Montant:</strong> {payment.amount}€
+                            </span>
+                            <span className="text-sm">
+                              <strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
+                            </span>
+                            <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${ 
+                              payment.status === 'Payé' ? 'bg-green-100 text-green-800' :
+                              payment.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
+                              payment.status === 'En retard' ? 'bg-red-100 text-red-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {payment.status}
+                            </span>
                           </div>
+                          
+                          {(() => {
+                            const student = getStudent(payment.studentId);
+                            return student?.academicYear && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Année académique : {student.academicYear} - {student.studyYear === 1 ? '1ère année' : `${student.studyYear}ème année`}
+                              </p>
+                            );
+                          })()}
+                          
+                          {(() => {
+                            const existingInvoice = getExistingInvoice(payment);
+                            return existingInvoice && (
+                              <p className="text-xs text-primary font-medium mt-1">
+                                <strong>Facture : {existingInvoice.number}</strong> - 
+                                Générée le {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}
+                              </p>
+                            );
+                          })()}
+                          
+                          {payment.paidDate && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}
+                            </p>
+                          )}
+                          {payment.method && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <strong>Moyen:</strong> {payment.method}
+                            </p>
+                          )}
 
                           {payment.description && (
                             <p className="text-sm text-muted-foreground mt-2 italic">
