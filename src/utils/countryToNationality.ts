@@ -24,3 +24,13 @@ export const COUNTRY_TO_NATIONALITY: Record<string, string> = {
   "Yémen": "Yéménite",
   "Zambie": "Zambienne", "Zimbabwe": "Zimbabwéenne"
 };
+
+// Mapping des codes courts vers les noms complets des pays
+export const COUNTRY_CODE_TO_NAME: Record<string, string> = {
+  "MA": "Maroc", "DZ": "Algérie", "TN": "Tunisie", "SN": "Sénégal", "CM": "Cameroun", "CG": "République du Congo", "CD": "République démocratique du Congo", "GA": "Gabon", "GN": "Guinée",
+  "FR": "France", "DE": "Allemagne", "GB": "Royaume-Uni", "IT": "Italie", "ES": "Espagne", "NL": "Pays-Bas", "BE": "Belgique",
+  "US": "États-Unis", "CA": "Canada",
+  "JP": "Japon", "CN": "Chine", "KR": "Corée du Sud", "IN": "Inde", "TH": "Thaïlande", "ID": "Indonésie", "PH": "Philippines", "SG": "Singapour", "MY": "Malaisie", "VN": "Viêt Nam",
+  "BR": "Brésil", "AR": "Argentine", "PE": "Pérou", "CO": "Colombie", "CL": "Chili", "VE": "Venezuela", "BO": "Bolivie", "EC": "Équateur", "UY": "Uruguay", "PY": "Paraguay", "GY": "Guyana", "SR": "Suriname", "GF": "Guyane française",
+  "AU": "Australie", "NZ": "Nouvelle-Zélande", "PG": "Papouasie-Nouvelle-Guinée"
+};

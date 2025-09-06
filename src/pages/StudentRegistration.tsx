@@ -20,7 +20,7 @@ import {
 } from "@/utils/studentUtils";
 import { COUNTRIES } from "@/utils/countries";
 import { NATIONALITIES } from "@/utils/nationalities";
-import { COUNTRY_TO_NATIONALITY } from "@/utils/countryToNationality";
+import { COUNTRY_TO_NATIONALITY, COUNTRY_CODE_TO_NAME } from "@/utils/countryToNationality";
 import { WORLD_CITIES_LIST, WORLD_CITIES_MAPPING } from "@/utils/worldCities";
 import { generateInvoiceNumber } from "@/utils/documentGenerator";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
@@ -89,13 +89,16 @@ const StudentRegistration = () => {
     });
   };
 
-  const handleCitySelect = (city: string, country: string) => {
-    setFormData(prev => ({
-      ...prev,
-      cityOfBirth: city,
-      countryOfBirth: country,
-      nationality: COUNTRY_TO_NATIONALITY[country] || prev.nationality
-    }));
+  const handleCitySelect = (city: string, countryCode: string) => {
+    const countryName = COUNTRY_CODE_TO_NAME[countryCode];
+    if (countryName) {
+      setFormData(prev => ({
+        ...prev,
+        cityOfBirth: city,
+        countryOfBirth: countryName,
+        nationality: COUNTRY_TO_NATIONALITY[countryName] || prev.nationality
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
