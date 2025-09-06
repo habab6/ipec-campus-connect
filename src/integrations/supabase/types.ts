@@ -14,7 +14,404 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      academic_years: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          is_current: boolean | null
+          start_date: string
+          year: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          is_current?: boolean | null
+          start_date: string
+          year: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_current?: boolean | null
+          start_date?: string
+          year?: string
+        }
+        Relationships: []
+      }
+      credit_notes: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          number: string
+          original_invoice_id: string
+          reason: string
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date?: string
+          id?: string
+          number: string
+          original_invoice_id: string
+          reason: string
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          number?: string
+          original_invoice_id?: string
+          reason?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_original_invoice_id_fkey"
+            columns: ["original_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          academic_year: string | null
+          amount: number
+          created_at: string
+          generate_date: string
+          id: string
+          number: string
+          payment_id: string
+          student_id: string
+          study_year: number | null
+          type: string
+        }
+        Insert: {
+          academic_year?: string | null
+          amount: number
+          created_at?: string
+          generate_date?: string
+          id?: string
+          number: string
+          payment_id: string
+          student_id: string
+          study_year?: number | null
+          type: string
+        }
+        Update: {
+          academic_year?: string | null
+          amount?: number
+          created_at?: string
+          generate_date?: string
+          id?: string
+          number?: string
+          payment_id?: string
+          student_id?: string
+          study_year?: number | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_installments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          paid_date: string
+          payment_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method: string
+          paid_date: string
+          payment_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          paid_date?: string
+          payment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_installments_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          academic_year: string | null
+          amount: number
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          method: string | null
+          paid_date: string | null
+          status: string
+          student_id: string
+          study_year: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          amount: number
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          method?: string | null
+          paid_date?: string | null
+          status?: string
+          student_id: string
+          study_year?: number | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          amount?: number
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          method?: string | null
+          paid_date?: string | null
+          status?: string
+          student_id?: string
+          study_year?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      registration_attestations: {
+        Row: {
+          academic_year: string
+          created_at: string
+          generate_date: string
+          id: string
+          number: string
+          program: string
+          specialty: string
+          student_id: string
+          study_year: number
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          generate_date?: string
+          id?: string
+          number: string
+          program: string
+          specialty: string
+          student_id: string
+          study_year: number
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          generate_date?: string
+          id?: string
+          number?: string
+          program?: string
+          specialty?: string
+          student_id?: string
+          study_year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_attestations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_academic_history: {
+        Row: {
+          academic_year: string
+          created_at: string
+          id: string
+          passed_to_next_year: boolean | null
+          program: string
+          specialty: string
+          status: string
+          student_id: string
+          study_year: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          id?: string
+          passed_to_next_year?: boolean | null
+          program: string
+          specialty: string
+          status: string
+          student_id: string
+          study_year: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          id?: string
+          passed_to_next_year?: boolean | null
+          program?: string
+          specialty?: string
+          status?: string
+          student_id?: string
+          study_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_academic_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          academic_year: string
+          address: string
+          city_of_birth: string
+          civilite: string
+          country_of_birth: string
+          created_at: string
+          date_of_birth: string
+          email: string
+          first_name: string
+          has_mba2_diploma: boolean | null
+          id: string
+          identity_number: string
+          last_name: string
+          nationality: string
+          notes: string | null
+          phone: string
+          program: string
+          reference: string
+          registration_date: string
+          registration_year: number
+          specialty: string
+          status: string
+          study_year: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          address: string
+          city_of_birth: string
+          civilite: string
+          country_of_birth: string
+          created_at?: string
+          date_of_birth: string
+          email: string
+          first_name: string
+          has_mba2_diploma?: boolean | null
+          id?: string
+          identity_number: string
+          last_name: string
+          nationality: string
+          notes?: string | null
+          phone: string
+          program: string
+          reference: string
+          registration_date?: string
+          registration_year: number
+          specialty: string
+          status?: string
+          study_year: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          address?: string
+          city_of_birth?: string
+          civilite?: string
+          country_of_birth?: string
+          created_at?: string
+          date_of_birth?: string
+          email?: string
+          first_name?: string
+          has_mba2_diploma?: boolean | null
+          id?: string
+          identity_number?: string
+          last_name?: string
+          nationality?: string
+          notes?: string | null
+          phone?: string
+          program?: string
+          reference?: string
+          registration_date?: string
+          registration_year?: number
+          specialty?: string
+          status?: string
+          study_year?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

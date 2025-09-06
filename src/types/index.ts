@@ -1,3 +1,32 @@
+// Database types (snake_case)
+export interface DbStudent {
+  id: string;
+  reference: string;
+  civilite: 'M.' | 'Mme' | 'Mlle' | 'Mx';
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  city_of_birth: string;
+  country_of_birth: string;
+  nationality: string;
+  identity_number: string;
+  phone: string;
+  email: string;
+  address: string;
+  program: 'BBA' | 'MBA' | 'MBA Complémentaire';
+  study_year: number;
+  specialty: string;
+  academic_year: string;
+  notes: string;
+  registration_date: string;
+  registration_year: number;
+  status: 'Actif' | 'Inactif' | 'Suspendu';
+  has_mba2_diploma?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Frontend types (camelCase) - for compatibility with existing code
 export interface Student {
   id: string;
   reference: string;

@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { UserCog, ArrowLeft, Save, Trash2 } from "lucide-react";
 import { Student } from "@/types";
+import { useStudents } from "@/hooks/useStudents";
+import { AcademicYearActions } from "@/components/AcademicYearActions";
 import { getStudyYearOptions } from "@/utils/studentUtils";
 import { COUNTRIES } from "@/utils/countries";
 import { NATIONALITIES } from "@/utils/nationalities";
@@ -24,14 +26,20 @@ const StudentEdit = () => {
   const { toast } = useToast();
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
+  const { updateStudent, deleteStudent, getStudentById } = useStudents();
 
-  useEffect(() => {
-    const students = JSON.parse(localStorage.getItem('students') || '[]');
-    const foundStudent = students.find((s: Student) => s.id === id);
+  const loadStudent = async () => {
+    if (!id) return;
+    setLoading(true);
+    const foundStudent = await getStudentById(id);
     if (foundStudent) {
       setStudent(foundStudent);
     }
     setLoading(false);
+  };
+
+  useEffect(() => {
+    loadStudent();
   }, [id]);
 
   const handleInputChange = (field: keyof Student, value: string) => {
@@ -65,7 +73,7 @@ const StudentEdit = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!student) return;
@@ -80,35 +88,40 @@ const StudentEdit = () => {
       return;
     }
 
-    // Mise à jour dans localStorage
-    const students = JSON.parse(localStorage.getItem('students') || '[]');
-    const updatedStudents = students.map((s: Student) => 
-      s.id === student.id ? student : s
-    );
-    localStorage.setItem('students', JSON.stringify(updatedStudents));
-
-    toast({
-      title: "Modifications sauvegardées !",
-      description: `Les informations de ${student.firstName} ${student.lastName} ont été mises à jour.`,
-    });
-
-    navigate('/students');
+    try {
+      await updateStudent(student.id, student);
+      toast({
+        title: "Modifications sauvegardées !",
+        description: `Les informations de ${student.firstName} ${student.lastName} ont été mises à jour.`,
+      });
+      navigate('/students');
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder les modifications.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!student) return;
     
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'étudiant ${student.firstName} ${student.lastName} ?`)) {
-      const students = JSON.parse(localStorage.getItem('students') || '[]');
-      const filteredStudents = students.filter((s: Student) => s.id !== student.id);
-      localStorage.setItem('students', JSON.stringify(filteredStudents));
-
-      toast({
-        title: "Étudiant supprimé",
-        description: `${student.firstName} ${student.lastName} a été supprimé.`,
-      });
-
-      navigate('/students');
+      try {
+        await deleteStudent(student.id);
+        toast({
+          title: "Étudiant supprimé",
+          description: `${student.firstName} ${student.lastName} a été supprimé.`,
+        });
+        navigate('/students');
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer l'étudiant.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -491,6 +504,14 @@ const StudentEdit = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Academic Year Management Section */}
+        <div className="mt-6">
+          <AcademicYearActions 
+            student={student} 
+            onUpdate={loadStudent}
+          />
+        </div>
       </div>
     </div>
   );
