@@ -113,7 +113,8 @@ const DocumentGeneration = () => {
           academic_year: student.academicYear,
           study_year: student.studyYear,
           program: student.program,
-          specialty: student.specialty
+          specialty: student.specialty,
+          generate_date: student.registrationDate
         };
         
         const createdAttestation = await createAttestation(newAttestationData);
@@ -194,7 +195,8 @@ const DocumentGeneration = () => {
           amount: payment.amount,
           type: payment.type,
           academic_year: payment.type !== 'Frais de dossier' ? student.academicYear : null,
-          study_year: payment.type !== 'Frais de dossier' ? student.studyYear : null
+          study_year: payment.type !== 'Frais de dossier' ? student.studyYear : null,
+          generate_date: student.registrationDate
         };
         
         const createdInvoice = await createInvoice(newInvoiceData);
@@ -353,7 +355,7 @@ const DocumentGeneration = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">
-                              {student?.program} - {student?.studyYear}ème année
+                              {student?.program} - {student?.studyYear === 1 ? '1ère année' : `${student?.studyYear}ème année`}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               Année académique : {student?.academicYear}
@@ -401,7 +403,7 @@ const DocumentGeneration = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">
-                              {attestation.program} - {attestation.study_year}ème année
+                              {attestation.program} - {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               Année académique : {attestation.academic_year}

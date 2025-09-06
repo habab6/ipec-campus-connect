@@ -62,11 +62,11 @@ const StudentRegistration = () => {
 
   // Fonction pour créer les paiements par défaut
   const createDefaultPayments = async (student: Student) => {
-    const currentDate = new Date();
-    const fraisDossierDueDate = new Date(currentDate);
-    fraisDossierDueDate.setDate(currentDate.getDate() + 14);
+    const registrationDate = new Date(student.registrationDate);
+    const fraisDossierDueDate = new Date(registrationDate);
+    fraisDossierDueDate.setDate(registrationDate.getDate() + 14);
     
-    const minervalDueDate = new Date(currentDate.getFullYear(), 11, 31); // 31 décembre
+    const minervalDueDate = new Date(registrationDate.getFullYear(), 11, 31); // 31 décembre
 
     // Calculer le montant du minerval selon le programme
     let minervalAmount = 5000; // BBA par défaut
