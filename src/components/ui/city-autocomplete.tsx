@@ -46,21 +46,26 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(target) &&
         inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
+        !inputRef.current.contains(target)
       ) {
         setIsOpen(false);
+        setHighlightedIndex(-1);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, []);
+  }, [isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -137,8 +142,8 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
                 "hover:bg-accent hover:text-accent-foreground",
                 highlightedIndex === index && "bg-accent text-accent-foreground"
               )}
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={(e) => {
+                e.stopPropagation();
                 handleCitySelect(city);
               }}
               onMouseEnter={() => setHighlightedIndex(index)}
