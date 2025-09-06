@@ -24,6 +24,7 @@ import { COUNTRY_TO_NATIONALITY, COUNTRY_CODE_TO_NAME } from "@/utils/countryToN
 import { WORLD_CITIES_LIST, WORLD_CITIES_MAPPING } from "@/utils/worldCities";
 import { generateInvoiceNumber } from "@/utils/documentGenerator";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
@@ -418,12 +419,10 @@ const StudentRegistration = () => {
                 </div>
                 <div>
                   <Label htmlFor="address">Adresse complète</Label>
-                  <Textarea
-                    id="address"
+                  <AddressAutocomplete
                     value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Rue, numéro, code postal, ville, pays"
-                    rows={2}
+                    onChange={(value) => handleInputChange('address', value)}
+                    placeholder="Rechercher une adresse..."
                   />
                 </div>
               </div>
