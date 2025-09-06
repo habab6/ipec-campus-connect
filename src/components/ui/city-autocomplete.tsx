@@ -38,6 +38,23 @@ const levenshteinDistance = (str1: string, str2: string): number => {
   return matrix[str2.length][str1.length];
 };
 
+// Fonction pour vérifier si une chaîne contient la plupart des caractères d'une autre
+const containsMostChars = (search: string, target: string): number => {
+  const searchChars = search.split('');
+  let matchCount = 0;
+  let targetIndex = 0;
+  
+  for (const char of searchChars) {
+    const foundIndex = target.indexOf(char, targetIndex);
+    if (foundIndex !== -1) {
+      matchCount++;
+      targetIndex = foundIndex + 1;
+    }
+  }
+  
+  return matchCount / search.length; // Retourne le pourcentage de correspondance
+};
+
 interface CityAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
@@ -72,7 +89,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
       // Recherche exacte et par inclusion d'abord
       const exactMatches: string[] = [];
       const includesMatches: string[] = [];
-      const fuzzyMatches: { city: string; distance: number }[] = [];
+      const fuzzyMatches: { city: string; score: number }[] = [];
       
       cities.forEach(city => {
         if (!city) return;
@@ -87,24 +104,32 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         else if (normalizedCity.includes(normalizedInput)) {
           includesMatches.push(city);
         }
-        // Recherche floue pour les similarités
+        // Recherche floue améliorée
         else {
+          // Distance de Levenshtein
           const distance = levenshteinDistance(normalizedInput, normalizedCity);
-          const maxDistance = Math.max(2, Math.floor(normalizedInput.length * 0.4));
-          if (distance <= maxDistance) {
-            fuzzyMatches.push({ city, distance });
+          const maxDistance = Math.max(3, Math.floor(Math.max(normalizedInput.length, normalizedCity.length) * 0.5));
+          
+          // Pourcentage de caractères en commun dans l'ordre
+          const charMatch = containsMostChars(normalizedInput, normalizedCity);
+          
+          // Score combiné (plus le score est bas, meilleur c'est)
+          const score = distance - (charMatch * 10);
+          
+          if (distance <= maxDistance || charMatch >= 0.6) {
+            fuzzyMatches.push({ city, score });
           }
         }
       });
       
-      // Trier les correspondances floues par distance
-      fuzzyMatches.sort((a, b) => a.distance - b.distance);
+      // Trier les correspondances floues par score (meilleur score = plus faible valeur)
+      fuzzyMatches.sort((a, b) => a.score - b.score);
       
       // Combiner les résultats : exact -> includes -> fuzzy
       const allMatches = [
         ...exactMatches,
         ...includesMatches,
-        ...fuzzyMatches.slice(0, 5).map(m => m.city) // Limiter les correspondances floues
+        ...fuzzyMatches.slice(0, 8).map(m => m.city) // Augmenter les correspondances floues
       ];
       
       const filtered = allMatches.slice(0, 10);
