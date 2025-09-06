@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useStudents } from '@/hooks/useStudents';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,10 +18,12 @@ import {
 } from "@/utils/documentGenerator";
 import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCreditNotePdf, downloadPdf } from "@/utils/positionPdfFiller";
 import { generatePaymentSummaryPdf, downloadPaymentSummary } from "@/utils/paymentSummaryGenerator";
+import { supabase } from '@/integrations/supabase/client';
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const { toast } = useToast();
+  const { getStudentById } = useStudents();
   const [student, setStudent] = useState<Student | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [creditNoteReason, setCreditNoteReason] = useState("");
@@ -28,27 +31,60 @@ const DocumentGeneration = () => {
   const [showCreditNoteForm, setShowCreditNoteForm] = useState(false);
   const [attestations, setAttestations] = useState<RegistrationAttestation[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const students = JSON.parse(localStorage.getItem('students') || '[]');
-    const storedPayments = JSON.parse(localStorage.getItem('payments') || '[]');
-    const storedAttestations = JSON.parse(localStorage.getItem('attestations') || '[]');
-    const storedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-    
-    const foundStudent = students.find((s: Student) => s.id === studentId);
-    if (foundStudent) {
-      setStudent(foundStudent);
-    }
-    
-    const studentPayments = storedPayments.filter((p: Payment) => p.studentId === studentId);
-    setPayments(studentPayments);
-    
-    const studentAttestations = storedAttestations.filter((a: RegistrationAttestation) => a.studentId === studentId);
-    setAttestations(studentAttestations);
-    
-    const studentInvoices = storedInvoices.filter((i: Invoice) => i.studentId === studentId);
-    setInvoices(studentInvoices);
-  }, [studentId]);
+    const loadStudentData = async () => {
+      if (!studentId) return;
+      
+      try {
+        console.log('Chargement des données pour l\'étudiant:', studentId);
+        
+        // Charger l'étudiant depuis Supabase
+        const foundStudent = await getStudentById(studentId);
+        console.log('Étudiant trouvé:', foundStudent);
+        
+        if (foundStudent) {
+          setStudent(foundStudent);
+          
+          // Charger les paiements depuis Supabase
+          const { data: paymentsData, error: paymentsError } = await supabase
+            .from('payments')
+            .select('*')
+            .eq('student_id', studentId);
+          
+          if (paymentsError) {
+            console.error('Erreur lors du chargement des paiements:', paymentsError);
+          } else {
+            console.log('Paiements trouvés:', paymentsData);
+            // Convertir les données de la DB vers le format frontend
+            const frontendPayments: Payment[] = (paymentsData || []).map((p: any) => ({
+              id: p.id,
+              studentId: p.student_id,
+              amount: p.amount,
+              dueDate: p.due_date,
+              paidDate: p.paid_date,
+              status: p.status,
+              type: p.type,
+              description: p.description,
+              method: p.method,
+              invoiceNumber: p.invoice_number,
+              invoiceDate: p.invoice_date,
+              academicYear: p.academic_year,
+              studyYear: p.study_year
+            }));
+            setPayments(frontendPayments);
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStudentData();
+  }, [studentId, getStudentById]);
 
   const generateAttestationNumber = (student: Student): string => {
     const year = new Date().getFullYear();
@@ -260,6 +296,17 @@ const DocumentGeneration = () => {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="container mx-auto max-w-2xl text-center">
+          <h1 className="text-2xl font-bold mb-4">Chargement...</h1>
+          <p className="text-muted-foreground mb-4">Chargement des données de l'étudiant...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!student) {
     return (

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useStudents } from '@/hooks/useStudents';
+import { usePayments } from '@/hooks/usePayments';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +17,8 @@ import { generateInvoiceNumber, generateInvoice, generatePaymentSummary, downloa
 
 const PaymentManagement = () => {
   const { toast } = useToast();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const { students } = useStudents();
+  const { payments, createPayment, updatePayment } = usePayments();
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [newPayment, setNewPayment] = useState({
@@ -44,17 +46,7 @@ const PaymentManagement = () => {
     paidDate: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    const storedStudents = localStorage.getItem('students');
-    const storedPayments = localStorage.getItem('payments');
-    
-    if (storedStudents) {
-      setStudents(JSON.parse(storedStudents));
-    }
-    if (storedPayments) {
-      setPayments(JSON.parse(storedPayments));
-    }
-  }, []);
+  // Les données sont maintenant chargées via les hooks useStudents et usePayments
 
   const calculateDueDate = (type: string): string => {
     const today = new Date();
@@ -75,7 +67,7 @@ const PaymentManagement = () => {
     return dueDate.toISOString().split('T')[0];
   };
 
-  const handleAddPayment = (e: React.FormEvent) => {
+  const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedStudent || !newPayment.amount || !newPayment.type) {
@@ -87,45 +79,50 @@ const PaymentManagement = () => {
       return;
     }
 
-    // Calcul automatique de l'échéance si non spécifiée
-    const dueDate = newPayment.dueDate || calculateDueDate(newPayment.type);
+    try {
+      // Calcul automatique de l'échéance si non spécifiée
+      const dueDate = newPayment.dueDate || calculateDueDate(newPayment.type);
 
-    const payment: Payment = {
-      id: Date.now().toString(),
-      studentId: selectedStudent,
-      amount: parseFloat(newPayment.amount),
-      dueDate: dueDate,
-      status: newPayment.paidDate ? 'Payé' : 'En attente',
-      type: newPayment.type as Payment['type'],
-      description: newPayment.description || `${newPayment.type} - ${getStudentName(selectedStudent)}`,
-      method: newPayment.paidMethod as Payment['method'],
-      invoiceNumber: generateInvoiceNumber(),
-      invoiceDate: new Date().toISOString().split('T')[0],
-      paidDate: newPayment.paidDate || undefined,
-      installments: newPayment.type === 'Minerval' ? [] : undefined
-    };
+      const payment: Omit<Payment, 'id'> = {
+        studentId: selectedStudent,
+        amount: parseFloat(newPayment.amount),
+        dueDate: dueDate,
+        status: newPayment.paidDate ? 'Payé' : 'En attente',
+        type: newPayment.type as Payment['type'],
+        description: newPayment.description || `${newPayment.type} - ${getStudentName(selectedStudent)}`,
+        method: newPayment.paidMethod as Payment['method'],
+        invoiceNumber: generateInvoiceNumber(),
+        invoiceDate: new Date().toISOString().split('T')[0],
+        paidDate: newPayment.paidDate || undefined,
+        installments: newPayment.type === 'Minerval' ? [] : undefined
+      };
 
-    const updatedPayments = [...payments, payment];
-    setPayments(updatedPayments);
-    localStorage.setItem('payments', JSON.stringify(updatedPayments));
+      await createPayment(payment);
 
-    toast({
-      title: "Paiement ajouté !",
-      description: `Nouveau paiement créé pour ${getStudentName(selectedStudent)}.`,
-    });
+      toast({
+        title: "Paiement ajouté !",
+        description: `Nouveau paiement créé pour ${getStudentName(selectedStudent)}.`,
+      });
 
-    // Reset form
-    setNewPayment({
-      amount: "",
-      dueDate: "",
-      type: "",
-      description: "",
-      method: "",
-      paidDate: "",
-      paidMethod: ""
-    });
-    setSelectedStudent("");
-    setShowAddPayment(false);
+      // Reset form
+      setNewPayment({
+        amount: "",
+        dueDate: "",
+        type: "",
+        description: "",
+        method: "",
+        paidDate: "",
+        paidMethod: ""
+      });
+      setSelectedStudent("");
+      setShowAddPayment(false);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer le paiement.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStudentName = (studentId: string): string => {
@@ -149,24 +146,25 @@ const PaymentManagement = () => {
     method: ''
   });
 
-  const markAsPaid = (paymentId: string, paidDate?: string, method?: Payment['method']) => {
-    const updatedPayments = payments.map(p => 
-      p.id === paymentId 
-        ? { 
-            ...p, 
-            status: 'Payé' as Payment['status'], 
-            paidDate: paidDate || new Date().toISOString().split('T')[0],
-            method: (method || p.method) as Payment['method']
-          }
-        : p
-    );
-    setPayments(updatedPayments);
-    localStorage.setItem('payments', JSON.stringify(updatedPayments));
-    
-    toast({
-      title: "Paiement confirmé",
-      description: "Le paiement a été marqué comme payé.",
-    });
+  const markAsPaid = async (paymentId: string, paidDate?: string, method?: Payment['method']) => {
+    try {
+      await updatePayment(paymentId, {
+        status: 'Payé' as Payment['status'],
+        paidDate: paidDate || new Date().toISOString().split('T')[0],
+        method: (method || undefined) as Payment['method']
+      });
+      
+      toast({
+        title: "Paiement confirmé",
+        description: "Le paiement a été marqué comme payé.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le paiement.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleMarkAsPaid = () => {
@@ -196,7 +194,7 @@ const PaymentManagement = () => {
     }
   };
 
-  const addInstallment = () => {
+  const addInstallment = async () => {
     const amount = parseFloat(installmentDialog.amount);
     if (!amount || amount <= 0) {
       toast({
@@ -207,47 +205,49 @@ const PaymentManagement = () => {
       return;
     }
 
-    const updatedPayments = payments.map(p => {
-      if (p.id === installmentDialog.paymentId) {
-        const currentInstallments = p.installments || [];
-        const totalPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0) + amount;
-        
-        const newInstallment = {
-          id: Date.now().toString(),
-          amount,
-          paidDate: installmentDialog.paidDate,
-          method: installmentDialog.method as Payment['method']
-        };
+    try {
+      const payment = payments.find(p => p.id === installmentDialog.paymentId);
+      if (!payment) return;
 
-        const updatedInstallments = [...currentInstallments, newInstallment];
-        const isFullyPaid = totalPaid >= p.amount;
+      const currentInstallments = payment.installments || [];
+      const totalPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0) + amount;
+      
+      const newInstallment = {
+        id: Date.now().toString(),
+        amount,
+        paidDate: installmentDialog.paidDate,
+        method: installmentDialog.method as Payment['method']
+      };
 
-        return {
-          ...p,
-          installments: updatedInstallments,
-          status: isFullyPaid ? 'Payé' as Payment['status'] : 'En attente' as Payment['status'],
-          paidDate: isFullyPaid ? installmentDialog.paidDate : undefined,
-          method: isFullyPaid ? installmentDialog.method as Payment['method'] : p.method
-        };
-      }
-      return p;
-    });
+      const updatedInstallments = [...currentInstallments, newInstallment];
+      const isFullyPaid = totalPaid >= payment.amount;
 
-    setPayments(updatedPayments);
-    localStorage.setItem('payments', JSON.stringify(updatedPayments));
-    
-    toast({
-      title: "Acompte ajouté",
-      description: `Acompte de ${amount}€ enregistré avec succès.`,
-    });
+      await updatePayment(installmentDialog.paymentId, {
+        installments: updatedInstallments,
+        status: isFullyPaid ? 'Payé' as Payment['status'] : 'En attente' as Payment['status'],
+        paidDate: isFullyPaid ? installmentDialog.paidDate : undefined,
+        method: isFullyPaid ? installmentDialog.method as Payment['method'] : payment.method
+      });
+      
+      toast({
+        title: "Acompte ajouté",
+        description: `Acompte de ${amount}€ enregistré avec succès.`,
+      });
 
-    setInstallmentDialog({
-      isOpen: false,
-      paymentId: '',
-      amount: '',
-      method: '',
-      paidDate: new Date().toISOString().split('T')[0]
-    });
+      setInstallmentDialog({
+        isOpen: false,
+        paymentId: '',
+        amount: '',
+        method: '',
+        paidDate: new Date().toISOString().split('T')[0]
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter l'acompte.",
+        variant: "destructive",
+      });
+    }
   };
 
   const openPaymentSummary = (payment: Payment) => {

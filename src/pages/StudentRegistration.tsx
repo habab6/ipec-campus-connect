@@ -11,6 +11,7 @@ import { UserPlus, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { useStudents } from "@/hooks/useStudents";
+import { supabase } from '@/integrations/supabase/client';
 import { 
   generateStudentReference, 
   BUSINESS_SPECIALTIES, 
@@ -58,6 +59,49 @@ const StudentRegistration = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { createStudent } = useStudents();
+
+  // Fonction pour créer les paiements par défaut
+  const createDefaultPayments = async (student: Student) => {
+    const currentDate = new Date();
+    const fraisDossierDueDate = new Date(currentDate);
+    fraisDossierDueDate.setDate(currentDate.getDate() + 14);
+    
+    const minervalDueDate = new Date(currentDate.getFullYear(), 11, 31); // 31 décembre
+
+    const payments = [
+      {
+        student_id: student.id,
+        amount: 50, // Frais de dossier
+        due_date: fraisDossierDueDate.toISOString().split('T')[0],
+        status: 'En attente',
+        type: 'Frais de dossier',
+        description: `Frais de dossier - ${student.firstName} ${student.lastName}`,
+        academic_year: student.academicYear,
+        study_year: student.studyYear
+      },
+      {
+        student_id: student.id,
+        amount: 1200, // Minerval (montant par défaut)
+        due_date: minervalDueDate.toISOString().split('T')[0],
+        status: 'En attente',
+        type: 'Minerval',
+        description: `Minerval ${student.academicYear} - ${student.firstName} ${student.lastName}`,
+        academic_year: student.academicYear,
+        study_year: student.studyYear
+      }
+    ];
+
+    try {
+      const { error } = await supabase
+        .from('payments')
+        .insert(payments);
+
+      if (error) throw error;
+      console.log('Paiements par défaut créés pour l\'étudiant:', student.id);
+    } catch (error) {
+      console.error('Erreur lors de la création des paiements par défaut:', error);
+    }
+  };
   const currentYear = new Date().getFullYear();
   const [formData, setFormData] = useState<StudentData>({
     civilite: "",
