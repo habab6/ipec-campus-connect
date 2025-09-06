@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useStudents } from '@/hooks/useStudents';
+import { usePayments } from '@/hooks/usePayments';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,19 +19,26 @@ import {
 } from "@/utils/documentGenerator";
 import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCreditNotePdf, downloadPdf } from "@/utils/positionPdfFiller";
 import { generatePaymentSummaryPdf, downloadPaymentSummary } from "@/utils/paymentSummaryGenerator";
-import { supabase } from '@/integrations/supabase/client';
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const { toast } = useToast();
   const { getStudentById } = useStudents();
+  const { 
+    getPaymentsByStudentId, 
+    getAttestationsByStudentId, 
+    createAttestation, 
+    getInvoicesByStudentId, 
+    createInvoice,
+    updatePayment 
+  } = usePayments();
   const [student, setStudent] = useState<Student | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [creditNoteReason, setCreditNoteReason] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showCreditNoteForm, setShowCreditNoteForm] = useState(false);
-  const [attestations, setAttestations] = useState<RegistrationAttestation[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [attestations, setAttestations] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,33 +56,19 @@ const DocumentGeneration = () => {
           setStudent(foundStudent);
           
           // Charger les paiements depuis Supabase
-          const { data: paymentsData, error: paymentsError } = await supabase
-            .from('payments')
-            .select('*')
-            .eq('student_id', studentId);
-          
-          if (paymentsError) {
-            console.error('Erreur lors du chargement des paiements:', paymentsError);
-          } else {
-            console.log('Paiements trouvés:', paymentsData);
-            // Convertir les données de la DB vers le format frontend
-            const frontendPayments: Payment[] = (paymentsData || []).map((p: any) => ({
-              id: p.id,
-              studentId: p.student_id,
-              amount: p.amount,
-              dueDate: p.due_date,
-              paidDate: p.paid_date,
-              status: p.status,
-              type: p.type,
-              description: p.description,
-              method: p.method,
-              invoiceNumber: p.invoice_number,
-              invoiceDate: p.invoice_date,
-              academicYear: p.academic_year,
-              studyYear: p.study_year
-            }));
-            setPayments(frontendPayments);
-          }
+          const paymentsData = await getPaymentsByStudentId(studentId);
+          console.log('Paiements trouvés:', paymentsData);
+          setPayments(paymentsData);
+
+          // Charger les attestations depuis Supabase
+          const attestationsData = await getAttestationsByStudentId(studentId);
+          console.log('Attestations trouvées:', attestationsData);
+          setAttestations(attestationsData);
+
+          // Charger les factures depuis Supabase
+          const invoicesData = await getInvoicesByStudentId(studentId);
+          console.log('Factures trouvées:', invoicesData);
+          setInvoices(invoicesData);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -84,7 +78,7 @@ const DocumentGeneration = () => {
     };
 
     loadStudentData();
-  }, [studentId, getStudentById]);
+  }, [studentId, getStudentById, getPaymentsByStudentId, getAttestationsByStudentId, getInvoicesByStudentId]);
 
   const generateAttestationNumber = (student: Student): string => {
     const year = new Date().getFullYear();
@@ -98,11 +92,10 @@ const DocumentGeneration = () => {
   };
 
   const getCurrentAttestation = () => {
-    const key = getCurrentAttestationKey();
     return attestations.find(a => 
-      a.studentId === student?.id && 
-      a.academicYear === student?.academicYear && 
-      a.studyYear === student?.studyYear
+      a.student_id === student?.id && 
+      a.academic_year === student?.academicYear && 
+      a.study_year === student?.studyYear
     );
   };
 
@@ -112,26 +105,20 @@ const DocumentGeneration = () => {
     try {
       let attestation = getCurrentAttestation();
       
-      // Si c'est une première génération, créer l'attestation
+      // Si c'est une première génération, créer l'attestation dans Supabase
       if (!attestation && !isDuplicate) {
-        const newAttestation: RegistrationAttestation = {
-          id: crypto.randomUUID(),
-          studentId: student.id,
+        const newAttestationData = {
+          student_id: student.id,
           number: generateAttestationNumber(student),
-          academicYear: student.academicYear,
-          studyYear: student.studyYear,
-          generateDate: new Date().toISOString(),
+          academic_year: student.academicYear,
+          study_year: student.studyYear,
           program: student.program,
           specialty: student.specialty
         };
         
-        // Sauvegarder l'attestation
-        const allAttestations = JSON.parse(localStorage.getItem('attestations') || '[]');
-        allAttestations.push(newAttestation);
-        localStorage.setItem('attestations', JSON.stringify(allAttestations));
-        
-        setAttestations(prev => [...prev, newAttestation]);
-        attestation = newAttestation;
+        const createdAttestation = await createAttestation(newAttestationData);
+        setAttestations(prev => [...prev, createdAttestation]);
+        attestation = createdAttestation;
       }
       
       if (!attestation) return;
@@ -177,21 +164,18 @@ const DocumentGeneration = () => {
   };
 
   const getExistingInvoice = (payment: Payment) => {
-    const key = getInvoiceKey(payment);
-    if (!key) return null;
-    
     if (payment.type === 'Frais de dossier') {
       return invoices.find(i => 
-        i.studentId === student?.id && 
+        i.student_id === student?.id && 
         i.type === payment.type
       );
     }
     
     return invoices.find(i => 
-      i.studentId === student?.id && 
+      i.student_id === student?.id && 
       i.type === payment.type &&
-      i.academicYear === student?.academicYear &&
-      i.studyYear === student?.studyYear
+      i.academic_year === student?.academicYear &&
+      i.study_year === student?.studyYear
     );
   };
 
@@ -201,27 +185,21 @@ const DocumentGeneration = () => {
     try {
       let invoice = getExistingInvoice(payment);
       
-      // Si c'est une première génération, créer la facture
+      // Si c'est une première génération, créer la facture dans Supabase
       if (!invoice && !isDuplicate) {
-        const newInvoice: Invoice = {
-          id: crypto.randomUUID(),
-          studentId: student.id,
-          paymentId: payment.id,
+        const newInvoiceData = {
+          student_id: student.id,
+          payment_id: payment.id,
           number: generateInvoiceNumber(student, payment),
-          generateDate: new Date().toISOString(),
           amount: payment.amount,
           type: payment.type,
-          academicYear: payment.type !== 'Frais de dossier' ? student.academicYear : undefined,
-          studyYear: payment.type !== 'Frais de dossier' ? student.studyYear : undefined
+          academic_year: payment.type !== 'Frais de dossier' ? student.academicYear : null,
+          study_year: payment.type !== 'Frais de dossier' ? student.studyYear : null
         };
         
-        // Sauvegarder la facture
-        const allInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-        allInvoices.push(newInvoice);
-        localStorage.setItem('invoices', JSON.stringify(allInvoices));
-        
-        setInvoices(prev => [...prev, newInvoice]);
-        invoice = newInvoice;
+        const createdInvoice = await createInvoice(newInvoiceData);
+        setInvoices(prev => [...prev, createdInvoice]);
+        invoice = createdInvoice;
       }
       
       if (!invoice) return;
@@ -262,22 +240,14 @@ const DocumentGeneration = () => {
       const filename = `avoir-${selectedPayment.id}-${student.firstName}-${student.lastName}.pdf`;
       downloadPdf(pdfBytes, filename);
 
-      // Mettre à jour le statut du paiement
+      // Mettre à jour le statut du paiement dans Supabase
+      const updatedPayment = { ...selectedPayment, status: 'Remboursé' as Payment['status'] };
+      await updatePayment(selectedPayment.id, { status: 'Remboursé' });
+      
       const updatedPayments = payments.map(p => 
-        p.id === selectedPayment.id 
-          ? { ...p, status: 'Remboursé' as Payment['status'] }
-          : p
+        p.id === selectedPayment.id ? updatedPayment : p
       );
       setPayments(updatedPayments);
-      
-      // Sauvegarder dans localStorage
-      const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
-      const globalUpdatedPayments = allPayments.map((p: Payment) => 
-        p.id === selectedPayment.id 
-          ? { ...p, status: 'Remboursé' as Payment['status'] }
-          : p
-      );
-      localStorage.setItem('payments', JSON.stringify(globalUpdatedPayments));
       
       toast({
         title: "Note de crédit générée",
@@ -375,8 +345,8 @@ const DocumentGeneration = () => {
                 <div className="space-y-3">
                   {/* Attestation année courante */}
                   {(() => {
-                    const currentAttestation = getCurrentAttestation();
-                    const hasCurrentAttestation = !!currentAttestation;
+                    const attestation = getCurrentAttestation();
+                    const hasAttestation = !!attestation;
                     
                     return (
                       <div className="p-3 border rounded-lg bg-muted/50">
@@ -388,17 +358,17 @@ const DocumentGeneration = () => {
                             <p className="text-sm text-muted-foreground">
                               Année académique : {student?.academicYear}
                             </p>
-                            {currentAttestation && (
+                            {attestation && (
                               <p className="text-xs text-muted-foreground">
-                                Attestation : {currentAttestation.number} 
-                                {currentAttestation.generateDate && 
-                                  ` - Générée le ${new Date(currentAttestation.generateDate).toLocaleDateString('fr-FR')}`
+                                Attestation : {attestation.number} 
+                                {attestation.generate_date && 
+                                  ` - Générée le ${new Date(attestation.generate_date).toLocaleDateString('fr-FR')}`
                                 }
                               </p>
                             )}
                           </div>
                           <div className="flex gap-2">
-                            {hasCurrentAttestation ? (
+                            {hasAttestation ? (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -424,17 +394,17 @@ const DocumentGeneration = () => {
                   
                   {/* Attestations des années précédentes */}
                   {attestations
-                    .filter(a => !(a.academicYear === student?.academicYear && a.studyYear === student?.studyYear))
-                    .sort((a, b) => new Date(b.generateDate).getTime() - new Date(a.generateDate).getTime())
+                    .filter(a => !(a.academic_year === student?.academicYear && a.study_year === student?.studyYear))
+                    .sort((a, b) => new Date(b.created_at || b.generate_date).getTime() - new Date(a.created_at || a.generate_date).getTime())
                     .map((attestation) => (
                       <div key={attestation.id} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">
-                              {attestation.program} - {attestation.studyYear}ème année
+                              {attestation.program} - {attestation.study_year}ème année
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              Année académique : {attestation.academicYear}
+                              Année académique : {attestation.academic_year}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               Attestation : {attestation.number} - 

@@ -137,6 +137,75 @@ export function usePayments() {
     fetchPayments();
   }, []);
 
+  
+  // Fonction pour récupérer les attestations d'un étudiant
+  const getAttestationsByStudentId = async (studentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('registration_attestations')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des attestations:', error);
+      return [];
+    }
+  };
+
+  // Fonction pour créer une attestation
+  const createAttestation = async (attestationData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('registration_attestations')
+        .insert([attestationData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'attestation:', error);
+      throw error;
+    }
+  };
+
+  // Fonction pour récupérer les factures d'un étudiant
+  const getInvoicesByStudentId = async (studentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des factures:', error);
+      return [];
+    }
+  };
+
+  // Fonction pour créer une facture
+  const createInvoice = async (invoiceData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert([invoiceData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erreur lors de la création de la facture:', error);
+      throw error;
+    }
+  };
+
   return {
     payments,
     loading,
@@ -144,6 +213,10 @@ export function usePayments() {
     fetchPayments,
     createPayment,
     updatePayment,
-    getPaymentsByStudentId
+    getPaymentsByStudentId,
+    getAttestationsByStudentId,
+    createAttestation,
+    getInvoicesByStudentId,
+    createInvoice
   };
 }
