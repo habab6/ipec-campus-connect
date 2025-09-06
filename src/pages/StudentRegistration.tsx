@@ -92,11 +92,15 @@ const StudentRegistration = () => {
     ];
 
     try {
+      console.log('Tentative d\'insertion des paiements:', payments);
       const { error } = await supabase
         .from('payments')
         .insert(payments);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase lors de l\'insertion des paiements:', error);
+        throw error;
+      }
       console.log('Paiements par défaut créés pour l\'étudiant:', student.id);
     } catch (error) {
       console.error('Erreur lors de la création des paiements par défaut:', error);
@@ -211,6 +215,10 @@ const StudentRegistration = () => {
 
       const createdStudent = await createStudent(newStudent);
       console.log('Étudiant créé avec Supabase:', createdStudent);
+
+      // Créer automatiquement les paiements obligatoires
+      console.log('Création des paiements par défaut...');
+      await createDefaultPayments(createdStudent);
 
       toast({
         title: "Inscription réussie !",
