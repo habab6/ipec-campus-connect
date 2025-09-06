@@ -42,6 +42,8 @@ const DocumentGeneration = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('DocumentGeneration useEffect triggered - studentId:', studentId);
+    
     const loadStudentData = async () => {
       if (!studentId) return;
       
@@ -78,7 +80,7 @@ const DocumentGeneration = () => {
     };
 
     loadStudentData();
-  }, [studentId, getStudentById, getPaymentsByStudentId, getAttestationsByStudentId, getInvoicesByStudentId]);
+  }, [studentId]); // Supprimé les fonctions des dépendances pour éviter la boucle infinie
 
   const generateAttestationNumber = (student: Student): string => {
     const year = new Date().getFullYear();
