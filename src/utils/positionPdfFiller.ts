@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { Student, Payment } from '@/types';
+import { Student, Payment, RegistrationAttestation } from '@/types';
 
 // Configuration des positions pour chaque champ
 // Ajustez ces coordonnées selon votre template PDF
@@ -47,8 +47,15 @@ const loadQuestrialFont = async (): Promise<Uint8Array> => {
   }
 };
 
+// Générer un numéro d'attestation unique
+const generateAttestationNumber = (student: Student): string => {
+  const year = new Date().getFullYear();
+  const studentCode = student.reference.split('-')[0] || student.id.slice(0, 4).toUpperCase();
+  return `ATT-${year}-${studentCode}-${student.studyYear}`;
+};
+
 // Remplir le PDF avec positionnement x,y
-export const fillRegistrationPdfWithPositions = async (student: Student, templatePath: string = '/templates/attestation-template.pdf'): Promise<Uint8Array> => {
+export const fillRegistrationPdfWithPositions = async (student: Student, attestationNumber?: string, templatePath: string = '/templates/attestation-template.pdf'): Promise<Uint8Array> => {
   try {
     console.log('📍 Génération PDF avec positionnement x,y');
     
@@ -77,7 +84,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, templat
     
     // Préparer les données avec tous les nouveaux champs
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    const documentNumber = `ATT-${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}-${Date.now().toString().slice(-4)}`;
+    const documentNumber = attestationNumber || generateAttestationNumber(student);
     
     // Formatage du niveau d'études
     const formatNiveau = (studyYear: number) => {

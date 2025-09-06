@@ -71,3 +71,14 @@ export interface CreditNote {
   date: string;
   number: string;
 }
+
+export interface RegistrationAttestation {
+  id: string;
+  studentId: string;
+  number: string; // ATT-XXXX unique
+  academicYear: string;
+  studyYear: number;
+  generateDate: string;
+  program: string;
+  specialty: string;
+}

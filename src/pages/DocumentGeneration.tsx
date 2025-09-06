@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, ArrowLeft, CreditCard, Receipt, FileCheck } from "lucide-react";
-import { Student, Payment } from "@/types";
+import { Student, Payment, RegistrationAttestation } from "@/types";
 import { 
   generateRegistrationDocument, 
   generateInvoice, 
@@ -25,10 +25,12 @@ const DocumentGeneration = () => {
   const [creditNoteReason, setCreditNoteReason] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showCreditNoteForm, setShowCreditNoteForm] = useState(false);
+  const [attestations, setAttestations] = useState<RegistrationAttestation[]>([]);
 
   useEffect(() => {
     const students = JSON.parse(localStorage.getItem('students') || '[]');
     const storedPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+    const storedAttestations = JSON.parse(localStorage.getItem('attestations') || '[]');
     
     const foundStudent = students.find((s: Student) => s.id === studentId);
     if (foundStudent) {
@@ -37,19 +39,72 @@ const DocumentGeneration = () => {
     
     const studentPayments = storedPayments.filter((p: Payment) => p.studentId === studentId);
     setPayments(studentPayments);
+    
+    const studentAttestations = storedAttestations.filter((a: RegistrationAttestation) => a.studentId === studentId);
+    setAttestations(studentAttestations);
   }, [studentId]);
 
-  const generateRegistrationDoc = async () => {
+  const generateAttestationNumber = (student: Student): string => {
+    const year = new Date().getFullYear();
+    const studentCode = student.reference.split('-')[0] || student.id.slice(0, 4).toUpperCase();
+    return `ATT-${year}-${studentCode}-${student.studyYear}`;
+  };
+
+  const getCurrentAttestationKey = () => {
+    if (!student) return null;
+    return `${student.id}-${student.academicYear}-${student.studyYear}`;
+  };
+
+  const getCurrentAttestation = () => {
+    const key = getCurrentAttestationKey();
+    return attestations.find(a => 
+      a.studentId === student?.id && 
+      a.academicYear === student?.academicYear && 
+      a.studyYear === student?.studyYear
+    );
+  };
+
+  const generateRegistrationDoc = async (isDuplicate = false) => {
     if (!student) return;
     
     try {
-      const pdfBytes = await fillRegistrationPdfWithPositions(student);
-      const filename = `attestation-inscription-${student.firstName}-${student.lastName}.pdf`;
+      let attestation = getCurrentAttestation();
+      
+      // Si c'est une première génération, créer l'attestation
+      if (!attestation && !isDuplicate) {
+        const newAttestation: RegistrationAttestation = {
+          id: crypto.randomUUID(),
+          studentId: student.id,
+          number: generateAttestationNumber(student),
+          academicYear: student.academicYear,
+          studyYear: student.studyYear,
+          generateDate: new Date().toISOString(),
+          program: student.program,
+          specialty: student.specialty
+        };
+        
+        // Sauvegarder l'attestation
+        const allAttestations = JSON.parse(localStorage.getItem('attestations') || '[]');
+        allAttestations.push(newAttestation);
+        localStorage.setItem('attestations', JSON.stringify(allAttestations));
+        
+        setAttestations(prev => [...prev, newAttestation]);
+        attestation = newAttestation;
+      }
+      
+      if (!attestation) return;
+      
+      const pdfBytes = await fillRegistrationPdfWithPositions(student, attestation.number);
+      const filename = isDuplicate 
+        ? `duplicata-attestation-${student.firstName}-${student.lastName}-${attestation.number}.pdf`
+        : `attestation-inscription-${student.firstName}-${student.lastName}-${attestation.number}.pdf`;
       downloadPdf(pdfBytes, filename);
       
       toast({
-        title: "Document généré",
-        description: "L'attestation d'inscription a été générée avec succès.",
+        title: isDuplicate ? "Duplicata téléchargé" : "Attestation générée",
+        description: isDuplicate 
+          ? `Duplicata de l'attestation ${attestation.number} téléchargé.`
+          : `Attestation ${attestation.number} générée avec succès.`,
       });
     } catch (error) {
       toast({
@@ -188,18 +243,124 @@ const DocumentGeneration = () => {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center">
                   <FileCheck className="mr-2 h-5 w-5 text-primary" />
-                  Document d'inscription
+                  Attestations d'inscription
                 </CardTitle>
                 <CardDescription>
-                  Générer le document officiel d'inscription de l'étudiant
+                  Attestations officielles d'inscription par année académique
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <Button onClick={generateRegistrationDoc} className="w-full">
-                    <Download className="mr-2 h-4 w-4" />
-                    Télécharger le document
-                  </Button>
+                  {/* Attestation année courante */}
+                  {(() => {
+                    const currentAttestation = getCurrentAttestation();
+                    const hasCurrentAttestation = !!currentAttestation;
+                    
+                    return (
+                      <div className="p-3 border rounded-lg bg-muted/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">
+                              {student?.program} - {student?.studyYear}ème année
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Année académique : {student?.academicYear}
+                            </p>
+                            {currentAttestation && (
+                              <p className="text-xs text-muted-foreground">
+                                Attestation : {currentAttestation.number} 
+                                {currentAttestation.generateDate && 
+                                  ` - Générée le ${new Date(currentAttestation.generateDate).toLocaleDateString('fr-FR')}`
+                                }
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            {hasCurrentAttestation ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => generateRegistrationDoc(true)}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Duplicata
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => generateRegistrationDoc(false)}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Générer l'attestation
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* Attestations des années précédentes */}
+                  {attestations
+                    .filter(a => !(a.academicYear === student?.academicYear && a.studyYear === student?.studyYear))
+                    .sort((a, b) => new Date(b.generateDate).getTime() - new Date(a.generateDate).getTime())
+                    .map((attestation) => (
+                      <div key={attestation.id} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">
+                              {attestation.program} - {attestation.studyYear}ème année
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Année académique : {attestation.academicYear}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Attestation : {attestation.number} - 
+                              Générée le {new Date(attestation.generateDate).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Créer un student temporaire avec les données de l'attestation
+                              const tempStudent = {
+                                ...student!,
+                                program: attestation.program as Student['program'],
+                                studyYear: attestation.studyYear,
+                                academicYear: attestation.academicYear,
+                                specialty: attestation.specialty
+                              };
+                              fillRegistrationPdfWithPositions(tempStudent, attestation.number)
+                                .then(pdfBytes => {
+                                  const filename = `duplicata-attestation-${student?.firstName}-${student?.lastName}-${attestation.number}.pdf`;
+                                  downloadPdf(pdfBytes, filename);
+                                  toast({
+                                    title: "Duplicata téléchargé",
+                                    description: `Duplicata de l'attestation ${attestation.number} téléchargé.`,
+                                  });
+                                })
+                                .catch(error => {
+                                  toast({
+                                    title: "Erreur",
+                                    description: "Impossible de télécharger le duplicata",
+                                    variant: "destructive",
+                                  });
+                                });
+                            }}
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            Duplicata
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  
+                  {attestations.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">
+                      Aucune attestation générée pour cet étudiant.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
