@@ -29,6 +29,7 @@ export const COUNTRY_TO_NATIONALITY: Record<string, string> = {
 export const COUNTRY_CODE_TO_NAME: Record<string, string> = {
   "MA": "Maroc", "DZ": "Algérie", "TN": "Tunisie", "SN": "Sénégal", "CM": "Cameroun", "CG": "République du Congo", "CD": "République démocratique du Congo", "GA": "Gabon", "GN": "Guinée",
   "FR": "France", "DE": "Allemagne", "GB": "Royaume-Uni", "IT": "Italie", "ES": "Espagne", "NL": "Pays-Bas", "BE": "Belgique",
+  "RS": "Serbie", "HR": "Croatie", "BA": "Bosnie-Herzégovine", "SI": "Slovénie", "MK": "Macédoine du Nord", "AL": "Albanie", "ME": "Monténégro", "BG": "Bulgarie", "GR": "Grèce", "TR": "Turquie",
   "US": "États-Unis", "CA": "Canada",
   "JP": "Japon", "CN": "Chine", "KR": "Corée du Sud", "IN": "Inde", "TH": "Thaïlande", "ID": "Indonésie", "PH": "Philippines", "SG": "Singapour", "MY": "Malaisie", "VN": "Viêt Nam",
   "BR": "Brésil", "AR": "Argentine", "PE": "Pérou", "CO": "Colombie", "CL": "Chili", "VE": "Venezuela", "BO": "Bolivie", "EC": "Équateur", "UY": "Uruguay", "PY": "Paraguay", "GY": "Guyana", "SR": "Suriname", "GF": "Guyane française",
