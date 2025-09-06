@@ -631,10 +631,6 @@ const PaymentManagement = () => {
                             <Badge variant="outline">{payment.type}</Badge>
                           </div>
                           
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {payment.description}
-                          </p>
-                          
                           <div className="flex items-center gap-4 mt-1">
                             <span className="text-sm">
                               <strong>Montant:</strong> {payment.amount}€
@@ -671,12 +667,6 @@ const PaymentManagement = () => {
                           {payment.method && (
                             <p className="text-xs text-muted-foreground mt-1">
                               <strong>Moyen:</strong> {payment.method}
-                            </p>
-                          )}
-
-                          {payment.description && (
-                            <p className="text-sm text-muted-foreground mt-2 italic">
-                              {payment.description}
                             </p>
                           )}
                         </div>
