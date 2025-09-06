@@ -35,8 +35,16 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
       const filtered = cities.filter(city =>
         city && city.toLowerCase().includes(value.toLowerCase())
       ).slice(0, 10); // Limite à 10 suggestions
-      setFilteredCities(filtered);
-      setIsOpen(filtered.length > 0);
+      
+      // Ne pas afficher le dropdown si la valeur correspond exactement à une ville
+      const exactMatch = cities.find(city => city.toLowerCase() === value.toLowerCase());
+      if (exactMatch) {
+        setFilteredCities([]);
+        setIsOpen(false);
+      } else {
+        setFilteredCities(filtered);
+        setIsOpen(filtered.length > 0);
+      }
       setHighlightedIndex(-1);
     } else {
       setFilteredCities([]);
