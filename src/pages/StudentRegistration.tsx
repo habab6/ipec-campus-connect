@@ -68,6 +68,11 @@ const StudentRegistration = () => {
     
     const minervalDueDate = new Date(currentDate.getFullYear(), 11, 31); // 31 décembre
 
+    // Calculer le montant du minerval selon le programme
+    let minervalAmount = 5000; // BBA par défaut
+    if (student.program === 'MBA') minervalAmount = 4000;
+    if (student.program === 'MBA Complémentaire') minervalAmount = 3000;
+
     const payments = [
       {
         student_id: student.id,
@@ -81,7 +86,7 @@ const StudentRegistration = () => {
       },
       {
         student_id: student.id,
-        amount: 5000, // Minerval BBA
+        amount: minervalAmount,
         due_date: minervalDueDate.toISOString().split('T')[0],
         status: 'En attente',
         type: 'Minerval',
@@ -452,7 +457,7 @@ const StudentRegistration = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="BBA">BBA - 5000€/an</SelectItem>
-                        <SelectItem value="MBA">MBA - 6000€/an</SelectItem>
+                        <SelectItem value="MBA">MBA - 4000€/an</SelectItem>
                         <SelectItem value="MBA Complémentaire">MBA Complémentaire - 3000€/an</SelectItem>
                       </SelectContent>
                     </Select>
