@@ -56,7 +56,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&countrycodes=be,fr,lu,nl,de`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8&addressdetails=1`
       );
       const data: AddressResult[] = await response.json();
       setSuggestions(data);
