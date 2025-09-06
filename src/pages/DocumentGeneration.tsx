@@ -410,7 +410,7 @@ const DocumentGeneration = () => {
                             </p>
                             <p className="text-xs text-muted-foreground">
                               Attestation : {attestation.number} - 
-                              Générée le {new Date(attestation.generateDate).toLocaleDateString('fr-FR')}
+                              Générée le {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
                             </p>
                           </div>
                           <Button
@@ -517,7 +517,7 @@ const DocumentGeneration = () => {
                                 {existingInvoice && (
                                   <p className="text-xs text-primary font-medium mt-1">
                                     <strong>Facture : {existingInvoice.number}</strong> - 
-                                    Générée le {new Date(existingInvoice.generateDate).toLocaleDateString('fr-FR')}
+                                    Générée le {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}
                                   </p>
                                 )}
                               </div>
