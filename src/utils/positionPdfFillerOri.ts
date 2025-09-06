@@ -42,7 +42,7 @@ const loadQuestrialFont = async (): Promise<Uint8Array> => {
 };
 
 // Remplir le PDF avec positionnement x,y
-export const fillRegistrationPdfWithPositions = async (student: Student, templatePath: string = '/templates/attestation-template.pdf'): Promise<Uint8Array> => {
+export const fillRegistrationPdfWithPositions = async (student: Student, attestationNumber?: string, templatePath: string = '/templates/attestation-template.pdf'): Promise<Uint8Array> => {
   try {
     console.log('📍 Génération PDF avec positionnement x,y');
     
@@ -71,7 +71,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, templat
     
     // Préparer les données
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    const documentNumber = `ATT-${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}-${Date.now().toString().slice(-4)}`;
+    const documentNumber = attestationNumber || `ATT-${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}-${Date.now().toString().slice(-4)}`;
 
     const fieldData = {
       numeroDocument: documentNumber,
@@ -115,7 +115,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, templat
 };
 
 // Version pour les factures
-export const fillInvoicePdfWithPositions = async (student: Student, payment: Payment, templatePath: string = '/templates/facture-template.pdf'): Promise<Uint8Array> => {
+export const fillInvoicePdfWithPositions = async (student: Student, payment: Payment, invoiceNumber?: string, templatePath: string = '/templates/facture-template.pdf'): Promise<Uint8Array> => {
   try {
     const existingPdfBytes = await loadPdfTemplate(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
@@ -135,7 +135,7 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
     }
 
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    const invoiceNumber = `IPEC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-6)}`;
+    const invoiceNum = invoiceNumber || `IPEC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-6)}`;
 
     // Positions pour la facture (ajustez selon votre template)
     const invoicePositions = {
@@ -146,7 +146,7 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
     };
 
     const invoiceData = {
-      numeroFacture: invoiceNumber,
+      numeroFacture: invoiceNum,
       dateFacture: currentDate,
       nomClient: `${student.firstName} ${student.lastName}`,
       montant: `${payment.amount} €`,

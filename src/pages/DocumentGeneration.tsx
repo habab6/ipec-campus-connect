@@ -82,10 +82,13 @@ const DocumentGeneration = () => {
     loadStudentData();
   }, [studentId]); // Supprimé les fonctions des dépendances pour éviter la boucle infinie
 
-  const generateAttestationNumber = (student: Student): string => {
-    const year = new Date().getFullYear();
-    const studentCode = student.reference.split('-')[0] || student.id.slice(0, 4).toUpperCase();
-    return `ATT-${year}-${studentCode}-${student.studyYear}`;
+  const generateAttestationNumber = async (): Promise<string> => {
+    // Use the same logic as the academic year management hook
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { count } = await supabase
+      .from('registration_attestations')
+      .select('*', { count: 'exact', head: true });
+    return `ATT-${String((count || 0) + 1).padStart(4, '0')}`;
   };
 
   const getCurrentAttestationKey = () => {
@@ -109,9 +112,10 @@ const DocumentGeneration = () => {
       
       // Si c'est une première génération, créer l'attestation dans Supabase
       if (!attestation && !isDuplicate) {
+        const attestationNumber = await generateAttestationNumber();
         const newAttestationData = {
           student_id: student.id,
-          number: generateAttestationNumber(student),
+          number: attestationNumber,
           academic_year: student.academicYear,
           study_year: student.studyYear,
           program: student.program,
@@ -147,13 +151,18 @@ const DocumentGeneration = () => {
     }
   };
 
-  const generateInvoiceNumber = (student: Student, payment: Payment): string => {
+  const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
+    // Use the same logic for unique invoice numbers
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { count } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true });
+    
     const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    const studentCode = student.reference.split('-')[0] || student.id.slice(0, 4).toUpperCase();
+    const invoiceCount = (count || 0) + 1;
     const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
                      payment.type === 'Minerval' ? 'MIN' : 'FAC';
-    return `IPEC-${year}${month}-${studentCode}-${typeCode}`;
+    return `IPEC-${year}-${String(invoiceCount).padStart(4, '0')}-${typeCode}`;
   };
 
   const getInvoiceKey = (payment: Payment) => {
@@ -177,8 +186,8 @@ const DocumentGeneration = () => {
     return invoices.find(i => 
       i.student_id === student?.id && 
       i.type === payment.type &&
-      i.academic_year === student?.academicYear &&
-      i.study_year === student?.studyYear
+      i.academic_year === payment.academicYear &&
+      i.study_year === payment.studyYear
     );
   };
 
@@ -190,14 +199,15 @@ const DocumentGeneration = () => {
       
       // Si c'est une première génération, créer la facture dans Supabase
       if (!invoice && !isDuplicate) {
+        const invoiceNumber = await generateInvoiceNumber(student, payment);
         const newInvoiceData = {
           student_id: student.id,
           payment_id: payment.id,
-          number: generateInvoiceNumber(student, payment),
+          number: invoiceNumber,
           amount: payment.amount,
           type: payment.type,
-          academic_year: payment.type !== 'Frais de dossier' ? student.academicYear : null,
-          study_year: payment.type !== 'Frais de dossier' ? student.studyYear : null,
+          academic_year: payment.academicYear,
+          study_year: payment.studyYear,
           generate_date: student.registrationDate
         };
         
