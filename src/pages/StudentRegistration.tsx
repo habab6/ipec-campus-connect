@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserPlus, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Student, Payment } from "@/types";
+import { useStudents } from "@/hooks/useStudents";
 import { 
   generateStudentReference, 
   BUSINESS_SPECIALTIES, 
@@ -56,6 +57,7 @@ interface StudentData {
 const StudentRegistration = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { createStudent } = useStudents();
   const currentYear = new Date().getFullYear();
   const [formData, setFormData] = useState<StudentData>({
     civilite: "",
@@ -127,103 +129,58 @@ const StudentRegistration = () => {
       return;
     }
 
-    // Générer la référence unique
-    const currentYear = new Date().getFullYear();
-    const reference = generateStudentReference(
-      formData.firstName,
-      formData.lastName,
-      formData.dateOfBirth,
-      formData.countryOfBirth,
-      currentYear
-    );
+    try {
+      // Générer la référence unique
+      const currentYear = new Date().getFullYear();
+      const reference = generateStudentReference(
+        formData.firstName,
+        formData.lastName,
+        formData.dateOfBirth,
+        formData.countryOfBirth,
+        currentYear
+      );
 
-    // Créer l'étudiant
-    const students = JSON.parse(localStorage.getItem('students') || '[]');
-    const newStudent: Student = {
-      id: Date.now().toString(),
-      reference,
-      civilite: formData.civilite as 'M.' | 'Mme' | 'Mlle' | 'Mx',
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      dateOfBirth: formData.dateOfBirth,
-      cityOfBirth: formData.cityOfBirth,
-      countryOfBirth: formData.countryOfBirth,
-      nationality: formData.nationality,
-      identityNumber: formData.identityNumber,
-      phone: formData.phone,
-      email: formData.email,
-      address: formData.address,
-      program: formData.program as 'BBA' | 'MBA' | 'MBA Complémentaire',
-      studyYear: formData.studyYear,
-      specialty: formData.specialty,
-      academicYear: formData.academicYear,
-      notes: formData.notes,
-      registrationDate: new Date().toISOString(),
-      registrationYear: currentYear,
-      status: "Actif",
-      hasMBA2Diploma: formData.hasMBA2Diploma
-    };
-    
-    students.push(newStudent);
-    localStorage.setItem('students', JSON.stringify(students));
+      // Créer l'étudiant avec Supabase
+      const newStudent: Omit<Student, 'id'> = {
+        reference,
+        civilite: formData.civilite as 'M.' | 'Mme' | 'Mlle' | 'Mx',
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth,
+        cityOfBirth: formData.cityOfBirth,
+        countryOfBirth: formData.countryOfBirth,
+        nationality: formData.nationality,
+        identityNumber: formData.identityNumber,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        program: formData.program as 'BBA' | 'MBA' | 'MBA Complémentaire',
+        studyYear: formData.studyYear,
+        specialty: formData.specialty,
+        academicYear: formData.academicYear,
+        notes: formData.notes,
+        registrationDate: new Date().toISOString().split('T')[0],
+        registrationYear: currentYear,
+        status: "Actif",
+        hasMBA2Diploma: formData.hasMBA2Diploma
+      };
 
-    // Créer les paiements (frais de dossier + minerval)
-    const payments = JSON.parse(localStorage.getItem('payments') || '[]');
-    const programPrice = PROGRAM_PRICES[formData.program as keyof typeof PROGRAM_PRICES];
-    
-    // Calculer les échéances selon les règles
-    const today = new Date();
-    
-    // Frais de dossier - 14 jours calendaires
-    const registrationDueDate = new Date(today);
-    registrationDueDate.setDate(today.getDate() + 14);
-    
-    // Minerval - 31 décembre de l'année en cours
-    const minervalDueDate = new Date(today.getFullYear(), 11, 31); // mois 11 = décembre
-    
-    // Petite pause pour assurer des numéros de facture différents
-    const baseTimestamp = Date.now();
-    
-    // Frais de dossier
-    const registrationPayment: Payment = {
-      id: `reg-${baseTimestamp}`,
-      studentId: newStudent.id,
-      amount: REGISTRATION_FEE,
-      dueDate: registrationDueDate.toISOString().split('T')[0],
-      status: 'En attente',
-      type: 'Frais de dossier',
-      description: 'Frais de dossier d\'inscription',
-      invoiceNumber: generateInvoiceNumber(),
-      invoiceDate: today.toISOString().split('T')[0]
-    };
+      const createdStudent = await createStudent(newStudent);
 
-    // Attendre 1ms pour avoir un timestamp différent
-    await new Promise(resolve => setTimeout(resolve, 1));
+      toast({
+        title: "Inscription réussie !",
+        description: `${formData.firstName} ${formData.lastName} a été inscrit avec la référence ${reference}. Redirection vers la génération de documents...`,
+      });
 
-    // Minerval (frais annuels)
-    const tuitionPayment: Payment = {
-      id: `tuition-${baseTimestamp + 1}`,
-      studentId: newStudent.id,
-      amount: programPrice,
-      dueDate: minervalDueDate.toISOString().split('T')[0],
-      status: 'En attente',
-      type: 'Minerval',
-      description: `Minerval annuel - ${formData.program}`,
-      invoiceNumber: generateInvoiceNumber(),
-      invoiceDate: today.toISOString().split('T')[0],
-      installments: []
-    };
-
-    payments.push(registrationPayment, tuitionPayment);
-    localStorage.setItem('payments', JSON.stringify(payments));
-
-    toast({
-      title: "Inscription réussie !",
-      description: `${formData.firstName} ${formData.lastName} a été inscrit avec la référence ${reference}. Redirection vers la génération de documents...`,
-    });
-
-    // Redirection vers la page documents
-    navigate(`/documents/${newStudent.id}`);
+      // Redirection vers la page documents avec l'UUID généré par Supabase
+      navigate(`/documents/${createdStudent.id}`);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer l'étudiant. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

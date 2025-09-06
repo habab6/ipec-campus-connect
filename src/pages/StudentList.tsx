@@ -5,32 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Search, Users, Mail, Phone, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-
-interface Student {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  address: string;
-  program: string;
-  level: string;
-  notes: string;
-  registrationDate: string;
-  status: string;
-}
+import { useStudents } from "@/hooks/useStudents";
+import type { Student } from "@/types";
 
 const StudentList = () => {
-  const [students, setStudents] = useState<Student[]>([]);
+  const { students, loading } = useStudents();
   const [searchTerm, setSearchTerm] = useState("");
-
-  useEffect(() => {
-    const storedStudents = localStorage.getItem('students');
-    if (storedStudents) {
-      setStudents(JSON.parse(storedStudents));
-    }
-  }, []);
 
   const filteredStudents = students.filter(student =>
     student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -98,7 +78,12 @@ const StudentList = () => {
               />
             </div>
 
-            {filteredStudents.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p>Chargement des étudiants...</p>
+              </div>
+            ) : filteredStudents.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">
@@ -130,9 +115,7 @@ const StudentList = () => {
                             <Badge className={getProgramBadgeColor(student.program)}>
                               {student.program}
                             </Badge>
-                            {student.level && (
-                              <Badge variant="outline">{student.level}</Badge>
-                            )}
+                            <Badge variant="outline">Année {student.studyYear}</Badge>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
