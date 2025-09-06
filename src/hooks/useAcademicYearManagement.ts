@@ -164,7 +164,7 @@ export function useAcademicYearManagement() {
   ) => {
     // Calculate minerval amount based on program and year
     let amount = 5000; // BBA par défaut
-    if (program === 'MBA') amount = 4000;
+    if (program === 'MBA') amount = 6000;
     if (program === 'MBA Complémentaire') amount = 3000;
 
     const { error } = await supabase
