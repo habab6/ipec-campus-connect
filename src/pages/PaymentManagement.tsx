@@ -642,14 +642,6 @@ const PaymentManagement = () => {
                             <span className="text-sm">
                               <strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
                             </span>
-                            <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${ 
-                              payment.status === 'Payé' ? 'bg-green-100 text-green-800' :
-                              payment.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
-                              payment.status === 'En retard' ? 'bg-red-100 text-red-800' :
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                              {payment.status}
-                            </span>
                           </div>
                           
                           {(() => {
