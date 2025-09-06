@@ -86,10 +86,10 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
     if (value && value.length >= 2 && cities && Array.isArray(cities)) {
       const normalizedInput = normalizeString(value);
       
-      // Recherche exacte et par inclusion d'abord
+      // Recherche simple mais efficace
       const exactMatches: string[] = [];
+      const startsWithMatches: string[] = [];
       const includesMatches: string[] = [];
-      const fuzzyMatches: { city: string; score: number }[] = [];
       
       cities.forEach(city => {
         if (!city) return;
@@ -100,47 +100,30 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         if (normalizedCity === normalizedInput) {
           exactMatches.push(city);
         }
+        // Commence par la recherche
+        else if (normalizedCity.startsWith(normalizedInput)) {
+          startsWithMatches.push(city);
+        }
         // Contient la recherche
         else if (normalizedCity.includes(normalizedInput)) {
           includesMatches.push(city);
         }
-        // Recherche floue améliorée
-        else {
-          // Distance de Levenshtein
-          const distance = levenshteinDistance(normalizedInput, normalizedCity);
-          const maxDistance = Math.max(3, Math.floor(Math.max(normalizedInput.length, normalizedCity.length) * 0.5));
-          
-          // Pourcentage de caractères en commun dans l'ordre
-          const charMatch = containsMostChars(normalizedInput, normalizedCity);
-          
-          // Score combiné (plus le score est bas, meilleur c'est)
-          const score = distance - (charMatch * 10);
-          
-          if (distance <= maxDistance || charMatch >= 0.6) {
-            fuzzyMatches.push({ city, score });
-          }
-        }
       });
       
-      // Trier les correspondances floues par score (meilleur score = plus faible valeur)
-      fuzzyMatches.sort((a, b) => a.score - b.score);
-      
-      // Combiner les résultats : exact -> includes -> fuzzy
+      // Combiner les résultats dans l'ordre de priorité
       const allMatches = [
         ...exactMatches,
-        ...includesMatches,
-        ...fuzzyMatches.slice(0, 8).map(m => m.city) // Augmenter les correspondances floues
-      ];
+        ...startsWithMatches,
+        ...includesMatches
+      ].slice(0, 10);
       
-      const filtered = allMatches.slice(0, 10);
-      
-      // Ne pas afficher le dropdown si la valeur correspond exactement à une ville
+      // Ne pas afficher le dropdown si correspondance exacte
       if (exactMatches.length > 0 && exactMatches[0].toLowerCase() === value.toLowerCase()) {
         setFilteredCities([]);
         setIsOpen(false);
       } else {
-        setFilteredCities(filtered);
-        setIsOpen(filtered.length > 0);
+        setFilteredCities(allMatches);
+        setIsOpen(allMatches.length > 0);
       }
       setHighlightedIndex(-1);
     } else {
