@@ -643,32 +643,28 @@ const DocumentGeneration = () => {
                         
                         return (
                            <div key={payment.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                            {/* Header avec type de frais */}
-                            <div className={`px-4 py-3 ${
-                              payment.type === 'Frais de dossier' 
-                                ? 'bg-blue-100 border-b border-blue-200' 
-                                : 'bg-purple-100 border-b border-purple-200'
-                            }`}>
-                              <div className="flex items-center justify-between">
-                                <div className={`text-lg font-semibold ${
-                                  payment.type === 'Frais de dossier' 
-                                    ? 'text-blue-900' 
-                                    : 'text-purple-900'
-                                }`}>
-                                  {payment.type}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${ 
-                                    payment.status === 'Payé' ? 'bg-green-100 text-green-700 border border-green-200' :
-                                    payment.status === 'En attente' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
-                                    payment.status === 'En retard' ? 'bg-red-100 text-red-700 border border-red-200' :
-                                    'bg-blue-100 text-blue-700 border border-blue-200'
-                                  }`}>
-                                    {payment.status}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
+                             {/* Header avec type de frais */}
+                             <div className={`px-4 py-3 ${
+                               payment.type === 'Frais de dossier' 
+                                 ? 'bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300' 
+                                 : 'bg-gradient-to-r from-indigo-600 to-indigo-700 border-b border-indigo-300'
+                             }`}>
+                               <div className="flex items-center justify-between">
+                                 <div className="text-lg font-semibold text-white">
+                                   {payment.type}
+                                 </div>
+                                 <div className="flex items-center gap-2">
+                                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${ 
+                                     payment.status === 'Payé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                                     payment.status === 'En attente' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                                     payment.status === 'En retard' ? 'bg-rose-100 text-rose-700 border border-rose-200' :
+                                     'bg-sky-100 text-sky-700 border border-sky-200'
+                                   }`}>
+                                     {payment.status}
+                                   </span>
+                                 </div>
+                               </div>
+                             </div>
 
                             {/* Content Section */}
                             <div className="p-4">
@@ -762,22 +758,22 @@ const DocumentGeneration = () => {
                                 )}
                               </div>
 
-                              {/* Avancement des paiements pour paiements partiels - style orange/jaune */}
+                              {/* Avancement des paiements pour paiements partiels - style professionnel */}
                               {hasInstallments && !isFullyPaid && (
-                                <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded-md">
-                                  <div className="text-xs font-medium text-orange-900">
+                                <div className="mb-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
+                                  <div className="text-sm font-medium text-amber-800">
                                     Payé: {totalPaid}€ - Reste: {remainingAmount}€
                                   </div>
                                 </div>
                               )}
 
-                              {/* Encadré bleu avec référence et date de génération */}
+                              {/* Encadré professionnel avec référence et date de génération */}
                               {existingInvoice && (
-                                <div className="p-2 bg-blue-50 border border-blue-200 rounded-md">
-                                  <div className="text-xs text-blue-600 flex items-center">
-                                    <FileText className="h-3 w-3 mr-1 text-blue-600" />
-                                    <span>Facture : {existingInvoice.number}</span>
-                                    <span className="mx-1">•</span>
+                                <div className="p-3 bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-md shadow-sm">
+                                  <div className="text-sm text-slate-700 flex items-center">
+                                    <FileText className="h-4 w-4 mr-2 text-slate-600" />
+                                    <span className="font-medium">Facture : {existingInvoice.number}</span>
+                                    <span className="mx-2 text-slate-400">•</span>
                                     <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}</span>
                                   </div>
                                 </div>
