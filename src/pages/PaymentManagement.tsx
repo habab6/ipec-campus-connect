@@ -683,10 +683,9 @@ const PaymentManagement = () => {
                           </div>
                           
                           {(() => {
-                            const student = getStudent(payment.studentId);
-                            return student?.academicYear && (
+                            return payment.academicYear && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                Année académique : {student.academicYear} - {student.studyYear === 1 ? '1ère année' : `${student.studyYear}ème année`}
+                                Année académique : {payment.academicYear} - {payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}
                               </p>
                             );
                           })()}
