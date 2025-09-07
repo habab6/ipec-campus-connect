@@ -3,29 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Search, Users, Mail, Phone, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useStudents } from "@/hooks/useStudents";
-import { useAcademicYearFilter } from "@/hooks/useAcademicYearFilter";
 import type { Student } from "@/types";
 
 const StudentList = () => {
   const { students, loading } = useStudents();
-  const { selectedYear, setSelectedYear, academicYears } = useAcademicYearFilter();
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filtrer les étudiants par année académique ET par terme de recherche
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.program.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesYear = selectedYear === "all" || student.academicYear === selectedYear;
-    
-    return matchesSearch && matchesYear;
-  });
+  const filteredStudents = students.filter(student =>
+    student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.program.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const getProgramBadgeColor = (program: string) => {
     const colors = {
@@ -76,36 +68,6 @@ const StudentList = () => {
           </CardHeader>
 
           <CardContent className="p-6">
-            {/* Filtre année académique */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">Année académique:</span>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Sélectionner l'année" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les années</SelectItem>
-                    {academicYears.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedYear !== "all" && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setSelectedYear("all")}
-                  >
-                    Tout afficher
-                  </Button>
-                )}
-              </div>
-            </div>
-            
-            {/* Barre de recherche */}
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input

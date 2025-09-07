@@ -23,15 +23,13 @@ interface GlobalSearchProps {
   placeholder?: string;
   autoFocus?: boolean;
   onSelect?: () => void;
-  selectedAcademicYear?: string;
 }
 
 const GlobalSearch = ({ 
   variant = 'compact', 
   placeholder = "Rechercher...", 
   autoFocus = false,
-  onSelect,
-  selectedAcademicYear = "all"
+  onSelect
 }: GlobalSearchProps) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -53,16 +51,10 @@ const GlobalSearch = ({
       const searchResults: SearchResult[] = [];
 
       try {
-        // Recherche dans les étudiants par nom, prénom ou référence avec filtre année académique
-        let studentsQuery = supabase
+        // Recherche dans les étudiants par nom, prénom ou référence
+        const { data: studentsData } = await supabase
           .from('students')
-          .select('*');
-          
-        if (selectedAcademicYear !== "all") {
-          studentsQuery = studentsQuery.eq('academic_year', selectedAcademicYear);
-        }
-        
-        const { data: studentsData } = await studentsQuery
+          .select('*')
           .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,reference.ilike.%${searchQuery}%`);
 
         if (studentsData) {
@@ -80,19 +72,13 @@ const GlobalSearch = ({
           });
         }
 
-        // Recherche dans les attestations par numéro avec filtre année académique
-        let attestationsQuery = supabase
+        // Recherche dans les attestations par numéro
+        const { data: attestationsData } = await supabase
           .from('registration_attestations')
           .select(`
             *,
             students!inner(*)
-          `);
-          
-        if (selectedAcademicYear !== "all") {
-          attestationsQuery = attestationsQuery.eq('academic_year', selectedAcademicYear);
-        }
-        
-        const { data: attestationsData } = await attestationsQuery
+          `)
           .or(`number.ilike.%${searchQuery}%,student_full_name.ilike.%${searchQuery}%,student_reference.ilike.%${searchQuery}%`);
 
         if (attestationsData) {
@@ -110,19 +96,13 @@ const GlobalSearch = ({
           });
         }
 
-        // Recherche dans les factures par numéro avec filtre année académique
-        let invoicesQuery = supabase
+        // Recherche dans les factures par numéro
+        const { data: invoicesData } = await supabase
           .from('invoices')
           .select(`
             *,
             students!inner(*)
-          `);
-          
-        if (selectedAcademicYear !== "all") {
-          invoicesQuery = invoicesQuery.eq('academic_year', selectedAcademicYear);
-        }
-        
-        const { data: invoicesData } = await invoicesQuery
+          `)
           .ilike('number', `%${searchQuery}%`);
 
         if (invoicesData) {
@@ -165,7 +145,7 @@ const GlobalSearch = ({
 
     const timeoutId = setTimeout(performSearch, 300); // Debounce de 300ms
     return () => clearTimeout(timeoutId);
-  }, [query, selectedAcademicYear]);
+  }, [query]);
 
   const handleResultClick = (result: SearchResult) => {
     navigate(result.link);

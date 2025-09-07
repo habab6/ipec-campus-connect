@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useStudents } from '@/hooks/useStudents';
 import { usePayments } from '@/hooks/usePayments';
-import { useAcademicYearFilter } from '@/hooks/useAcademicYearFilter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,29 @@ const PaymentManagement = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { students } = useStudents();
-  const { selectedYear, setSelectedYear, academicYears } = useAcademicYearFilter();
+  
+  // Gestion du filtre d'années académiques spécifique aux paiements
+  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [academicYears, setAcademicYears] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchAcademicYears = async () => {
+      // Récupérer les années académiques réellement utilisées par les paiements
+      const { data: paymentYears } = await supabase
+        .from('payments')
+        .select('academic_year')
+        .not('academic_year', 'is', null);
+      
+      // Dédupliquer les années
+      const allYears = new Set<string>();
+      paymentYears?.forEach(item => allYears.add(item.academic_year));
+      
+      setAcademicYears(Array.from(allYears).sort().reverse());
+    };
+
+    fetchAcademicYears();
+  }, []);
+  
   const {
     payments, 
     createPayment, 
