@@ -642,118 +642,137 @@ const DocumentGeneration = () => {
                         const remainingAmount = payment.amount - totalPaid;
                         
                         return (
-                          <div key={payment.id} className="p-4 border rounded-lg bg-background">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-medium text-foreground">
+                          <div key={payment.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow">
+                            {/* Header Section */}
+                            <div className="p-4 border-b bg-muted/30">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <h3 className="font-semibold text-lg text-foreground">
                                     {existingInvoice ? existingInvoice.number : `Facture ${payment.type}`}
                                   </h3>
                                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${ 
-                                    payment.status === 'Payé' ? 'bg-green-100 text-green-800' :
-                                    payment.status === 'En attente' ? 'bg-yellow-100 text-yellow-800' :
-                                    payment.status === 'En retard' ? 'bg-red-100 text-red-800' :
-                                    'bg-blue-100 text-blue-800'
+                                    payment.status === 'Payé' ? 'bg-green-100 text-green-700 border border-green-200' :
+                                    payment.status === 'En attente' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
+                                    payment.status === 'En retard' ? 'bg-red-100 text-red-700 border border-red-200' :
+                                    'bg-blue-100 text-blue-700 border border-blue-200'
                                   }`}>
                                     {payment.status}
                                   </span>
-                                  <span className="text-foreground font-medium">{payment.type}</span>
+                                  <span className="text-muted-foreground text-sm font-medium bg-secondary px-2 py-1 rounded">
+                                    {payment.type}
+                                  </span>
                                 </div>
                                 
-                                <div className="flex items-center gap-6 text-sm text-foreground mb-2">
-                                  <span><strong>Montant:</strong> {payment.amount}€</span>
-                                  <span><strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}</span>
-                                </div>
-                                
-                                {payment.academicYear && (
-                                  <p className="text-sm text-muted-foreground mb-2">
-                                    Année académique : {payment.academicYear} - {payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}
-                                  </p>
-                                )}
-                                
-                                {existingInvoice && (
-                                  <p className="text-sm text-primary font-medium">
-                                    <strong>Facture : {existingInvoice.number}</strong> - 
-                                    Générée le {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}
-                                  </p>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center gap-2">
-                                {/* Payment progress for payments with installments */}
-                                {hasInstallments && !isFullyPaid && (
-                                  <div className="text-sm text-right mr-4">
-                                    <p className="text-muted-foreground">
-                                      <strong>Payé:</strong> {totalPaid}€ / {payment.amount}€
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                      <strong>Reste:</strong> {remainingAmount}€
-                                    </p>
-                                  </div>
-                                )}
-                                
-                                <div className="flex gap-2">
-                                  {hasInvoice && (
+                                <div className="flex items-center gap-4">
+                                  {/* Payment progress for payments with installments */}
+                                  {hasInstallments && !isFullyPaid && (
+                                    <div className="text-right bg-background p-3 rounded-lg border">
+                                      <div className="text-sm font-medium text-foreground">
+                                        Payé: <span className="text-green-600">{totalPaid}€</span> / {payment.amount}€
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">
+                                        Reste: <span className="font-medium text-orange-600">{remainingAmount}€</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  <div className="flex gap-2">
+                                    {hasInvoice && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => generateInvoiceDoc(payment, true)}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Receipt className="h-4 w-4" />
+                                        Facture
+                                      </Button>
+                                    )}
+                                    
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => generateInvoiceDoc(payment, true)}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Receipt className="h-4 w-4" />
-                                      Facture
-                                    </Button>
-                                  )}
-                                  
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      const summaryContent = generatePaymentSummaryPdf(student, [payment]);
-                                      const filename = `recapitulatif-${payment.type.toLowerCase().replace(/\s+/g, '-')}-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
-                                      downloadPaymentSummary(summaryContent, filename);
-                                      toast({
-                                        title: "Récapitulatif généré",
-                                        description: "Le récapitulatif a été téléchargé.",
-                                      });
-                                    }}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                    Récapitulatif
-                                  </Button>
-                                  
-                                  {/* Only show add payment button if not fully paid */}
-                                  {!isFullyPaid && (
-                                    <Button
-                                      size="sm"
                                       onClick={() => {
-                                        if (payment.type === 'Frais de dossier') {
-                                          setPaymentDialog({
-                                            isOpen: true,
-                                            paymentId: payment.id,
-                                            amount: payment.amount.toString(),
-                                            method: '',
-                                            paidDate: new Date().toISOString().split('T')[0]
-                                          });
-                                        } else {
-                                          setInstallmentDialog({
-                                            isOpen: true,
-                                            paymentId: payment.id,
-                                            amount: '',
-                                            method: '',
-                                            paidDate: new Date().toISOString().split('T')[0]
-                                          });
-                                        }
+                                        const summaryContent = generatePaymentSummaryPdf(student, [payment]);
+                                        const filename = `recapitulatif-${payment.type.toLowerCase().replace(/\s+/g, '-')}-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
+                                        downloadPaymentSummary(summaryContent, filename);
+                                        toast({
+                                          title: "Récapitulatif généré",
+                                          description: "Le récapitulatif a été téléchargé.",
+                                        });
                                       }}
                                       className="flex items-center gap-2"
                                     >
-                                      <Euro className="h-4 w-4" />
-                                      Ajouter {payment.type === 'Frais de dossier' ? 'paiement' : 'acompte'}
+                                      <Eye className="h-4 w-4" />
+                                      Récapitulatif
                                     </Button>
-                                  )}
+                                    
+                                    {/* Only show add payment button if not fully paid */}
+                                    {!isFullyPaid && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => {
+                                          if (payment.type === 'Frais de dossier') {
+                                            setPaymentDialog({
+                                              isOpen: true,
+                                              paymentId: payment.id,
+                                              amount: payment.amount.toString(),
+                                              method: '',
+                                              paidDate: new Date().toISOString().split('T')[0]
+                                            });
+                                          } else {
+                                            setInstallmentDialog({
+                                              isOpen: true,
+                                              paymentId: payment.id,
+                                              amount: '',
+                                              method: '',
+                                              paidDate: new Date().toISOString().split('T')[0]
+                                            });
+                                          }
+                                        }}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Euro className="h-4 w-4" />
+                                        Ajouter {payment.type === 'Frais de dossier' ? 'paiement' : 'acompte'}
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
+                            </div>
+
+                            {/* Content Section */}
+                            <div className="p-4">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Montant</label>
+                                  <p className="text-lg font-semibold text-foreground">{payment.amount}€</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Échéance</label>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
+                                  </p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Année académique</label>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {payment.academicYear} - {payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {existingInvoice && (
+                                <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                                  <p className="text-sm text-primary font-medium">
+                                    <Receipt className="inline h-4 w-4 mr-2" />
+                                    Facture : <span className="font-semibold">{existingInvoice.number}</span>
+                                    <span className="text-primary/70 ml-2">
+                                      • Générée le {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}
+                                    </span>
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
