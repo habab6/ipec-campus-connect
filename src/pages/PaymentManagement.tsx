@@ -760,8 +760,6 @@ const PaymentManagement = () => {
        const amount = payment.amount;
        const firstInstallment = 3000;
        const remainingAmount = amount - firstInstallment;
-       const monthlyInstallment = 1000;
-       const numberOfInstallments = Math.ceil(remainingAmount / monthlyInstallment);
        
        // Date de la facture ou date actuelle
        const invoiceDate = payment.invoiceDate ? new Date(payment.invoiceDate) : new Date();
@@ -770,41 +768,73 @@ const PaymentManagement = () => {
        const firstDueDate = new Date(invoiceDate);
        firstDueDate.setDate(firstDueDate.getDate() + 14);
        
-       // Générer les échéances mensuelles jusqu'en juin
+       // Générer les échéances
        const installments = [
          {
            amount: firstInstallment,
-           dueDate: firstDueDate,
+           dueDate: new Date(firstDueDate),
            description: "Première tranche"
          }
        ];
        
-       let currentDate = new Date(firstDueDate);
-       for (let i = 0; i < numberOfInstallments; i++) {
-         currentDate.setMonth(currentDate.getMonth() + 1);
-         // Vérifier si on ne dépasse pas juin
-         if (currentDate.getMonth() > 5) { // Juin = 5 (0-indexé)
-           break;
+       // Calculer les tranches mensuelles restantes
+       if (remainingAmount > 0) {
+         const monthlyInstallment = 1000;
+         let currentAmount = remainingAmount;
+         let currentDate = new Date(firstDueDate);
+         let installmentNumber = 2;
+         
+         while (currentAmount > 0 && currentDate.getMonth() < 6) { // Jusqu'en juin (mois 5, mais on vérifie < 6)
+           currentDate = new Date(currentDate);
+           currentDate.setMonth(currentDate.getMonth() + 1);
+           
+           // Si on dépasse juin, arrêter
+           if (currentDate.getMonth() >= 6) break;
+           
+           const installmentAmount = currentAmount >= monthlyInstallment ? monthlyInstallment : currentAmount;
+           
+           installments.push({
+             amount: installmentAmount,
+             dueDate: new Date(currentDate),
+             description: `Tranche ${installmentNumber}`
+           });
+           
+           currentAmount -= installmentAmount;
+           installmentNumber++;
          }
          
-         const installmentAmount = i === numberOfInstallments - 1 ? 
-           remainingAmount - (monthlyInstallment * i) : monthlyInstallment;
-         
-         installments.push({
-           amount: installmentAmount,
-           dueDate: new Date(currentDate),
-           description: `Tranche ${i + 2}`
-         });
+         // Si il reste encore de l'argent, l'ajouter à la dernière tranche ou créer une tranche finale
+         if (currentAmount > 0) {
+           if (installments.length > 1) {
+             installments[installments.length - 1].amount += currentAmount;
+           } else {
+             installments.push({
+               amount: currentAmount,
+               dueDate: new Date(currentDate),
+               description: "Tranche finale"
+             });
+           }
+         }
        }
        
        // Générer le document PDF de l'échéancier
-       const scheduleContent = generateScheduleDocument(student, payment, installments);
-       const filename = `echeancier-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
-       downloadDocument(scheduleContent, filename);
+       const pdfBytes = await generateSchedulePDF(student, payment, installments);
+       const filename = `echeancier-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.pdf`;
+       
+       // Télécharger le PDF
+       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+       const url = URL.createObjectURL(blob);
+       const link = document.createElement('a');
+       link.href = url;
+       link.download = filename;
+       document.body.appendChild(link);
+       link.click();
+       document.body.removeChild(link);
+       URL.revokeObjectURL(url);
        
        toast({
          title: "Échéancier généré",
-         description: "L'échéancier de paiement a été téléchargé.",
+         description: "L'échéancier de paiement PDF a été téléchargé.",
        });
      } catch (error) {
        console.error('Erreur lors de la génération de l\'échéancier:', error);
@@ -816,73 +846,163 @@ const PaymentManagement = () => {
      }
    };
 
-   // Générer le contenu HTML de l'échéancier
-   const generateScheduleDocument = (student: Student, payment: Payment, installments: any[]) => {
-     return `
-       <!DOCTYPE html>
-       <html>
-       <head>
-         <meta charset="UTF-8">
-         <title>Échéancier de Paiement</title>
-         <style>
-           body { font-family: Arial, sans-serif; margin: 40px; }
-           .header { text-align: center; margin-bottom: 30px; }
-           .student-info { margin-bottom: 30px; }
-           .schedule-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-           .schedule-table th, .schedule-table td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-           .schedule-table th { background-color: #f5f5f5; }
-           .total { font-weight: bold; background-color: #f9f9f9; }
-         </style>
-       </head>
-       <body>
-         <div class="header">
-           <h1>ÉCHÉANCIER DE PAIEMENT</h1>
-           <p>Minerval - ${payment.academicYear}</p>
-         </div>
-         
-         <div class="student-info">
-           <h3>Informations Étudiant</h3>
-           <p><strong>Nom:</strong> ${student.firstName} ${student.lastName}</p>
-           <p><strong>Programme:</strong> ${student.program}</p>
-           <p><strong>Spécialité:</strong> ${student.specialty}</p>
-           <p><strong>Année d'étude:</strong> ${payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}</p>
-           <p><strong>Montant total:</strong> ${payment.amount}€</p>
-         </div>
-         
-         <h3>Échéancier des Paiements</h3>
-         <table class="schedule-table">
-           <thead>
-             <tr>
-               <th>Tranche</th>
-               <th>Montant</th>
-               <th>Date d'échéance</th>
-               <th>Description</th>
-             </tr>
-           </thead>
-           <tbody>
-             ${installments.map((installment, index) => `
-               <tr>
-                 <td>${index + 1}</td>
-                 <td>${installment.amount}€</td>
-                 <td>${installment.dueDate.toLocaleDateString('fr-FR')}</td>
-                 <td>${installment.description}</td>
-               </tr>
-             `).join('')}
-             <tr class="total">
-               <td colspan="2"><strong>Total</strong></td>
-               <td><strong>${installments.reduce((sum, inst) => sum + inst.amount, 0)}€</strong></td>
-               <td></td>
-             </tr>
-           </tbody>
-         </table>
-         
-         <div style="margin-top: 30px;">
-           <p><em>Cet échéancier constitue une proposition de paiement échelonné pour faciliter le règlement du minerval.</em></p>
-           <p><em>Pour toute question concernant cet échéancier, veuillez contacter l'administration.</em></p>
-         </div>
-       </body>
-       </html>
-     `;
+   // Générer le PDF de l'échéancier
+   const generateSchedulePDF = async (student: Student, payment: Payment, installments: any[]) => {
+     const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
+     
+     const pdfDoc = await PDFDocument.create();
+     const page = pdfDoc.addPage([595, 842]); // A4 size
+     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+     
+     const { width, height } = page.getSize();
+     let yPosition = height - 50;
+     
+     // Title
+     page.drawText('ÉCHÉANCIER DE PAIEMENT', {
+       x: width / 2 - 120,
+       y: yPosition,
+       size: 18,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     yPosition -= 30;
+     page.drawText(`Minerval - ${payment.academicYear || 'N/A'}`, {
+       x: width / 2 - 80,
+       y: yPosition,
+       size: 12,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     yPosition -= 40;
+     
+     // Student information
+     page.drawText('Informations Étudiant', {
+       x: 50,
+       y: yPosition,
+       size: 14,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     yPosition -= 25;
+     const studentInfo = [
+       `Nom: ${student.firstName} ${student.lastName}`,
+       `Programme: ${student.program}`,
+       `Spécialité: ${student.specialty}`,
+       `Année d'étude: ${payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}`,
+       `Montant total: ${payment.amount}€`
+     ];
+     
+     studentInfo.forEach(info => {
+       page.drawText(info, {
+         x: 50,
+         y: yPosition,
+         size: 10,
+         font: font,
+         color: rgb(0, 0, 0),
+       });
+       yPosition -= 20;
+     });
+     
+     yPosition -= 20;
+     
+     // Schedule table header
+     page.drawText('Échéancier des Paiements', {
+       x: 50,
+       y: yPosition,
+       size: 14,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     yPosition -= 30;
+     
+     // Table headers
+     const headers = ['Tranche', 'Montant', 'Date d\'échéance', 'Description'];
+     const columnWidths = [80, 80, 120, 200];
+     let xPosition = 50;
+     
+     headers.forEach((header, index) => {
+       page.drawText(header, {
+         x: xPosition,
+         y: yPosition,
+         size: 10,
+         font: boldFont,
+         color: rgb(0, 0, 0),
+       });
+       xPosition += columnWidths[index];
+     });
+     
+     yPosition -= 20;
+     
+     // Table content
+     installments.forEach((installment, index) => {
+       xPosition = 50;
+       const rowData = [
+         (index + 1).toString(),
+         `${installment.amount}€`,
+         installment.dueDate.toLocaleDateString('fr-FR'),
+         installment.description
+       ];
+       
+       rowData.forEach((data, colIndex) => {
+         page.drawText(data, {
+           x: xPosition,
+           y: yPosition,
+           size: 9,
+           font: font,
+           color: rgb(0, 0, 0),
+         });
+         xPosition += columnWidths[colIndex];
+       });
+       
+       yPosition -= 18;
+     });
+     
+     // Total
+     yPosition -= 10;
+     xPosition = 50;
+     page.drawText('Total:', {
+       x: xPosition + columnWidths[0],
+       y: yPosition,
+       size: 10,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText(`${installments.reduce((sum, inst) => sum + inst.amount, 0)}€`, {
+       x: xPosition + columnWidths[0] + columnWidths[1],
+       y: yPosition,
+       size: 10,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Footer notes
+     yPosition -= 40;
+     const notes = [
+       'Cet échéancier constitue une proposition de paiement échelonné',
+       'pour faciliter le règlement du minerval.',
+       '',
+       'Pour toute question concernant cet échéancier,',
+       'veuillez contacter l\'administration.'
+     ];
+     
+     notes.forEach(note => {
+       page.drawText(note, {
+         x: 50,
+         y: yPosition,
+         size: 9,
+         font: font,
+         color: rgb(0.3, 0.3, 0.3),
+       });
+       yPosition -= 15;
+     });
+     
+     return await pdfDoc.save();
    };
 
   return (
