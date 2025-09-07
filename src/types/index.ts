@@ -67,7 +67,7 @@ export interface Payment {
   status: 'En attente' | 'Payé' | 'En retard' | 'Remboursé';
   type: 'Frais de dossier' | 'Minerval' | 'Frais mensuel' | 'Matériel' | 'Examen' | 'Autre';
   description: string;
-  method?: 'Espèces' | 'Carte' | 'Virement' | 'Chèque';
+  method?: 'Espèces' | 'Virement';
   invoiceNumber?: string;
   invoiceDate?: string; // Date de génération de la facture
   installments?: PaymentInstallment[]; // Pour les paiements échelonnés
@@ -79,7 +79,7 @@ export interface PaymentInstallment {
   id: string;
   amount: number;
   paidDate: string;
-  method: 'Espèces' | 'Carte' | 'Virement' | 'Chèque';
+  method: 'Espèces' | 'Virement';
 }
 
 export interface Document {

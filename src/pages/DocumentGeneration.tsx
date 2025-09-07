@@ -389,7 +389,7 @@ const DocumentGeneration = () => {
       await updatePayment(paymentDialog.paymentId, {
         status: 'Payé' as const,
         paidDate: paymentDialog.paidDate,
-        method: paymentDialog.method as "Espèces" | "Carte" | "Virement" | "Chèque"
+        method: paymentDialog.method as "Espèces" | "Virement"
       });
 
       // Recharger les données
@@ -468,7 +468,7 @@ const DocumentGeneration = () => {
         await updatePayment(installmentDialog.paymentId, {
           status: 'Payé' as const,
           paidDate: installmentDialog.paidDate,
-          method: installmentDialog.method as "Espèces" | "Carte" | "Virement" | "Chèque"
+          method: installmentDialog.method as "Espèces" | "Virement"
         });
       }
 
@@ -1184,8 +1184,6 @@ const DocumentGeneration = () => {
                   <SelectContent>
                     <SelectItem value="Espèces">Espèces</SelectItem>
                     <SelectItem value="Virement">Virement bancaire</SelectItem>
-                    <SelectItem value="Carte">Carte bancaire</SelectItem>
-                    <SelectItem value="Chèque">Chèque</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1258,8 +1256,6 @@ const DocumentGeneration = () => {
                   <SelectContent>
                     <SelectItem value="Espèces">Espèces</SelectItem>
                     <SelectItem value="Virement">Virement bancaire</SelectItem>
-                    <SelectItem value="Carte">Carte bancaire</SelectItem>
-                    <SelectItem value="Chèque">Chèque</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
