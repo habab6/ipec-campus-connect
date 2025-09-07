@@ -416,7 +416,7 @@ const DocumentGeneration = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">
-                              {attestation.program} - {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
+                              {attestation.program} - {(attestation.study_year || 1) === 1 ? '1ère année' : `${attestation.study_year || 1}ème année`}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               Année académique : {attestation.academic_year}
