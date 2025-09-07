@@ -900,26 +900,16 @@ const PaymentManagement = () => {
                       </div>
                       
                       <div>
-                        <Label htmlFor="amount">Montant (€) {newPayment.type && (newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') ? '(automatique)' : '*'}</Label>
+                        <Label htmlFor="amount">Montant (€) *</Label>
                          <Input
                            id="amount"
                            type="number"
                            step="0.01"
                            value={newPayment.amount}
                            onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
-                           disabled={newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata'}
                            placeholder={newPayment.type === 'Frais de dossier' ? "500€" : newPayment.type === "Frais d'envoi" ? "120€" : newPayment.type === "Duplicata" ? "35€" : "0.00"}
                            required
                          />
-                         {newPayment.type === 'Frais de dossier' && (
-                           <p className="text-xs text-muted-foreground mt-1">Montant automatique: 500€</p>
-                         )}
-                         {newPayment.type === "Frais d'envoi" && (
-                           <p className="text-xs text-muted-foreground mt-1">Montant automatique: 120€</p>
-                         )}
-                         {newPayment.type === "Duplicata" && (
-                           <p className="text-xs text-muted-foreground mt-1">Montant automatique: 35€</p>
-                         )}
                       </div>
                     </div>
 
@@ -947,21 +937,14 @@ const PaymentManagement = () => {
                       </div>
                       
                       <div>
-                        <Label htmlFor="dueDate">Date d'échéance {newPayment.type && (newPayment.type === 'Frais de dossier' || newPayment.type === 'Minerval' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') ? '(automatique)' : '*'}</Label>
+                        <Label htmlFor="dueDate">Date d'échéance *</Label>
                          <Input
                            id="dueDate"
                            type="date"
                            value={newPayment.dueDate}
                            onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
                            placeholder={newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata' ? '14 jours' : newPayment.type === 'Minerval' ? '31 décembre' : ''}
-                           disabled={newPayment.type === 'Frais de dossier' || newPayment.type === 'Minerval' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata'}
                          />
-                         {(newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') && (
-                           <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 14 jours calendaires</p>
-                         )}
-                         {newPayment.type === 'Minerval' && (
-                           <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 31 décembre {new Date().getFullYear()}</p>
-                         )}
                       </div>
                     </div>
 
