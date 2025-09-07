@@ -1203,7 +1203,7 @@ const DocumentGeneration = () => {
         <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Paiement</DialogTitle>
+              <DialogTitle>Ajouter un paiement</DialogTitle>
               <DialogDescription>
                 Enregistrez un paiement pour le minerval
               </DialogDescription>

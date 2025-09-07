@@ -145,8 +145,8 @@ const PaymentManagement = () => {
   const calculateDueDate = (type: string): string => {
     const today = new Date();
     
-    if (type === 'Frais de dossier') {
-      // 14 jours calendaires après aujourd'hui
+    if (type === 'Frais de dossier' || type === "Frais d'envoi" || type === 'Duplicata') {
+      // 14 jours calendaires après aujourd'hui pour frais de dossier, frais d'envoi et duplicata
       const dueDate = new Date(today);
       dueDate.setDate(today.getDate() + 14);
       return dueDate.toISOString().split('T')[0];
@@ -936,20 +936,21 @@ const PaymentManagement = () => {
                       </div>
                       
                       <div>
-                        <Label htmlFor="dueDate">Date d'échéance {newPayment.type && (newPayment.type === 'Frais de dossier' || newPayment.type === 'Minerval') ? '(automatique)' : '*'}</Label>
-                        <Input
-                          id="dueDate"
-                          type="date"
-                          value={newPayment.dueDate}
-                          onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
-                          placeholder={newPayment.type === 'Frais de dossier' ? '14 jours' : newPayment.type === 'Minerval' ? '31 décembre' : ''}
-                        />
-                        {newPayment.type === 'Frais de dossier' && (
-                          <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 14 jours calendaires</p>
-                        )}
-                        {newPayment.type === 'Minerval' && (
-                          <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 31 décembre {new Date().getFullYear()}</p>
-                        )}
+                        <Label htmlFor="dueDate">Date d'échéance {newPayment.type && (newPayment.type === 'Frais de dossier' || newPayment.type === 'Minerval' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') ? '(automatique)' : '*'}</Label>
+                         <Input
+                           id="dueDate"
+                           type="date"
+                           value={newPayment.dueDate}
+                           onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
+                           placeholder={newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata' ? '14 jours' : newPayment.type === 'Minerval' ? '31 décembre' : ''}
+                           disabled={newPayment.type === 'Frais de dossier' || newPayment.type === 'Minerval' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata'}
+                         />
+                         {(newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') && (
+                           <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 14 jours calendaires</p>
+                         )}
+                         {newPayment.type === 'Minerval' && (
+                           <p className="text-xs text-muted-foreground mt-1">Échéance automatique: 31 décembre {new Date().getFullYear()}</p>
+                         )}
                       </div>
                     </div>
 
@@ -1154,7 +1155,7 @@ const PaymentManagement = () => {
             <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Paiement</DialogTitle>
+                   <DialogTitle>Ajouter un paiement</DialogTitle>
                   <DialogDescription>
                     Veuillez renseigner les informations de paiement
                   </DialogDescription>
