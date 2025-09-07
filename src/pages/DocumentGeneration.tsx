@@ -785,17 +785,7 @@ const DocumentGeneration = () => {
 
                                {/* Boutons d'action */}
                                <div className="flex items-center gap-2 justify-end mb-4">
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   onClick={() => generateInvoiceDoc(payment, false)}
-                                   className="flex items-center gap-2"
-                                 >
-                                   <Receipt className="h-4 w-4" />
-                                   Facture
-                                 </Button>
-                                 
-                                 {hasInvoice && (
+                                 {hasInvoice ? (
                                    <Button
                                      variant="outline"
                                      size="sm"
@@ -804,6 +794,15 @@ const DocumentGeneration = () => {
                                    >
                                      <Download className="h-4 w-4" />
                                      Télécharger PDF
+                                   </Button>
+                                 ) : (
+                                   <Button
+                                     size="sm"
+                                     onClick={() => generateInvoiceDoc(payment, false)}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Receipt className="h-4 w-4" />
+                                     Générer facture
                                    </Button>
                                  )}
                                 
