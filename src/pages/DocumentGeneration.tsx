@@ -765,13 +765,8 @@ const DocumentGeneration = () => {
                               {/* Avancement des paiements pour paiements partiels - style orange/jaune */}
                               {hasInstallments && !isFullyPaid && (
                                 <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded-md">
-                                  <div className="text-xs">
-                                    <div className="font-medium text-orange-900">
-                                      Payé: {totalPaid}€ / {payment.amount}€
-                                    </div>
-                                    <div className="text-orange-700">
-                                      Reste: {remainingAmount}€
-                                    </div>
+                                  <div className="text-xs font-medium text-orange-900">
+                                    Payé: {totalPaid}€ - Reste: {remainingAmount}€
                                   </div>
                                 </div>
                               )}
