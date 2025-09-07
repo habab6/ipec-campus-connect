@@ -741,7 +741,149 @@ const PaymentManagement = () => {
     } finally {
       setIsGeneratingZip(false);
     }
-  };
+   };
+
+   // Générer l'échéancier de paiement pour les minervaux
+   const generatePaymentSchedule = async (payment: Payment) => {
+     const student = getStudent(payment.studentId);
+     if (!student) {
+       toast({
+         title: "Erreur",
+         description: "Étudiant non trouvé.",
+         variant: "destructive",
+       });
+       return;
+     }
+
+     try {
+       // Calculer les tranches d'échéancier
+       const amount = payment.amount;
+       const firstInstallment = 3000;
+       const remainingAmount = amount - firstInstallment;
+       const monthlyInstallment = 1000;
+       const numberOfInstallments = Math.ceil(remainingAmount / monthlyInstallment);
+       
+       // Date de la facture ou date actuelle
+       const invoiceDate = payment.invoiceDate ? new Date(payment.invoiceDate) : new Date();
+       
+       // Première échéance : 14 jours après la facture
+       const firstDueDate = new Date(invoiceDate);
+       firstDueDate.setDate(firstDueDate.getDate() + 14);
+       
+       // Générer les échéances mensuelles jusqu'en juin
+       const installments = [
+         {
+           amount: firstInstallment,
+           dueDate: firstDueDate,
+           description: "Première tranche"
+         }
+       ];
+       
+       let currentDate = new Date(firstDueDate);
+       for (let i = 0; i < numberOfInstallments; i++) {
+         currentDate.setMonth(currentDate.getMonth() + 1);
+         // Vérifier si on ne dépasse pas juin
+         if (currentDate.getMonth() > 5) { // Juin = 5 (0-indexé)
+           break;
+         }
+         
+         const installmentAmount = i === numberOfInstallments - 1 ? 
+           remainingAmount - (monthlyInstallment * i) : monthlyInstallment;
+         
+         installments.push({
+           amount: installmentAmount,
+           dueDate: new Date(currentDate),
+           description: `Tranche ${i + 2}`
+         });
+       }
+       
+       // Générer le document PDF de l'échéancier
+       const scheduleContent = generateScheduleDocument(student, payment, installments);
+       const filename = `echeancier-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
+       downloadDocument(scheduleContent, filename);
+       
+       toast({
+         title: "Échéancier généré",
+         description: "L'échéancier de paiement a été téléchargé.",
+       });
+     } catch (error) {
+       console.error('Erreur lors de la génération de l\'échéancier:', error);
+       toast({
+         title: "Erreur",
+         description: "Impossible de générer l'échéancier.",
+         variant: "destructive",
+       });
+     }
+   };
+
+   // Générer le contenu HTML de l'échéancier
+   const generateScheduleDocument = (student: Student, payment: Payment, installments: any[]) => {
+     return `
+       <!DOCTYPE html>
+       <html>
+       <head>
+         <meta charset="UTF-8">
+         <title>Échéancier de Paiement</title>
+         <style>
+           body { font-family: Arial, sans-serif; margin: 40px; }
+           .header { text-align: center; margin-bottom: 30px; }
+           .student-info { margin-bottom: 30px; }
+           .schedule-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+           .schedule-table th, .schedule-table td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+           .schedule-table th { background-color: #f5f5f5; }
+           .total { font-weight: bold; background-color: #f9f9f9; }
+         </style>
+       </head>
+       <body>
+         <div class="header">
+           <h1>ÉCHÉANCIER DE PAIEMENT</h1>
+           <p>Minerval - ${payment.academicYear}</p>
+         </div>
+         
+         <div class="student-info">
+           <h3>Informations Étudiant</h3>
+           <p><strong>Nom:</strong> ${student.firstName} ${student.lastName}</p>
+           <p><strong>Programme:</strong> ${student.program}</p>
+           <p><strong>Spécialité:</strong> ${student.specialty}</p>
+           <p><strong>Année d'étude:</strong> ${payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}</p>
+           <p><strong>Montant total:</strong> ${payment.amount}€</p>
+         </div>
+         
+         <h3>Échéancier des Paiements</h3>
+         <table class="schedule-table">
+           <thead>
+             <tr>
+               <th>Tranche</th>
+               <th>Montant</th>
+               <th>Date d'échéance</th>
+               <th>Description</th>
+             </tr>
+           </thead>
+           <tbody>
+             ${installments.map((installment, index) => `
+               <tr>
+                 <td>${index + 1}</td>
+                 <td>${installment.amount}€</td>
+                 <td>${installment.dueDate.toLocaleDateString('fr-FR')}</td>
+                 <td>${installment.description}</td>
+               </tr>
+             `).join('')}
+             <tr class="total">
+               <td colspan="2"><strong>Total</strong></td>
+               <td><strong>${installments.reduce((sum, inst) => sum + inst.amount, 0)}€</strong></td>
+               <td></td>
+             </tr>
+           </tbody>
+         </table>
+         
+         <div style="margin-top: 30px;">
+           <p><em>Cet échéancier constitue une proposition de paiement échelonné pour faciliter le règlement du minerval.</em></p>
+           <p><em>Pour toute question concernant cet échéancier, veuillez contacter l'administration.</em></p>
+         </div>
+       </body>
+       </html>
+     `;
+   };
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
@@ -1139,27 +1281,41 @@ const PaymentManagement = () => {
                              );
                            })()}
                           
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openPaymentSummary(payment)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Récapitulatif
-                          </Button>
-                          
-                          {payment.status === 'En attente' && (
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => openPaymentDialog(payment.id)}
-                            >
-                              <>
-                                <Euro className="h-4 w-4 mr-1" />
-                                Paiement
-                              </>
-                            </Button>
-                          )}
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => openPaymentSummary(payment)}
+                           >
+                             <Eye className="h-4 w-4 mr-1" />
+                             Récapitulatif
+                           </Button>
+                           
+                           {payment.type === 'Minerval' && (() => {
+                             const student = getStudent(payment.studentId);
+                             return student && student.program !== 'MBA Complémentaire';
+                           })() && (
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => generatePaymentSchedule(payment)}
+                             >
+                               <Calendar className="h-4 w-4 mr-1" />
+                               Échéancier
+                             </Button>
+                           )}
+                           
+                           {payment.status === 'En attente' && (
+                             <Button
+                               variant="default"
+                               size="sm"
+                               onClick={() => openPaymentDialog(payment.id)}
+                             >
+                               <>
+                                 <Euro className="h-4 w-4 mr-1" />
+                                 Paiement
+                               </>
+                             </Button>
+                           )}
 
                          </div>
                        </div>
