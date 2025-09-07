@@ -1077,16 +1077,12 @@ const PaymentManagement = () => {
                              );
                            })()}
                           
-                          {payment.paidDate && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              <strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}
-                            </p>
-                          )}
-                          {payment.method && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              <strong>Moyen:</strong> {payment.method}
-                            </p>
-                          )}
+                           {payment.paidDate && payment.method && (
+                             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                               <span><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}</span>
+                               <span><strong>Moyen:</strong> {payment.method}</span>
+                             </div>
+                           )}
                         </div>
                         
                          <div className="flex gap-2">
@@ -1136,13 +1132,24 @@ const PaymentManagement = () => {
                             </Button>
                           )}
 
-                          {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
-                            <div className="text-xs text-muted-foreground">
-                              Payé: {getTotalPaidForPayment(payment)}€ / {payment.amount}€
-                              <br />
-                              Reste: {getRemainingAmount(payment)}€
-                            </div>
-                          )}
+                           {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
+                             <div className="mt-3 p-3 bg-muted/50 rounded-lg border">
+                               <div className="grid grid-cols-3 gap-4 text-sm">
+                                 <div>
+                                   <span className="text-muted-foreground">Payé</span>
+                                   <p className="font-semibold text-emerald-600">{getTotalPaidForPayment(payment)}€</p>
+                                 </div>
+                                 <div>
+                                   <span className="text-muted-foreground">Total</span>
+                                   <p className="font-semibold">{payment.amount}€</p>
+                                 </div>
+                                 <div>
+                                   <span className="text-muted-foreground">Reste</span>
+                                   <p className="font-semibold text-amber-600">{getRemainingAmount(payment)}€</p>
+                                 </div>
+                               </div>
+                             </div>
+                           )}
                         </div>
                       </div>
                     </CardContent>
