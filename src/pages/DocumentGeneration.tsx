@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, ArrowLeft, CreditCard, Receipt, FileCheck } from "lucide-react";
 import { Student, Payment, RegistrationAttestation, Invoice } from "@/types";
@@ -41,6 +43,32 @@ const DocumentGeneration = () => {
   const [attestations, setAttestations] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paymentDialog, setPaymentDialog] = useState<{
+    isOpen: boolean;
+    paymentId: string;
+    amount: string;
+    method: string;
+    paidDate: string;
+  }>({
+    isOpen: false,
+    paymentId: '',
+    amount: '',
+    method: '',
+    paidDate: new Date().toISOString().split('T')[0]
+  });
+  const [installmentDialog, setInstallmentDialog] = useState<{
+    isOpen: boolean;
+    paymentId: string;
+    amount: string;
+    method: string;
+    paidDate: string;
+  }>({
+    isOpen: false,
+    paymentId: '',
+    amount: '',
+    method: '',
+    paidDate: new Date().toISOString().split('T')[0]
+  });
 
   useEffect(() => {
     console.log('DocumentGeneration useEffect triggered - studentId:', studentId);
@@ -236,6 +264,103 @@ const DocumentGeneration = () => {
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de générer la facture",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (!paymentDialog.amount || !paymentDialog.method) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs requis.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const payment = payments.find(p => p.id === paymentDialog.paymentId);
+      if (!payment) return;
+
+      await updatePayment(paymentDialog.paymentId, {
+        status: 'Payé' as const,
+        paidDate: paymentDialog.paidDate,
+        method: paymentDialog.method as "Espèces" | "Carte" | "Virement" | "Chèque"
+      });
+
+      // Recharger les données
+      if (studentId) {
+        const updatedPayments = await getPaymentsByStudentId(studentId);
+        setPayments(updatedPayments);
+      }
+
+      setPaymentDialog({
+        isOpen: false,
+        paymentId: '',
+        amount: '',
+        method: '',
+        paidDate: new Date().toISOString().split('T')[0]
+      });
+
+      toast({
+        title: "Paiement enregistré",
+        description: "Le paiement a été marqué comme payé.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du paiement:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer le paiement.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addInstallment = async () => {
+    if (!installmentDialog.amount || !installmentDialog.method) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs requis.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Ajouter l'acompte
+      await supabase.from('payment_installments').insert({
+        payment_id: installmentDialog.paymentId,
+        amount: parseFloat(installmentDialog.amount),
+        paid_date: installmentDialog.paidDate,
+        method: installmentDialog.method
+      });
+
+      // Recharger les données
+      if (studentId) {
+        const updatedPayments = await getPaymentsByStudentId(studentId);
+        setPayments(updatedPayments);
+      }
+
+      setInstallmentDialog({
+        isOpen: false,
+        paymentId: '',
+        amount: '',
+        method: '',
+        paidDate: new Date().toISOString().split('T')[0]
+      });
+
+      toast({
+        title: "Acompte ajouté",
+        description: "L'acompte a été enregistré avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'acompte:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter l'acompte.",
         variant: "destructive",
       });
     }
@@ -549,17 +674,40 @@ const DocumentGeneration = () => {
                               <div className="flex gap-2">
                                 {hasInvoice ? (
                                   <>
-                                    {/* Afficher le bouton Ajouter versement seulement si ce n'est pas un frais de dossier */}
-                                    {payment.type !== 'Frais de dossier' && (
-                                      <Link to={`/payments?studentId=${studentId}&installmentPaymentId=${payment.id}`}>
-                                        <Button
-                                          variant="secondary"
-                                          size="sm"
-                                        >
-                                          <CreditCard className="mr-2 h-4 w-4" />
-                                          Ajouter versement
-                                        </Button>
-                                      </Link>
+                                    {payment.type === 'Frais de dossier' ? (
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => {
+                                          setPaymentDialog({
+                                            isOpen: true,
+                                            paymentId: payment.id,
+                                            amount: payment.amount.toString(),
+                                            method: '',
+                                            paidDate: new Date().toISOString().split('T')[0]
+                                          });
+                                        }}
+                                      >
+                                        <CreditCard className="mr-2 h-4 w-4" />
+                                        Ajouter paiement
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => {
+                                          setInstallmentDialog({
+                                            isOpen: true,
+                                            paymentId: payment.id,
+                                            amount: '',
+                                            method: '',
+                                            paidDate: new Date().toISOString().split('T')[0]
+                                          });
+                                        }}
+                                      >
+                                        <CreditCard className="mr-2 h-4 w-4" />
+                                        Ajouter versement
+                                      </Button>
                                     )}
                                     <Button
                                       variant="outline"
@@ -694,6 +842,118 @@ const DocumentGeneration = () => {
             </Card>
           </CardContent>
         </Card>
+
+        {/* Dialog pour paiement complet (frais de dossier) */}
+        <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enregistrer le paiement</DialogTitle>
+              <DialogDescription>
+                Marquez ce paiement comme payé et enregistrez les détails
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="paidAmount">Montant payé (€)</Label>
+                <Input
+                  id="paidAmount"
+                  type="number"
+                  step="0.01"
+                  value={paymentDialog.amount}
+                  onChange={(e) => setPaymentDialog(prev => ({ ...prev, amount: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="paidDate">Date de paiement</Label>
+                <Input
+                  id="paidDate"
+                  type="date"
+                  value={paymentDialog.paidDate}
+                  onChange={(e) => setPaymentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="method">Moyen de paiement</Label>
+                <Select onValueChange={(value) => setPaymentDialog(prev => ({ ...prev, method: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez le moyen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Espèces">Espèces</SelectItem>
+                    <SelectItem value="Virement">Virement bancaire</SelectItem>
+                    <SelectItem value="Carte">Carte bancaire</SelectItem>
+                    <SelectItem value="Chèque">Chèque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPaymentDialog(prev => ({ ...prev, isOpen: false }))}>
+                Annuler
+              </Button>
+              <Button onClick={handleMarkAsPaid}>
+                Confirmer le paiement
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog pour acompte minerval */}
+        <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Ajouter un acompte pour le minerval</DialogTitle>
+              <DialogDescription>
+                Enregistrez un paiement partiel pour le minerval
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="installmentAmount">Montant de l'acompte (€)</Label>
+                <Input
+                  id="installmentAmount"
+                  type="number"
+                  step="0.01"
+                  value={installmentDialog.amount}
+                  onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="installmentDate">Date de paiement</Label>
+                <Input
+                  id="installmentDate"
+                  type="date"
+                  value={installmentDialog.paidDate}
+                  onChange={(e) => setInstallmentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="installmentMethod">Moyen de paiement</Label>
+                <Select onValueChange={(value) => setInstallmentDialog(prev => ({ ...prev, method: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez le moyen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Espèces">Espèces</SelectItem>
+                    <SelectItem value="Virement">Virement bancaire</SelectItem>
+                    <SelectItem value="Carte">Carte bancaire</SelectItem>
+                    <SelectItem value="Chèque">Chèque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInstallmentDialog(prev => ({ ...prev, isOpen: false }))}>
+                Annuler
+              </Button>
+              <Button onClick={addInstallment}>
+                Ajouter l'acompte
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
