@@ -634,6 +634,13 @@ const DocumentGeneration = () => {
                       {payments.map((payment) => {
                         const existingInvoice = getExistingInvoice(payment);
                         const hasInvoice = !!existingInvoice;
+                        const isFullyPaid = payment.status === 'Payé';
+                        const hasInstallments = payment.installments && payment.installments.length > 0;
+                        const totalPaid = hasInstallments 
+                          ? payment.installments.reduce((sum, inst) => sum + inst.amount, 0)
+                          : (isFullyPaid ? payment.amount : 0);
+                        const remainingAmount = payment.amount - totalPaid;
+                        const progressPercentage = Math.round((totalPaid / payment.amount) * 100);
                         
                         return (
                           <div key={payment.id} className="p-4 border rounded-lg bg-muted/50">
@@ -659,6 +666,26 @@ const DocumentGeneration = () => {
                                     {payment.status}
                                   </span>
                                 </div>
+
+                                {/* Progress bar for payments with installments */}
+                                {hasInstallments && !isFullyPaid && (
+                                  <div className="mt-2">
+                                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                      <span>Progression du paiement</span>
+                                      <span>{totalPaid}€ / {payment.amount}€ ({progressPercentage}%)</span>
+                                    </div>
+                                    <div className="w-full bg-muted rounded-full h-2">
+                                      <div 
+                                        className="bg-primary h-2 rounded-full transition-all duration-300" 
+                                        style={{ width: `${progressPercentage}%` }}
+                                      />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Reste à payer: {remainingAmount}€
+                                    </p>
+                                  </div>
+                                )}
+
                                 {payment.academicYear && (
                                   <p className="text-xs text-muted-foreground mt-1">
                                     Année académique : {payment.academicYear} - {payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}
@@ -674,40 +701,43 @@ const DocumentGeneration = () => {
                               <div className="flex gap-2">
                                 {hasInvoice ? (
                                   <>
-                                    {payment.type === 'Frais de dossier' ? (
-                                      <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={() => {
-                                          setPaymentDialog({
-                                            isOpen: true,
-                                            paymentId: payment.id,
-                                            amount: payment.amount.toString(),
-                                            method: '',
-                                            paidDate: new Date().toISOString().split('T')[0]
-                                          });
-                                        }}
-                                      >
-                                        <CreditCard className="mr-2 h-4 w-4" />
-                                        Ajouter paiement
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={() => {
-                                          setInstallmentDialog({
-                                            isOpen: true,
-                                            paymentId: payment.id,
-                                            amount: '',
-                                            method: '',
-                                            paidDate: new Date().toISOString().split('T')[0]
-                                          });
-                                        }}
-                                      >
-                                        <CreditCard className="mr-2 h-4 w-4" />
-                                        Ajouter versement
-                                      </Button>
+                                    {/* Only show add payment button if not fully paid */}
+                                    {!isFullyPaid && (
+                                      payment.type === 'Frais de dossier' ? (
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={() => {
+                                            setPaymentDialog({
+                                              isOpen: true,
+                                              paymentId: payment.id,
+                                              amount: payment.amount.toString(),
+                                              method: '',
+                                              paidDate: new Date().toISOString().split('T')[0]
+                                            });
+                                          }}
+                                        >
+                                          <CreditCard className="mr-2 h-4 w-4" />
+                                          Ajouter paiement
+                                        </Button>
+                                      ) : (
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={() => {
+                                            setInstallmentDialog({
+                                              isOpen: true,
+                                              paymentId: payment.id,
+                                              amount: '',
+                                              method: '',
+                                              paidDate: new Date().toISOString().split('T')[0]
+                                            });
+                                          }}
+                                        >
+                                          <CreditCard className="mr-2 h-4 w-4" />
+                                          Ajouter versement
+                                        </Button>
+                                      )
                                     )}
                                     <Button
                                       variant="outline"
