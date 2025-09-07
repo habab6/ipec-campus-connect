@@ -114,6 +114,104 @@ const DocumentGeneration = () => {
     };
 
     loadStudentData();
+
+    // Configurer Supabase Realtime pour écouter les changements
+    const setupRealtime = async () => {
+      if (!studentId) return;
+      
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Écouter les nouveaux paiements
+      const paymentsChannel = supabase
+        .channel('payments-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'payments',
+            filter: `student_id=eq.${studentId}`
+          },
+          async (payload) => {
+            console.log('Nouveau paiement détecté:', payload.new);
+            // Recharger les paiements
+            const updatedPayments = await getPaymentsByStudentId(studentId);
+            setPayments(updatedPayments);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'payments',
+            filter: `student_id=eq.${studentId}`
+          },
+          async (payload) => {
+            console.log('Paiement mis à jour:', payload.new);
+            // Recharger les paiements
+            const updatedPayments = await getPaymentsByStudentId(studentId);
+            setPayments(updatedPayments);
+          }
+        )
+        .subscribe();
+
+      // Écouter les nouvelles factures
+      const invoicesChannel = supabase
+        .channel('invoices-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'invoices',
+            filter: `student_id=eq.${studentId}`
+          },
+          async (payload) => {
+            console.log('Nouvelle facture détectée:', payload.new);
+            // Recharger les factures
+            const updatedInvoices = await getInvoicesByStudentId(studentId);
+            setInvoices(updatedInvoices);
+          }
+        )
+        .subscribe();
+
+      // Écouter les nouvelles attestations
+      const attestationsChannel = supabase
+        .channel('attestations-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'registration_attestations',
+            filter: `student_id=eq.${studentId}`
+          },
+          async (payload) => {
+            console.log('Nouvelle attestation détectée:', payload.new);
+            // Recharger les attestations
+            const updatedAttestations = await getAttestationsByStudentId(studentId);
+            setAttestations(updatedAttestations);
+          }
+        )
+        .subscribe();
+
+      // Cleanup function pour désabonner les channels
+      return () => {
+        supabase.removeChannel(paymentsChannel);
+        supabase.removeChannel(invoicesChannel);
+        supabase.removeChannel(attestationsChannel);
+      };
+    };
+
+    const cleanup = setupRealtime();
+
+    // Retourner la fonction de cleanup
+    return () => {
+      cleanup.then(cleanupFn => {
+        if (cleanupFn) cleanupFn();
+      });
+    };
   }, [studentId]); // Supprimé les fonctions des dépendances pour éviter la boucle infinie
 
   const generateAttestationNumber = async (): Promise<string> => {
