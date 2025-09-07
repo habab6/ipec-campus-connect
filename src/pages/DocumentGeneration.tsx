@@ -512,13 +512,6 @@ const DocumentGeneration = () => {
 
                         {/* Content Section */}
                         <div className="p-4">
-                          {/* Référence d'attestation */}
-                          <div className="mb-4">
-                            <h3 className="font-semibold text-lg text-foreground">
-                              {hasAttestation ? attestation.number : 'Nouvelle Attestation'}
-                            </h3>
-                          </div>
-
                           {/* Informations dans une grille avec boutons d'action */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
@@ -603,13 +596,6 @@ const DocumentGeneration = () => {
                         
                         {/* Content Section */}
                         <div className="p-4">
-                          {/* Référence d'attestation */}
-                          <div className="mb-4">
-                            <h3 className="font-semibold text-lg text-foreground">
-                              {attestation.number}
-                            </h3>
-                          </div>
-
                           {/* Informations dans une grille avec boutons d'action */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
@@ -758,16 +744,9 @@ const DocumentGeneration = () => {
                                </div>
                              </div>
 
-                            {/* Content Section */}
-                            <div className="p-4">
-                              {/* Référence de facture */}
-                              <div className="mb-4">
-                                <h3 className="font-semibold text-lg text-foreground">
-                                  {existingInvoice ? existingInvoice.number : `Facture ${payment.type}`}
-                                </h3>
-                              </div>
-
-                              {/* Informations dans une grille avec boutons d'action */}
+                             {/* Content Section */}
+                             <div className="p-4">
+                               {/* Informations dans une grille avec boutons d'action */}
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Montant</label>
