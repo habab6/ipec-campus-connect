@@ -783,19 +783,29 @@ const DocumentGeneration = () => {
                                 </div>
                               </div>
 
-                              {/* Boutons d'action */}
-                              <div className="flex items-center gap-2 justify-end mb-4">
-                                {hasInvoice && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => generateInvoiceDoc(payment, true)}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Download className="h-4 w-4" />
-                                    Télécharger PDF
-                                  </Button>
-                                )}
+                               {/* Boutons d'action */}
+                               <div className="flex items-center gap-2 justify-end mb-4">
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={() => generateInvoiceDoc(payment, false)}
+                                   className="flex items-center gap-2"
+                                 >
+                                   <Receipt className="h-4 w-4" />
+                                   Facture
+                                 </Button>
+                                 
+                                 {hasInvoice && (
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => generateInvoiceDoc(payment, true)}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Download className="h-4 w-4" />
+                                     Télécharger PDF
+                                   </Button>
+                                 )}
                                 
                                 <Button
                                   variant="outline"
