@@ -190,11 +190,41 @@ const PaymentManagement = () => {
         paidDate: newPayment.paidDate || undefined
       };
 
-      await createPayment(payment);
+      // Créer le paiement
+      const createdPaymentData = await createPayment(payment);
+
+      // Générer automatiquement la facture
+      if (createdPaymentData) {
+        // Transformer les données de la base en objet Payment
+        const createdPayment: Payment = {
+          id: createdPaymentData.id,
+          studentId: createdPaymentData.student_id,
+          amount: createdPaymentData.amount,
+          dueDate: createdPaymentData.due_date,
+          status: createdPaymentData.status as Payment['status'],
+          type: createdPaymentData.type as Payment['type'],
+          description: createdPaymentData.description,
+          method: createdPaymentData.method as Payment['method'],
+          invoiceNumber: createdPaymentData.invoice_number,
+          invoiceDate: createdPaymentData.invoice_date,
+          paidDate: createdPaymentData.paid_date,
+          academicYear: createdPaymentData.academic_year,
+          studyYear: createdPaymentData.study_year
+        };
+
+        // Attendre un court délai pour que le paiement soit bien créé
+        setTimeout(async () => {
+          try {
+            await generateInvoiceDocument(createdPayment, false);
+          } catch (error) {
+            console.error('Erreur lors de la génération automatique de la facture:', error);
+          }
+        }, 500);
+      }
 
       toast({
-        title: "Paiement ajouté !",
-        description: `Nouveau paiement créé pour ${getStudentName(selectedStudent)}.`,
+        title: "Facture créée !",
+        description: `Facture manuelle générée pour ${getStudentName(selectedStudent)}.`,
       });
 
       // Reset form
@@ -210,9 +240,10 @@ const PaymentManagement = () => {
       setSelectedStudent("");
       setShowAddPayment(false);
     } catch (error) {
+      console.error('Erreur complète:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de créer le paiement.",
+        description: "Impossible de créer la facture manuelle.",
         variant: "destructive",
       });
     }
@@ -721,7 +752,7 @@ const PaymentManagement = () => {
                 onClick={() => setShowAddPayment(!showAddPayment)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {showAddPayment ? 'Annuler' : 'Facture manuelle'}
+                {showAddPayment ? 'Annuler' : 'Générer la facture'}
               </Button>
             </div>
           </CardHeader>
@@ -947,7 +978,7 @@ const PaymentManagement = () => {
 
                     <Button type="submit" className="w-full">
                       <Plus className="mr-2 h-4 w-4" />
-                      Ajouter le paiement
+                      Générer la facture
                     </Button>
                   </form>
                 </CardContent>
