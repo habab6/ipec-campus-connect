@@ -440,10 +440,10 @@ const DocumentGeneration = () => {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-6">
-          <Link to="/payments">
+          <Link to="/students">
             <Button variant="ghost" className="mb-4">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux paiements
+              Retour à la liste des étudiants
             </Button>
           </Link>
         </div>
