@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useStudents } from '@/hooks/useStudents';
 import { usePayments } from '@/hooks/usePayments';
+import { useAcademicYearFilter } from '@/hooks/useAcademicYearFilter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer } from "lucide-react";
+import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer, Calendar } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
@@ -20,7 +21,8 @@ const PaymentManagement = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { students } = useStudents();
-  const { 
+  const { selectedYear, setSelectedYear, academicYears } = useAcademicYearFilter();
+  const {
     payments, 
     createPayment, 
     updatePayment, 
@@ -479,6 +481,39 @@ const PaymentManagement = () => {
     }, 0);
   };
 
+  // Filtrer les paiements par année académique
+  const filteredPayments = payments.filter(payment => 
+    selectedYear === "all" || payment.academicYear === selectedYear
+  );
+
+  // Recalculer les statistiques avec les paiements filtrés
+  const getFilteredTotalAmount = () => {
+    return filteredPayments.reduce((total, payment) => total + payment.amount, 0);
+  };
+
+  const getFilteredPaidAmount = () => {
+    return filteredPayments.reduce((total, payment) => {
+      if (payment.status === 'Payé') {
+        return total + payment.amount;
+      } else if (payment.installments && payment.installments.length > 0) {
+        // Ajouter les acomptes pour les paiements partiels
+        return total + getTotalPaidForPayment(payment);
+      }
+      return total;
+    }, 0);
+  };
+
+  const getFilteredPendingAmount = () => {
+    return filteredPayments.reduce((total, payment) => {
+      if (payment.status === 'En attente') {
+        // Pour les paiements en attente, soustraire les acomptes déjà payés
+        const remainingAmount = getRemainingAmount(payment);
+        return total + remainingAmount;
+      }
+      return total;
+    }, 0);
+  };
+
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto">
@@ -496,21 +531,21 @@ const PaymentManagement = () => {
           <Card className="bg-gradient-card shadow-soft">
             <CardContent className="p-6 text-center">
               <h3 className="text-lg font-semibold mb-2">Total des paiements</h3>
-              <p className="text-3xl font-bold text-primary">{getTotalAmount()}€</p>
+              <p className="text-3xl font-bold text-primary">{getFilteredTotalAmount()}€</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-card shadow-soft">
             <CardContent className="p-6 text-center">
               <h3 className="text-lg font-semibold mb-2">Montant payé</h3>
-              <p className="text-3xl font-bold text-secondary">{getPaidAmount()}€</p>
+              <p className="text-3xl font-bold text-secondary">{getFilteredPaidAmount()}€</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-card shadow-soft">
             <CardContent className="p-6 text-center">
               <h3 className="text-lg font-semibold mb-2">En attente</h3>
-              <p className="text-3xl font-bold text-yellow-600">{getPendingAmount()}€</p>
+              <p className="text-3xl font-bold text-yellow-600">{getFilteredPendingAmount()}€</p>
             </CardContent>
           </Card>
         </div>
@@ -538,6 +573,39 @@ const PaymentManagement = () => {
           </CardHeader>
 
           <CardContent className="p-6">
+            {/* Filtre année académique */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-4">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Année académique:</span>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Sélectionner l'année" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les années</SelectItem>
+                    {academicYears.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedYear !== "all" && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedYear("all")}
+                  >
+                    Tout afficher
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <span>{filteredPayments.length} facture{filteredPayments.length > 1 ? 's' : ''} affiché{filteredPayments.length > 1 ? 's' : 'e'}</span>
+              </div>
+            </div>
+            
             {showAddPayment && (
               <Card className="mb-6 border-2 border-primary/20">
                 <CardHeader>
@@ -666,21 +734,30 @@ const PaymentManagement = () => {
             )}
 
             {/* Payments List */}
-            {payments.length === 0 ? (
+            {filteredPayments.length === 0 ? (
               <div className="text-center py-12">
                 <CreditCard className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Aucun paiement enregistré</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {payments.length === 0 ? "Aucun paiement enregistré" : "Aucun paiement pour cette année"}
+                </h3>
                 <p className="text-muted-foreground mb-4">
-                  Commencez par ajouter un premier paiement.
+                  {payments.length === 0 
+                    ? "Commencez par ajouter un premier paiement."
+                    : selectedYear !== "all" 
+                      ? `Aucun paiement trouvé pour l'année ${selectedYear}.`
+                      : "Aucun paiement ne correspond aux critères."
+                  }
                 </p>
-                <Button onClick={() => setShowAddPayment(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Ajouter un paiement
-                </Button>
+                {payments.length === 0 && (
+                  <Button onClick={() => setShowAddPayment(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ajouter un paiement
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                {payments.map((payment) => (
+                {filteredPayments.map((payment) => (
                   <Card key={payment.id} className="hover:shadow-soft transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
