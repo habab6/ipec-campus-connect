@@ -1062,7 +1062,11 @@ const PaymentManagement = () => {
             ) : (
               <div className="space-y-4">
                 {filteredPayments.map((payment) => (
-                  <Card key={payment.id} className={`hover:shadow-soft transition-shadow ${isPaymentOverdue(payment) ? 'border-red-400 bg-red-100/50' : ''}`}>
+                   <Card key={payment.id} className={`hover:shadow-soft transition-shadow ${
+                     isPaymentOverdue(payment) ? 'border-red-400 bg-red-100/50' : 
+                     payment.status === 'En attente' ? 'border-orange-300 bg-orange-50/30' :
+                     payment.status === 'Payé' ? 'border-green-300 bg-green-50/30' : ''
+                   }`}>
                     <CardContent className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div className="flex-1">
