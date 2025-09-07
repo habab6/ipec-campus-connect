@@ -297,6 +297,23 @@ const PaymentManagement = () => {
       return;
     }
 
+    // Validation : vérifier que le montant ne dépasse pas ce qui reste à payer
+    const payment = payments.find(p => p.id === installmentDialog.paymentId);
+    if (!payment) return;
+
+    const currentInstallments = payment.installments || [];
+    const totalAlreadyPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+    const remainingAmount = payment.amount - totalAlreadyPaid;
+
+    if (amount > remainingAmount) {
+      toast({
+        title: "Montant trop élevé",
+        description: `Le montant saisi (${amount}€) dépasse ce qui reste à payer (${remainingAmount}€).`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const payment = payments.find(p => p.id === installmentDialog.paymentId);
       if (!payment) return;
@@ -1124,14 +1141,32 @@ const PaymentManagement = () => {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="installmentAmount">Montant de l'acompte (€)</Label>
-                    <Input
-                      id="installmentAmount"
-                      type="number"
-                      step="0.01"
-                      value={installmentDialog.amount}
-                      onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
-                      placeholder="0.00"
-                    />
+                    {(() => {
+                      const payment = payments.find(p => p.id === installmentDialog.paymentId);
+                      if (!payment) return null;
+                      
+                      const currentInstallments = payment.installments || [];
+                      const totalAlreadyPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+                      const remainingAmount = payment.amount - totalAlreadyPaid;
+                      
+                      return (
+                        <>
+                          <Input
+                            id="installmentAmount"
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            max={remainingAmount}
+                            value={installmentDialog.amount}
+                            onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
+                            placeholder="0.00"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Montant maximum : {remainingAmount}€ (reste à payer)
+                          </p>
+                        </>
+                      );
+                    })()}
                   </div>
                   <div>
                     <Label htmlFor="installmentDate">Date de paiement</Label>

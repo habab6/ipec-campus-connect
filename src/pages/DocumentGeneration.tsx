@@ -430,6 +430,24 @@ const DocumentGeneration = () => {
       return;
     }
 
+    // Validation : vérifier que le montant ne dépasse pas ce qui reste à payer
+    const amount = parseFloat(installmentDialog.amount);
+    const payment = payments.find(p => p.id === installmentDialog.paymentId);
+    if (!payment) return;
+
+    const currentInstallments = payment.installments || [];
+    const totalAlreadyPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+    const remainingAmount = payment.amount - totalAlreadyPaid;
+
+    if (amount > remainingAmount) {
+      toast({
+        title: "Montant trop élevé",
+        description: `Le montant saisi (${amount}€) dépasse ce qui reste à payer (${remainingAmount}€).`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
@@ -440,6 +458,19 @@ const DocumentGeneration = () => {
         paid_date: installmentDialog.paidDate,
         method: installmentDialog.method
       });
+
+      // Vérifier si le paiement est maintenant complet
+      const newTotalPaid = totalAlreadyPaid + amount;
+      const isFullyPaid = newTotalPaid >= payment.amount;
+
+      // Mettre à jour le statut du paiement si entièrement payé
+      if (isFullyPaid) {
+        await updatePayment(installmentDialog.paymentId, {
+          status: 'Payé' as const,
+          paidDate: installmentDialog.paidDate,
+          method: installmentDialog.method as "Espèces" | "Carte" | "Virement" | "Chèque"
+        });
+      }
 
       // Recharger les données
       if (studentId) {
@@ -457,7 +488,9 @@ const DocumentGeneration = () => {
 
       toast({
         title: "Acompte ajouté",
-        description: "L'acompte a été enregistré avec succès.",
+        description: isFullyPaid 
+          ? `Acompte de ${amount}€ enregistré. Le paiement est maintenant soldé !`
+          : `Acompte de ${amount}€ enregistré avec succès.`,
       });
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'acompte:', error);
@@ -1099,14 +1132,28 @@ const DocumentGeneration = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="paidAmount">Montant payé (€)</Label>
-                <Input
-                  id="paidAmount"
-                  type="number"
-                  step="0.01"
-                  value={paymentDialog.amount}
-                  onChange={(e) => setPaymentDialog(prev => ({ ...prev, amount: e.target.value }))}
-                  placeholder="0.00"
-                />
+                {(() => {
+                  const payment = payments.find(p => p.id === paymentDialog.paymentId);
+                  if (!payment) return null;
+                  
+                  return (
+                    <>
+                      <Input
+                        id="paidAmount"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        max={payment.amount}
+                        value={paymentDialog.amount}
+                        onChange={(e) => setPaymentDialog(prev => ({ ...prev, amount: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Montant à payer : {payment.amount}€
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
               <div>
                 <Label htmlFor="paidDate">Date de paiement</Label>
@@ -1155,14 +1202,32 @@ const DocumentGeneration = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="installmentAmount">Montant de l'acompte (€)</Label>
-                <Input
-                  id="installmentAmount"
-                  type="number"
-                  step="0.01"
-                  value={installmentDialog.amount}
-                  onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
-                  placeholder="0.00"
-                />
+                {(() => {
+                  const payment = payments.find(p => p.id === installmentDialog.paymentId);
+                  if (!payment) return null;
+                  
+                  const currentInstallments = payment.installments || [];
+                  const totalAlreadyPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+                  const remainingAmount = payment.amount - totalAlreadyPaid;
+                  
+                  return (
+                    <>
+                      <Input
+                        id="installmentAmount"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        max={remainingAmount}
+                        value={installmentDialog.amount}
+                        onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Montant maximum : {remainingAmount}€ (reste à payer)
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
               <div>
                 <Label htmlFor="installmentDate">Date de paiement</Label>
