@@ -1133,16 +1133,16 @@ const PaymentManagement = () => {
                           )}
 
                          </div>
-                        
-                         {/* Encadré d'avancement des paiements en dessous - style identique à l'onglet documents */}
-                         {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
-                           <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
-                             <div className="text-sm font-medium text-amber-800">
-                               Payé: {getTotalPaidForPayment(payment)}€ - Reste: {getRemainingAmount(payment)}€
-                             </div>
-                           </div>
-                         )}
                        </div>
+                       
+                       {/* Encadré d'avancement des paiements en dessous - complètement séparé */}
+                       {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
+                         <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
+                           <div className="text-sm font-medium text-amber-800">
+                             Payé: {getTotalPaidForPayment(payment)}€ - Reste: {getRemainingAmount(payment)}€
+                           </div>
+                         </div>
+                       )}
                     </CardContent>
                   </Card>
                 ))}
