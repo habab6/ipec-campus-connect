@@ -779,11 +779,11 @@ const DocumentGeneration = () => {
                               {/* Encadré bleu avec référence et date de génération */}
                               {existingInvoice && (
                                 <div className="p-2 bg-blue-50 border border-blue-200 rounded-md">
-                                  <div className="text-xs text-blue-900 flex items-center">
+                                  <div className="text-xs text-blue-600 flex items-center">
                                     <FileText className="h-3 w-3 mr-1 text-blue-600" />
-                                    <span className="font-medium">Facture : {existingInvoice.number}</span>
+                                    <span>Facture : {existingInvoice.number}</span>
                                     <span className="mx-1">•</span>
-                                    <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}</span>
+                                    <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}</span>
                                   </div>
                                 </div>
                               )}
