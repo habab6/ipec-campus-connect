@@ -61,37 +61,60 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
   };
 
   return (
-    <div className="p-3 border rounded-lg bg-card">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="font-medium text-foreground">
-            {attestation.program} - {formatStudyYear(attestation.study_year)}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Année académique : {attestation.academic_year}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Étudiant : {formatStudentName(attestation, student)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Attestation : {attestation.number} - 
-            Générée le {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
-          </p>
-          {attestation.specialty && (
-            <p className="text-xs text-muted-foreground">
-              Spécialité : {attestation.specialty}
-            </p>
-          )}
+    <div className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      {/* Header avec nom de l'attestation */}
+      <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-300">
+        <div className="flex items-center justify-between">
+          <div className="text-lg font-semibold text-white">
+            Attestation {attestation.number}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
+              {attestation.program}
+            </span>
+            {attestation.specialty && (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                {attestation.specialty}
+              </span>
+            )}
+          </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleGenerateDuplicate}
-          className="ml-4"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Duplicata
-        </Button>
+      </div>
+      
+      {/* Contenu */}
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground">Étudiant:</span>
+              <span className="text-sm font-semibold text-foreground">{formatStudentName(attestation, student)}</span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground">Année d'étude:</span>
+              <span className="text-sm text-foreground">{formatStudyYear(attestation.study_year)}</span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground">Année académique:</span>
+              <span className="text-sm text-foreground">{attestation.academic_year}</span>
+            </div>
+            
+            <div className="text-xs text-muted-foreground mt-2">
+              Générée le {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
+            </div>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateDuplicate}
+            className="ml-4 hover:bg-blue-50 hover:border-blue-200"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Duplicata
+          </Button>
+        </div>
       </div>
     </div>
   );
