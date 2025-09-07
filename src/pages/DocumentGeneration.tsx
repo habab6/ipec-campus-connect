@@ -705,11 +705,23 @@ const DocumentGeneration = () => {
                     </Button>
                   </div>
                   
-                  {payments.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">
-                      Aucun paiement enregistré pour cet étudiant.
-                    </p>
-                  ) : (
+                   {payments.length === 0 ? (
+                     <div className="text-center py-6 space-y-4">
+                       <p className="text-muted-foreground">
+                         Aucun paiement enregistré pour cet étudiant.
+                       </p>
+                       <Button 
+                         onClick={async () => {
+                           // Rediriger vers la page des paiements pour créer les paiements
+                           window.location.href = `/payments?student=${studentId}`;
+                         }}
+                         className="flex items-center gap-2"
+                       >
+                         <CreditCard className="h-4 w-4" />
+                         Créer les paiements et générer les factures
+                       </Button>
+                     </div>
+                   ) : (
                     <div className="space-y-3">
                       {payments.map((payment) => {
                         const existingInvoice = getExistingInvoice(payment);
