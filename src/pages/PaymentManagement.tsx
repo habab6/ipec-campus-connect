@@ -1129,14 +1129,10 @@ const PaymentManagement = () => {
                               size="sm"
                               onClick={() => openPaymentDialog(payment.id)}
                             >
-                              {payment.type === 'Minerval' ? (
-                                <>
-                                  <Euro className="h-4 w-4 mr-1" />
-                                  Paiement
-                                </>
-                              ) : (
-                                'Paiement'
-                              )}
+                              <>
+                                <Euro className="h-4 w-4 mr-1" />
+                                Paiement
+                              </>
                             </Button>
                           )}
 
