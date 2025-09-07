@@ -21,26 +21,42 @@ const PaymentManagement = () => {
   const [searchParams] = useSearchParams();
   const { students } = useStudents();
   
-  // Gestion du filtre d'années académiques spécifique aux paiements
-  const [selectedYear, setSelectedYear] = useState<string>("all");
+  // Gestion des filtres spécifiques aux paiements
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("all");
+  const [selectedFiscalYear, setSelectedFiscalYear] = useState<string>("all");
   const [academicYears, setAcademicYears] = useState<string[]>([]);
+  const [fiscalYears, setFiscalYears] = useState<string[]>([]);
+  const [isGeneratingZip, setIsGeneratingZip] = useState(false);
 
   useEffect(() => {
-    const fetchAcademicYears = async () => {
-      // Récupérer les années académiques réellement utilisées par les paiements
+    const fetchYears = async () => {
+      // Récupérer les années académiques des paiements
       const { data: paymentYears } = await supabase
         .from('payments')
         .select('academic_year')
         .not('academic_year', 'is', null);
       
-      // Dédupliquer les années
-      const allYears = new Set<string>();
-      paymentYears?.forEach(item => allYears.add(item.academic_year));
+      // Récupérer les années fiscales des factures (basé sur la date de génération)
+      const { data: invoiceYears } = await supabase
+        .from('invoices')
+        .select('generate_date')
+        .not('generate_date', 'is', null);
       
-      setAcademicYears(Array.from(allYears).sort().reverse());
+      // Traiter les années académiques
+      const allAcademicYears = new Set<string>();
+      paymentYears?.forEach(item => allAcademicYears.add(item.academic_year));
+      setAcademicYears(Array.from(allAcademicYears).sort().reverse());
+      
+      // Traiter les années fiscales
+      const allFiscalYears = new Set<string>();
+      invoiceYears?.forEach(item => {
+        const year = new Date(item.generate_date).getFullYear().toString();
+        allFiscalYears.add(year);
+      });
+      setFiscalYears(Array.from(allFiscalYears).sort().reverse());
     };
 
-    fetchAcademicYears();
+    fetchYears();
   }, []);
   
   const {
@@ -502,10 +518,23 @@ const PaymentManagement = () => {
     }, 0);
   };
 
-  // Filtrer les paiements par année académique
-  const filteredPayments = payments.filter(payment => 
-    selectedYear === "all" || payment.academicYear === selectedYear
-  );
+  // Filtrer les paiements par année académique et fiscale
+  const filteredPayments = payments.filter(payment => {
+    const matchesAcademicYear = selectedAcademicYear === "all" || payment.academicYear === selectedAcademicYear;
+    
+    // Pour l'année fiscale, vérifier la date de génération de la facture associée
+    let matchesFiscalYear = selectedFiscalYear === "all";
+    if (!matchesFiscalYear && payment.invoiceDate) {
+      const fiscalYear = new Date(payment.invoiceDate).getFullYear().toString();
+      matchesFiscalYear = fiscalYear === selectedFiscalYear;
+    } else if (!matchesFiscalYear) {
+      // Si pas de date de facture, utiliser la date de création du paiement
+      const fiscalYear = new Date().getFullYear().toString();
+      matchesFiscalYear = fiscalYear === selectedFiscalYear;
+    }
+    
+    return matchesAcademicYear && matchesFiscalYear;
+  });
 
   // Recalculer les statistiques avec les paiements filtrés
   const getFilteredTotalAmount = () => {
@@ -533,6 +562,82 @@ const PaymentManagement = () => {
       }
       return total;
     }, 0);
+  };
+
+  // Fonction pour générer et télécharger un ZIP avec toutes les factures filtrées
+  const downloadFilteredInvoicesZip = async () => {
+    setIsGeneratingZip(true);
+    
+    try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      
+      let addedCount = 0;
+      
+      for (const payment of filteredPayments) {
+        const student = getStudent(payment.studentId);
+        if (!student) continue;
+        
+        const existingInvoice = getExistingInvoice(payment);
+        if (!existingInvoice) continue;
+        
+        try {
+          // Import des modules PDF
+          const { fillInvoicePdfWithPositions } = await import('@/utils/positionPdfFiller');
+          
+          const invoiceNumber = existingInvoice.number || 'SANS-NUMERO';
+          const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
+          
+          // Ajouter le PDF au ZIP
+          const filename = `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
+          zip.file(filename, pdfBytes);
+          addedCount++;
+        } catch (error) {
+          console.error(`Erreur lors de la génération de la facture ${existingInvoice.number}:`, error);
+        }
+      }
+      
+      if (addedCount === 0) {
+        toast({
+          title: "Aucune facture",
+          description: "Aucune facture n'a pu être générée pour les filtres sélectionnés.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Générer le ZIP
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Télécharger le ZIP
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Nom du fichier avec les filtres appliqués
+      const academicFilter = selectedAcademicYear !== "all" ? `-${selectedAcademicYear}` : "";
+      const fiscalFilter = selectedFiscalYear !== "all" ? `-${selectedFiscalYear}` : "";
+      link.download = `factures${academicFilter}${fiscalFilter}-${new Date().toISOString().split('T')[0]}.zip`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "ZIP téléchargé",
+        description: `${addedCount} facture${addedCount > 1 ? 's' : ''} téléchargée${addedCount > 1 ? 's' : ''} dans le fichier ZIP.`,
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération du ZIP:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer le fichier ZIP.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingZip(false);
+    }
   };
 
   return (
@@ -594,34 +699,85 @@ const PaymentManagement = () => {
           </CardHeader>
 
           <CardContent className="p-6">
-            {/* Filtre année académique */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-4">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Année académique:</span>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Sélectionner l'année" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les années</SelectItem>
-                    {academicYears.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedYear !== "all" && (
+            {/* Filtres années académiques et fiscales */}
+            <div className="flex flex-col gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
+              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Filtre année académique */}
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Année académique:</span>
+                    <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Sélectionner l'année" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les années</SelectItem>
+                        {academicYears.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Filtre année fiscale */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Année fiscale:</span>
+                    <Select value={selectedFiscalYear} onValueChange={setSelectedFiscalYear}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Sélectionner l'année" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les années</SelectItem>
+                        {fiscalYears.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* Boutons d'action */}
+                <div className="flex items-center gap-2">
+                  {(selectedAcademicYear !== "all" || selectedFiscalYear !== "all") && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAcademicYear("all");
+                        setSelectedFiscalYear("all");
+                      }}
+                    >
+                      Tout afficher
+                    </Button>
+                  )}
+                  
                   <Button 
-                    variant="outline" 
+                    variant="secondary"
                     size="sm"
-                    onClick={() => setSelectedYear("all")}
+                    onClick={downloadFilteredInvoicesZip}
+                    disabled={isGeneratingZip || filteredPayments.length === 0}
+                    className="flex items-center gap-2"
                   >
-                    Tout afficher
+                    {isGeneratingZip ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        Génération...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4" />
+                        Télécharger ZIP ({filteredPayments.length})
+                      </>
+                    )}
                   </Button>
-                )}
+                </div>
               </div>
+              
               <div className="flex items-center text-sm text-muted-foreground">
                 <span>{filteredPayments.length} facture{filteredPayments.length > 1 ? 's' : ''} affiché{filteredPayments.length > 1 ? 's' : 'e'}</span>
               </div>
@@ -764,8 +920,8 @@ const PaymentManagement = () => {
                 <p className="text-muted-foreground mb-4">
                   {payments.length === 0 
                     ? "Commencez par ajouter un premier paiement."
-                    : selectedYear !== "all" 
-                      ? `Aucun paiement trouvé pour l'année ${selectedYear}.`
+                    : (selectedAcademicYear !== "all" || selectedFiscalYear !== "all")
+                      ? `Aucun paiement trouvé pour les filtres sélectionnés.`
                       : "Aucun paiement ne correspond aux critères."
                   }
                 </p>
