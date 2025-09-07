@@ -547,6 +547,15 @@ const DocumentGeneration = () => {
                                 )}
                               </div>
                               <div className="flex gap-2">
+                                <Link to={`/payments?studentId=${studentId}&paymentId=${payment.id}`}>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                  >
+                                    <CreditCard className="mr-2 h-4 w-4" />
+                                    Ajouter paiement
+                                  </Button>
+                                </Link>
                                 {hasInvoice ? (
                                   <Button
                                     variant="outline"

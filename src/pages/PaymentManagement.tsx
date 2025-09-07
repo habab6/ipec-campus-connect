@@ -11,13 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
 const PaymentManagement = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const { students } = useStudents();
   const { 
     payments, 
@@ -77,6 +78,21 @@ const PaymentManagement = () => {
       loadInvoices();
     }
   }, [payments, getInvoicesByStudentId]);
+
+  // Gérer les paramètres URL pour auto-sélectionner l'étudiant et ouvrir le formulaire
+  useEffect(() => {
+    const studentId = searchParams.get('studentId');
+    const paymentId = searchParams.get('paymentId');
+    
+    if (studentId) {
+      setSelectedStudent(studentId);
+      
+      // Si un paymentId est fourni, ouvrir le formulaire d'ajout de paiement
+      if (paymentId) {
+        setShowAddPayment(true);
+      }
+    }
+  }, [searchParams]);
 
   // Les données sont maintenant chargées via les hooks useStudents et usePayments
 
