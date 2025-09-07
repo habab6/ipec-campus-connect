@@ -900,29 +900,37 @@ const PaymentManagement = () => {
                       </div>
                       
                       <div>
-                        <Label htmlFor="amount">Montant (€) *</Label>
-                        <Input
-                          id="amount"
-                          type="number"
-                          step="0.01"
-                          value={newPayment.amount}
-                          onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
-                          placeholder="0.00"
-                          required
-                        />
+                        <Label htmlFor="amount">Montant (€) {newPayment.type && (newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') ? '(automatique)' : '*'}</Label>
+                         <Input
+                           id="amount"
+                           type="number"
+                           step="0.01"
+                           value={newPayment.amount}
+                           onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
+                           disabled={newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata'}
+                           placeholder={newPayment.type === "Frais d'envoi" ? "120€" : newPayment.type === "Duplicata" ? "35€" : "0.00"}
+                           required
+                         />
+                         {newPayment.type === "Frais d'envoi" && (
+                           <p className="text-xs text-muted-foreground mt-1">Montant automatique: 120€</p>
+                         )}
+                         {newPayment.type === "Duplicata" && (
+                           <p className="text-xs text-muted-foreground mt-1">Montant automatique: 35€</p>
+                         )}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="type">Type de paiement *</Label>
-                        <Select onValueChange={(value) => {
-                          setNewPayment(prev => ({ 
-                            ...prev, 
-                            type: value,
-                            dueDate: calculateDueDate(value)
-                          }));
-                        }}>
+                         <Select onValueChange={(value) => {
+                           setNewPayment(prev => ({ 
+                             ...prev, 
+                             type: value,
+                             dueDate: calculateDueDate(value),
+                             amount: value === "Frais d'envoi" ? "120" : value === "Duplicata" ? "35" : prev.amount
+                           }));
+                         }}>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionnez le type" />
                           </SelectTrigger>
