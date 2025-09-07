@@ -293,7 +293,7 @@ const PaymentManagement = () => {
       
       toast({
         title: "Paiement confirmé",
-        description: "Le paiement a été marqué comme payé.",
+        description: "Paiement confirmé avec succès.",
       });
     } catch (error) {
       toast({

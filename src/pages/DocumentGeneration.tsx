@@ -408,7 +408,7 @@ const DocumentGeneration = () => {
 
       toast({
         title: "Paiement enregistré",
-        description: "Le paiement a été marqué comme payé.",
+        description: "Paiement enregistré avec succès.",
       });
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du paiement:', error);
