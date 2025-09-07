@@ -1154,7 +1154,7 @@ const PaymentManagement = () => {
             <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Marquer le paiement comme payé</DialogTitle>
+                  <DialogTitle>Paiement</DialogTitle>
                   <DialogDescription>
                     Veuillez renseigner les informations de paiement
                   </DialogDescription>
