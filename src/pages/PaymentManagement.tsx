@@ -1134,25 +1134,14 @@ const PaymentManagement = () => {
 
                          </div>
                         
-                        {/* Encadré d'avancement des paiements en dessous */}
-                        {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
-                          <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Payé</span>
-                                <p className="font-semibold text-emerald-600">{getTotalPaidForPayment(payment)}€</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Total</span>
-                                <p className="font-semibold">{payment.amount}€</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Reste</span>
-                                <p className="font-semibold text-amber-600">{getRemainingAmount(payment)}€</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                         {/* Encadré d'avancement des paiements en dessous - style identique à l'onglet documents */}
+                         {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
+                           <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
+                             <div className="text-sm font-medium text-amber-800">
+                               Payé: {getTotalPaidForPayment(payment)}€ - Reste: {getRemainingAmount(payment)}€
+                             </div>
+                           </div>
+                         )}
                        </div>
                     </CardContent>
                   </Card>
