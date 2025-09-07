@@ -1132,26 +1132,28 @@ const PaymentManagement = () => {
                             </Button>
                           )}
 
-                           {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
-                             <div className="mt-3 p-3 bg-muted/50 rounded-lg border">
-                               <div className="grid grid-cols-3 gap-4 text-sm">
-                                 <div>
-                                   <span className="text-muted-foreground">Payé</span>
-                                   <p className="font-semibold text-emerald-600">{getTotalPaidForPayment(payment)}€</p>
-                                 </div>
-                                 <div>
-                                   <span className="text-muted-foreground">Total</span>
-                                   <p className="font-semibold">{payment.amount}€</p>
-                                 </div>
-                                 <div>
-                                   <span className="text-muted-foreground">Reste</span>
-                                   <p className="font-semibold text-amber-600">{getRemainingAmount(payment)}€</p>
-                                 </div>
-                               </div>
-                             </div>
-                           )}
-                        </div>
-                      </div>
+                         </div>
+                        
+                        {/* Encadré d'avancement des paiements en dessous */}
+                        {payment.type === 'Minerval' && payment.installments && payment.installments.length > 0 && payment.status === 'En attente' && (
+                          <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Payé</span>
+                                <p className="font-semibold text-emerald-600">{getTotalPaidForPayment(payment)}€</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Total</span>
+                                <p className="font-semibold">{payment.amount}€</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Reste</span>
+                                <p className="font-semibold text-amber-600">{getRemainingAmount(payment)}€</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                       </div>
                     </CardContent>
                   </Card>
                 ))}
