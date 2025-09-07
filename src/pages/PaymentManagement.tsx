@@ -728,64 +728,72 @@ const PaymentManagement = () => {
 
           <CardContent className="p-6">
             {/* Filtres années académiques et fiscales */}
-            <div className="flex flex-col gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
-              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Filtre année académique */}
+            <div className="space-y-4 mb-6 p-4 bg-muted/50 rounded-lg">
+              {/* Première ligne : Filtres */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Filtre année académique */}
+                <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Année académique:</span>
-                    <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Sélectionner l'année" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Toutes les années</SelectItem>
-                        {academicYears.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
-                  
-                  {/* Filtre année fiscale */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Année fiscale:</span>
-                    <Select value={selectedFiscalYear} onValueChange={setSelectedFiscalYear}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Sélectionner l'année" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Toutes les années</SelectItem>
-                        {fiscalYears.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Filtre statut de paiement */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Statut:</span>
-                    <Select value={selectedPaymentStatus} onValueChange={setSelectedPaymentStatus}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Sélectionner le statut" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous les statuts</SelectItem>
-                        <SelectItem value="paid">Factures payées</SelectItem>
-                        <SelectItem value="unpaid">Factures non payées</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionner l'année" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les années</SelectItem>
+                      {academicYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Filtre année fiscale */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">Année fiscale:</span>
+                  <Select value={selectedFiscalYear} onValueChange={setSelectedFiscalYear}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionner l'année" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les années</SelectItem>
+                      {fiscalYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Filtre statut de paiement */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">Statut:</span>
+                  <Select value={selectedPaymentStatus} onValueChange={setSelectedPaymentStatus}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionner le statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les statuts</SelectItem>
+                      <SelectItem value="paid">Factures payées</SelectItem>
+                      <SelectItem value="unpaid">Factures non payées</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {/* Deuxième ligne : Actions et statistiques */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span>{filteredPayments.length} facture{filteredPayments.length > 1 ? 's' : ''} affiché{filteredPayments.length > 1 ? 's' : 'e'}</span>
                 </div>
                 
                 {/* Boutons d'action */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {(selectedAcademicYear !== "all" || selectedFiscalYear !== "all" || selectedPaymentStatus !== "all") && (
                     <Button 
                       variant="outline" 
@@ -805,7 +813,7 @@ const PaymentManagement = () => {
                     size="sm"
                     onClick={downloadFilteredInvoicesZip}
                     disabled={isGeneratingZip || filteredPayments.length === 0}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 shrink-0"
                   >
                     {isGeneratingZip ? (
                       <>
@@ -815,15 +823,11 @@ const PaymentManagement = () => {
                     ) : (
                       <>
                         <FileText className="h-4 w-4" />
-                        Télécharger ZIP ({filteredPayments.length})
+                        ZIP ({filteredPayments.length})
                       </>
                     )}
                   </Button>
                 </div>
-              </div>
-              
-              <div className="flex items-center text-sm text-muted-foreground">
-                <span>{filteredPayments.length} facture{filteredPayments.length > 1 ? 's' : ''} affiché{filteredPayments.length > 1 ? 's' : 'e'}</span>
               </div>
             </div>
             
