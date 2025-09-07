@@ -246,10 +246,20 @@ export type Database = {
           created_at: string
           generate_date: string
           id: string
+          is_duplicate: boolean | null
+          notes: string | null
           number: string
+          original_attestation_id: string | null
           program: string
+          registration_date: string | null
           specialty: string
+          student_birth_city: string | null
+          student_birth_country: string | null
+          student_birth_date: string | null
+          student_full_name: string | null
           student_id: string
+          student_nationality: string | null
+          student_reference: string | null
           study_year: number
         }
         Insert: {
@@ -257,10 +267,20 @@ export type Database = {
           created_at?: string
           generate_date?: string
           id?: string
+          is_duplicate?: boolean | null
+          notes?: string | null
           number: string
+          original_attestation_id?: string | null
           program: string
+          registration_date?: string | null
           specialty: string
+          student_birth_city?: string | null
+          student_birth_country?: string | null
+          student_birth_date?: string | null
+          student_full_name?: string | null
           student_id: string
+          student_nationality?: string | null
+          student_reference?: string | null
           study_year: number
         }
         Update: {
@@ -268,13 +288,30 @@ export type Database = {
           created_at?: string
           generate_date?: string
           id?: string
+          is_duplicate?: boolean | null
+          notes?: string | null
           number?: string
+          original_attestation_id?: string | null
           program?: string
+          registration_date?: string | null
           specialty?: string
+          student_birth_city?: string | null
+          student_birth_country?: string | null
+          student_birth_date?: string | null
+          student_full_name?: string | null
           student_id?: string
+          student_nationality?: string | null
+          student_reference?: string | null
           study_year?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "registration_attestations_original_attestation_id_fkey"
+            columns: ["original_attestation_id"]
+            isOneToOne: false
+            referencedRelation: "registration_attestations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "registration_attestations_student_id_fkey"
             columns: ["student_id"]
