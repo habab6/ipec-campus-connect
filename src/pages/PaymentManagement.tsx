@@ -1166,8 +1166,8 @@ const PaymentManagement = () => {
                        
                        {/* Encadré d'avancement des paiements en dessous - complètement séparé */}
                        {payment.status === 'En attente' && (
-                         <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
-                           <div className="text-sm font-medium text-amber-800">
+                         <div className="mt-4 p-3 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-md shadow-sm">
+                           <div className="text-sm font-medium text-red-800">
                              Payé: {getTotalPaidForPayment(payment)}€ - Reste: {getRemainingAmount(payment)}€
                            </div>
                          </div>
