@@ -174,6 +174,17 @@ const PaymentManagement = () => {
     }
 
     try {
+      // Récupérer les informations de l'étudiant
+      const student = getStudent(selectedStudent);
+      if (!student) {
+        toast({
+          title: "Erreur",
+          description: "Étudiant non trouvé.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Calcul automatique de l'échéance si non spécifiée
       const dueDate = newPayment.dueDate || calculateDueDate(newPayment.type);
 
@@ -187,7 +198,9 @@ const PaymentManagement = () => {
         method: newPayment.paidMethod as Payment['method'],
         invoiceNumber: null,
         invoiceDate: new Date().toISOString().split('T')[0],
-        paidDate: newPayment.paidDate || undefined
+        paidDate: newPayment.paidDate || undefined,
+        academicYear: student.academicYear,
+        studyYear: student.studyYear
       };
 
       // Créer le paiement
