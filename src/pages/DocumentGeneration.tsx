@@ -492,68 +492,85 @@ const DocumentGeneration = () => {
                     return (
                       <div className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                         {/* Header avec nom de l'attestation */}
-                        <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-300">
+                        <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
                           <div className="flex items-center justify-between">
                             <div className="text-lg font-semibold text-white">
                               {hasAttestation ? `Attestation ${attestation.number}` : 'Nouvelle Attestation'}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
                                 {student?.program}
                               </span>
                               {student?.specialty && (
-                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
                                   {student?.specialty}
                                 </span>
                               )}
                             </div>
                           </div>
                         </div>
-                        
-                        {/* Contenu */}
+
+                        {/* Content Section */}
                         <div className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium text-muted-foreground">Année d'étude:</span>
-                                <span className="text-sm text-foreground">{student?.studyYear === 1 ? '1ère année' : `${student?.studyYear}ème année`}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium text-muted-foreground">Année académique:</span>
-                                <span className="text-sm text-foreground">{student?.academicYear}</span>
-                              </div>
-                              
-                              {attestation && (
-                                <div className="text-xs text-muted-foreground mt-2">
-                                  Générée le {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
-                                </div>
-                              )}
+                          {/* Référence d'attestation */}
+                          <div className="mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">
+                              {hasAttestation ? attestation.number : 'Nouvelle Attestation'}
+                            </h3>
+                          </div>
+
+                          {/* Informations dans une grille avec boutons d'action */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Programme</label>
+                              <p className="text-lg font-semibold text-foreground">{student?.program}</p>
                             </div>
-                            
-                            <div className="flex gap-2">
-                              {hasAttestation ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => generateRegistrationDoc(true)}
-                                  className="hover:bg-blue-50 hover:border-blue-200"
-                                >
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Duplicata
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  onClick={() => generateRegistrationDoc(false)}
-                                  className="bg-blue-600 hover:bg-blue-700"
-                                >
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Générer l'attestation
-                                </Button>
-                              )}
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
+                              <p className="text-sm font-medium text-foreground">
+                                {student?.studyYear === 1 ? '1ère année' : `${student?.studyYear}ème année`}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Année académique</label>
+                              <p className="text-sm font-medium text-foreground">
+                                {student?.academicYear}
+                              </p>
                             </div>
                           </div>
+
+                          {/* Boutons d'action */}
+                          <div className="flex items-center gap-2 justify-end mb-4">
+                            {hasAttestation ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => generateRegistrationDoc(true)}
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                Duplicata
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => generateRegistrationDoc(false)}
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                Générer l'attestation
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* Informations de génération */}
+                          {attestation && (
+                            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                              <div className="text-xs text-muted-foreground">
+                                <strong>Date de génération:</strong> {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -566,17 +583,17 @@ const DocumentGeneration = () => {
                     .map((attestation) => (
                       <div key={attestation.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                         {/* Header avec nom de l'attestation */}
-                        <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-300">
+                        <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
                           <div className="flex items-center justify-between">
                             <div className="text-lg font-semibold text-white">
                               Attestation {attestation.number}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
                                 {attestation.program}
                               </span>
                               {attestation.specialty && (
-                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
                                   {attestation.specialty}
                                 </span>
                               )}
@@ -584,74 +601,94 @@ const DocumentGeneration = () => {
                           </div>
                         </div>
                         
-                        {/* Contenu */}
+                        {/* Content Section */}
                         <div className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium text-muted-foreground">Année d'étude:</span>
-                                <span className="text-sm text-foreground">{attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium text-muted-foreground">Année académique:</span>
-                                <span className="text-sm text-foreground">{attestation.academic_year}</span>
-                              </div>
-                              
-                              <div className="text-xs text-muted-foreground mt-2">
-                                Générée le {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
-                              </div>
+                          {/* Référence d'attestation */}
+                          <div className="mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">
+                              {attestation.number}
+                            </h3>
+                          </div>
+
+                          {/* Informations dans une grille avec boutons d'action */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Programme</label>
+                              <p className="text-lg font-semibold text-foreground">{attestation.program}</p>
                             </div>
-                            
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
+                              <p className="text-sm font-medium text-foreground">
+                                {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Année académique</label>
+                              <p className="text-sm font-medium text-foreground">
+                                {attestation.academic_year}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Boutons d'action */}
+                          <div className="flex items-center gap-2 justify-end mb-4">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={async () => {
                                 try {
                                   // Utiliser les données enrichies de l'attestation si disponibles
-                                const historicalStudent = {
-                                  ...student!,
-                                  firstName: attestation.student_full_name?.split(' ')[0] || student!.firstName,
-                                  lastName: attestation.student_full_name?.split(' ').slice(1).join(' ') || student!.lastName,
-                                  reference: attestation.student_reference || student!.reference,
-                                  program: attestation.program as Student['program'],
-                                  studyYear: attestation.study_year,
-                                  academicYear: attestation.academic_year,
-                                  specialty: attestation.specialty,
-                                  nationality: attestation.student_nationality || student!.nationality,
-                                  dateOfBirth: attestation.student_birth_date || student!.dateOfBirth,
-                                  cityOfBirth: attestation.student_birth_city || student!.cityOfBirth,
-                                  countryOfBirth: attestation.student_birth_country || student!.countryOfBirth,
-                                  registrationDate: attestation.registration_date || student!.registrationDate
-                                };
-                                
-                                const pdfBytes = await fillRegistrationPdfWithPositions(historicalStudent, attestation.number);
-                                const studentName = attestation.student_full_name || `${student?.firstName}-${student?.lastName}`;
-                                const filename = `duplicata-attestation-${studentName.replace(' ', '-')}-${attestation.number}.pdf`;
-                                downloadPdf(pdfBytes, filename);
-                                
-                                toast({
-                                  title: "Duplicata téléchargé",
-                                  description: `Duplicata de l'attestation ${attestation.number} téléchargé.`,
-                                });
-                              } catch (error) {
-                                console.error('Erreur lors de la génération du duplicata:', error);
-                                toast({
-                                  title: "Erreur",
-                                  description: "Erreur lors de la génération du duplicata",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                          >
-                            <Download className="mr-2 h-4 w-4" />
-                            Duplicata
-                           </Button>
-                         </div>
-                       </div>
-                     </div>
-                   ))}
-                 </div>
+                                  const historicalStudent = {
+                                    ...student!,
+                                    firstName: attestation.student_full_name?.split(' ')[0] || student!.firstName,
+                                    lastName: attestation.student_full_name?.split(' ').slice(1).join(' ') || student!.lastName,
+                                    reference: attestation.student_reference || student!.reference,
+                                    program: attestation.program as Student['program'],
+                                    studyYear: attestation.study_year,
+                                    academicYear: attestation.academic_year,
+                                    specialty: attestation.specialty,
+                                    nationality: attestation.student_nationality || student!.nationality,
+                                    dateOfBirth: attestation.student_birth_date || student!.dateOfBirth,
+                                    cityOfBirth: attestation.student_birth_city || student!.cityOfBirth,
+                                    countryOfBirth: attestation.student_birth_country || student!.countryOfBirth,
+                                    registrationDate: attestation.registration_date || student!.registrationDate
+                                  };
+                                  
+                                  const pdfBytes = await fillRegistrationPdfWithPositions(historicalStudent, attestation.number);
+                                  const studentName = attestation.student_full_name || `${student?.firstName}-${student?.lastName}`;
+                                  const filename = `duplicata-attestation-${studentName.replace(' ', '-')}-${attestation.number}.pdf`;
+                                  downloadPdf(pdfBytes, filename);
+                                  
+                                  toast({
+                                    title: "Duplicata téléchargé",
+                                    description: `Duplicata de l'attestation ${attestation.number} téléchargé.`,
+                                  });
+                                } catch (error) {
+                                  console.error('Erreur lors de la génération du duplicata:', error);
+                                  toast({
+                                    title: "Erreur",
+                                    description: "Erreur lors de la génération du duplicata",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <Download className="h-4 w-4" />
+                              Duplicata
+                            </Button>
+                          </div>
+
+                          {/* Informations de génération */}
+                          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                            <div className="text-xs text-muted-foreground">
+                              <strong>Date de génération:</strong> {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </CardContent>
             </Card>
 
