@@ -781,7 +781,7 @@ const PaymentManagement = () => {
                      <p className="text-3xl font-bold text-yellow-600">{getFilteredPendingAmount()}€</p>
                      {stats.overdue > 0 && (
                        <p className="text-sm text-red-600 mt-2">
-                         {stats.total} dont {stats.overdue} en retard
+                         {stats.total} facture{stats.total > 1 ? 's' : ''} dont {stats.overdue} en retard
                        </p>
                      )}
                    </>
