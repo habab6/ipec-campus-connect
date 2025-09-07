@@ -57,6 +57,8 @@ export function usePayments() {
 
   const createPayment = async (paymentData: Omit<Payment, 'id'>) => {
     try {
+      console.log('Données de paiement à insérer:', paymentData);
+      
       const { data, error } = await supabase
         .from('payments')
         .insert([{
@@ -76,10 +78,17 @@ export function usePayments() {
         .select()
         .single();
 
-      if (error) throw error;
+      console.log('Réponse Supabase:', { data, error });
+
+      if (error) {
+        console.error('Erreur Supabase détaillée:', error);
+        throw error;
+      }
+      
       await fetchPayments();
       return data;
     } catch (err) {
+      console.error('Erreur dans createPayment:', err);
       throw new Error(err instanceof Error ? err.message : 'Erreur lors de la création du paiement');
     }
   };
