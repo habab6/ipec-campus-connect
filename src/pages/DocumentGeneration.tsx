@@ -868,28 +868,34 @@ const DocumentGeneration = () => {
                            <div key={payment.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                              {/* Header avec nom de la facture */}
                              <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
-                               <div className="flex items-center justify-between">
-                                 <div className="text-lg font-semibold text-white">
-                                   {existingInvoice ? `Facture ${existingInvoice.number}` : `Facture ${payment.type}`}
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                     payment.type === 'Frais de dossier' 
-                                       ? 'bg-slate-100 text-slate-700 border border-slate-200' 
-                                       : 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                                   }`}>
-                                     {payment.type}
-                                   </span>
-                                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${ 
-                                     payment.status === 'Payé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                                     payment.status === 'En attente' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                                     payment.status === 'En retard' ? 'bg-rose-100 text-rose-700 border border-rose-200' :
-                                     'bg-sky-100 text-sky-700 border border-sky-200'
-                                   }`}>
-                                     {payment.status}
-                                   </span>
-                                 </div>
-                               </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-lg font-semibold text-white">
+                                    {existingInvoice ? `Facture ${existingInvoice.number}` : `Facture ${payment.type}`}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                      payment.type === 'Frais de dossier' 
+                                        ? 'bg-slate-100 text-slate-700 border border-slate-200' 
+                                        : 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                    }`}>
+                                      {payment.type}
+                                    </span>
+                                    {!existingInvoice ? (
+                                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
+                                        Non généré
+                                      </span>
+                                    ) : (
+                                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${ 
+                                        payment.status === 'Payé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                                        payment.status === 'En attente' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                                        payment.status === 'En retard' ? 'bg-rose-100 text-rose-700 border border-rose-200' :
+                                        'bg-sky-100 text-sky-700 border border-sky-200'
+                                      }`}>
+                                        {payment.status}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                              </div>
 
                              {/* Content Section */}
@@ -914,86 +920,91 @@ const DocumentGeneration = () => {
                                 </div>
                               </div>
 
-                               {/* Boutons d'action */}
-                               <div className="flex items-center gap-2 justify-end mb-4">
-                                 {hasInvoice ? (
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={() => generateInvoiceDoc(payment, true)}
-                                     className="flex items-center gap-2"
-                                   >
-                                     <Download className="h-4 w-4" />
-                                     Télécharger PDF
-                                   </Button>
-                                 ) : (
-                                   <Button
-                                     size="sm"
-                                     onClick={() => generateInvoiceDoc(payment, false)}
-                                     className="flex items-center gap-2"
-                                   >
-                                     <Receipt className="h-4 w-4" />
-                                     Générer facture
-                                   </Button>
+                                {/* Boutons d'action */}
+                                <div className="flex items-center gap-2 justify-end mb-4">
+                                  {hasInvoice ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => generateInvoiceDoc(payment, true)}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                      Télécharger PDF
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => generateInvoiceDoc(payment, false)}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Receipt className="h-4 w-4" />
+                                      Générer facture
+                                    </Button>
+                                  )}
+                                 
+                                 {/* Only show other actions if invoice exists */}
+                                 {hasInvoice && (
+                                   <>
+                                     <Button
+                                       variant="outline"
+                                       size="sm"
+                                       onClick={() => {
+                                         const summaryContent = generatePaymentSummaryPdf(student, [payment]);
+                                         const filename = `recapitulatif-${payment.type.toLowerCase().replace(/\s+/g, '-')}-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
+                                         downloadPaymentSummary(summaryContent, filename);
+                                         toast({
+                                           title: "Récapitulatif généré",
+                                           description: "Le récapitulatif a été téléchargé.",
+                                         });
+                                       }}
+                                       className="flex items-center gap-2"
+                                     >
+                                       <Eye className="h-4 w-4" />
+                                       Récapitulatif
+                                     </Button>
+                                     
+                                     {/* Only show add payment button if not fully paid */}
+                                     {!isFullyPaid && (
+                                       <Button
+                                         size="sm"
+                                         onClick={() => {
+                                           if (payment.type === 'Frais de dossier') {
+                                             setPaymentDialog({
+                                               isOpen: true,
+                                               paymentId: payment.id,
+                                               amount: payment.amount.toString(),
+                                               method: '',
+                                               paidDate: new Date().toISOString().split('T')[0]
+                                             });
+                                           } else {
+                                             setInstallmentDialog({
+                                               isOpen: true,
+                                               paymentId: payment.id,
+                                               amount: '',
+                                               method: '',
+                                               paidDate: new Date().toISOString().split('T')[0]
+                                             });
+                                           }
+                                         }}
+                                         className="flex items-center gap-2"
+                                       >
+                                         <Euro className="h-4 w-4" />
+                                         + Paiement
+                                       </Button>
+                                     )}
+                                   </>
                                  )}
-                                
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const summaryContent = generatePaymentSummaryPdf(student, [payment]);
-                                    const filename = `recapitulatif-${payment.type.toLowerCase().replace(/\s+/g, '-')}-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
-                                    downloadPaymentSummary(summaryContent, filename);
-                                    toast({
-                                      title: "Récapitulatif généré",
-                                      description: "Le récapitulatif a été téléchargé.",
-                                    });
-                                  }}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  Récapitulatif
-                                </Button>
-                                
-                                {/* Only show add payment button if not fully paid */}
-                                {!isFullyPaid && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => {
-                                      if (payment.type === 'Frais de dossier') {
-                                        setPaymentDialog({
-                                          isOpen: true,
-                                          paymentId: payment.id,
-                                          amount: payment.amount.toString(),
-                                          method: '',
-                                          paidDate: new Date().toISOString().split('T')[0]
-                                        });
-                                      } else {
-                                        setInstallmentDialog({
-                                          isOpen: true,
-                                          paymentId: payment.id,
-                                          amount: '',
-                                          method: '',
-                                          paidDate: new Date().toISOString().split('T')[0]
-                                        });
-                                      }
-                                    }}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Euro className="h-4 w-4" />
-                                    + Paiement
-                                  </Button>
-                                )}
-                              </div>
+                               </div>
 
-                              {/* Avancement des paiements pour paiements partiels - style professionnel */}
-                              {hasInstallments && !isFullyPaid && (
-                                <div className="mb-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
-                                  <div className="text-sm font-medium text-amber-800">
-                                    Payé: {totalPaid}€ - Reste: {remainingAmount}€
-                                  </div>
-                                </div>
-                              )}
+                               {/* Avancement des paiements pour paiements partiels - style professionnel - seulement si facture générée */}
+                               {hasInvoice && hasInstallments && !isFullyPaid && (
+                                 <div className="mb-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
+                                   <div className="text-sm font-medium text-amber-800">
+                                     Payé: {totalPaid}€ - Reste: {remainingAmount}€
+                                   </div>
+                                 </div>
+                               )}
 
                               {/* Encadré professionnel avec référence et date de génération */}
                               {existingInvoice && (
