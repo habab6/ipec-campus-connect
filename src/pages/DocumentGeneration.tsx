@@ -19,6 +19,7 @@ import {
 } from "@/utils/documentGenerator";
 import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCreditNotePdf, downloadPdf } from "@/utils/positionPdfFiller";
 import { generatePaymentSummaryPdf, downloadPaymentSummary } from "@/utils/paymentSummaryGenerator";
+import { AttestationDisplay } from "@/components/AttestationDisplay";
 
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -416,7 +417,7 @@ const DocumentGeneration = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">
-                              {attestation.program} - {(attestation.study_year || 1) === 1 ? '1ère année' : `${attestation.study_year || 1}ème année`}
+                              {attestation.program} - {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               Année académique : {attestation.academic_year}
@@ -429,31 +430,42 @@ const DocumentGeneration = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              // Créer un student temporaire avec les données de l'attestation
-                              const tempStudent = {
-                                ...student!,
-                                program: attestation.program as Student['program'],
-                                studyYear: attestation.studyYear,
-                                academicYear: attestation.academicYear,
-                                specialty: attestation.specialty
-                              };
-                              fillRegistrationPdfWithPositions(tempStudent, attestation.number)
-                                .then(pdfBytes => {
-                                  const filename = `duplicata-attestation-${student?.firstName}-${student?.lastName}-${attestation.number}.pdf`;
-                                  downloadPdf(pdfBytes, filename);
-                                  toast({
-                                    title: "Duplicata téléchargé",
-                                    description: `Duplicata de l'attestation ${attestation.number} téléchargé.`,
-                                  });
-                                })
-                                .catch(error => {
-                                  toast({
-                                    title: "Erreur",
-                                    description: "Impossible de télécharger le duplicata",
-                                    variant: "destructive",
-                                  });
+                            onClick={async () => {
+                              try {
+                                // Utiliser les données enrichies de l'attestation si disponibles
+                                const historicalStudent = {
+                                  ...student!,
+                                  firstName: attestation.student_full_name?.split(' ')[0] || student!.firstName,
+                                  lastName: attestation.student_full_name?.split(' ').slice(1).join(' ') || student!.lastName,
+                                  reference: attestation.student_reference || student!.reference,
+                                  program: attestation.program as Student['program'],
+                                  studyYear: attestation.study_year,
+                                  academicYear: attestation.academic_year,
+                                  specialty: attestation.specialty,
+                                  nationality: attestation.student_nationality || student!.nationality,
+                                  dateOfBirth: attestation.student_birth_date || student!.dateOfBirth,
+                                  cityOfBirth: attestation.student_birth_city || student!.cityOfBirth,
+                                  countryOfBirth: attestation.student_birth_country || student!.countryOfBirth,
+                                  registrationDate: attestation.registration_date || student!.registrationDate
+                                };
+                                
+                                const pdfBytes = await fillRegistrationPdfWithPositions(historicalStudent, attestation.number);
+                                const studentName = attestation.student_full_name || `${student?.firstName}-${student?.lastName}`;
+                                const filename = `duplicata-attestation-${studentName.replace(' ', '-')}-${attestation.number}.pdf`;
+                                downloadPdf(pdfBytes, filename);
+                                
+                                toast({
+                                  title: "Duplicata téléchargé",
+                                  description: `Duplicata de l'attestation ${attestation.number} téléchargé.`,
                                 });
+                              } catch (error) {
+                                console.error('Erreur lors de la génération du duplicata:', error);
+                                toast({
+                                  title: "Erreur",
+                                  description: "Erreur lors de la génération du duplicata",
+                                  variant: "destructive",
+                                });
+                              }
                             }}
                           >
                             <Download className="mr-2 h-4 w-4" />
