@@ -547,24 +547,26 @@ const DocumentGeneration = () => {
                                 )}
                               </div>
                               <div className="flex gap-2">
-                                <Link to={`/payments?studentId=${studentId}&paymentId=${payment.id}`}>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                  >
-                                    <CreditCard className="mr-2 h-4 w-4" />
-                                    Ajouter paiement
-                                  </Button>
-                                </Link>
                                 {hasInvoice ? (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => generateInvoiceDoc(payment, true)}
-                                  >
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Duplicata
-                                  </Button>
+                                  <>
+                                    <Link to={`/payments?studentId=${studentId}&installmentPaymentId=${payment.id}`}>
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                      >
+                                        <CreditCard className="mr-2 h-4 w-4" />
+                                        Ajouter versement
+                                      </Button>
+                                    </Link>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => generateInvoiceDoc(payment, true)}
+                                    >
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Duplicata
+                                    </Button>
+                                  </>
                                 ) : (
                                   <Button
                                     variant="default"

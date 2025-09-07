@@ -79,17 +79,23 @@ const PaymentManagement = () => {
     }
   }, [payments, getInvoicesByStudentId]);
 
-  // Gérer les paramètres URL pour auto-sélectionner l'étudiant et ouvrir le formulaire
+  // Gérer les paramètres URL pour auto-sélectionner l'étudiant et ouvrir le dialog d'ajout de versement
   useEffect(() => {
     const studentId = searchParams.get('studentId');
-    const paymentId = searchParams.get('paymentId');
+    const installmentPaymentId = searchParams.get('installmentPaymentId');
     
     if (studentId) {
       setSelectedStudent(studentId);
       
-      // Si un paymentId est fourni, ouvrir le formulaire d'ajout de paiement
-      if (paymentId) {
-        setShowAddPayment(true);
+      // Si un installmentPaymentId est fourni, ouvrir le dialog d'ajout de versement
+      if (installmentPaymentId) {
+        setInstallmentDialog({
+          isOpen: true,
+          paymentId: installmentPaymentId,
+          amount: '',
+          method: '',
+          paidDate: new Date().toISOString().split('T')[0]
+        });
       }
     }
   }, [searchParams]);
