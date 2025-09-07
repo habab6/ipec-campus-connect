@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Student, RegistrationAttestation, Invoice } from "@/types";
+import { dbStudentToStudent } from "@/utils/dataTransforms";
 
 interface SearchResult {
   id: string;
@@ -32,31 +34,8 @@ const GlobalSearch = ({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [attestations, setAttestations] = useState<RegistrationAttestation[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  // Charger les données depuis localStorage
-  useEffect(() => {
-    const loadData = () => {
-      const storedStudents = JSON.parse(localStorage.getItem('students') || '[]');
-      const storedAttestations = JSON.parse(localStorage.getItem('attestations') || '[]');
-      const storedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-      
-      setStudents(storedStudents);
-      setAttestations(storedAttestations);
-      setInvoices(storedInvoices);
-    };
-
-    loadData();
-    
-    // Écouter les changements dans localStorage
-    const handleStorageChange = () => loadData();
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   // Fonction de recherche
   useEffect(() => {
@@ -66,104 +45,107 @@ const GlobalSearch = ({
       return;
     }
 
-    const searchQuery = query.toLowerCase().trim();
-    const searchResults: SearchResult[] = [];
+    const performSearch = async () => {
+      setIsLoading(true);
+      const searchQuery = query.toLowerCase().trim();
+      const searchResults: SearchResult[] = [];
 
-    // Recherche dans les étudiants
-    students.forEach(student => {
-      const searchableText = [
-        student.firstName,
-        student.lastName,
-        student.reference,
-        student.email,
-        student.phone,
-        student.program,
-        student.specialty
-      ].join(' ').toLowerCase();
+      try {
+        // Recherche dans les étudiants par nom, prénom ou référence
+        const { data: studentsData } = await supabase
+          .from('students')
+          .select('*')
+          .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,reference.ilike.%${searchQuery}%`);
 
-      if (searchableText.includes(searchQuery)) {
-        searchResults.push({
-          id: student.id,
-          type: 'student',
-          title: `${student.firstName} ${student.lastName}`,
-          subtitle: `Référence: ${student.reference}`,
-          description: `${student.program} - ${student.studyYear}ème année - ${student.specialty}`,
-          link: `/edit-student/${student.id}`,
-          data: student
+        if (studentsData) {
+          studentsData.forEach(dbStudent => {
+            const student = dbStudentToStudent(dbStudent as any);
+            searchResults.push({
+              id: student.id,
+              type: 'student',
+              title: `${student.firstName} ${student.lastName}`,
+              subtitle: `Référence: ${student.reference}`,
+              description: `${student.program} - ${student.studyYear}ème année - ${student.specialty}`,
+              link: `/edit-student/${student.id}`,
+              data: student
+            });
+          });
+        }
+
+        // Recherche dans les attestations par numéro
+        const { data: attestationsData } = await supabase
+          .from('registration_attestations')
+          .select(`
+            *,
+            students!inner(*)
+          `)
+          .or(`number.ilike.%${searchQuery}%,student_full_name.ilike.%${searchQuery}%,student_reference.ilike.%${searchQuery}%`);
+
+        if (attestationsData) {
+          attestationsData.forEach(attestation => {
+            const student = dbStudentToStudent(attestation.students as any);
+            searchResults.push({
+              id: attestation.id,
+              type: 'attestation',
+              title: `Attestation ${attestation.number}`,
+              subtitle: `${attestation.student_full_name || `${student.firstName} ${student.lastName}`}`,
+              description: `${attestation.program} - ${attestation.study_year}ème année - ${attestation.academic_year}`,
+              link: `/documents/${student.id}`,
+              data: { attestation, student }
+            });
+          });
+        }
+
+        // Recherche dans les factures par numéro
+        const { data: invoicesData } = await supabase
+          .from('invoices')
+          .select(`
+            *,
+            students!inner(*)
+          `)
+          .ilike('number', `%${searchQuery}%`);
+
+        if (invoicesData) {
+          invoicesData.forEach(invoice => {
+            const student = dbStudentToStudent(invoice.students as any);
+            searchResults.push({
+              id: invoice.id,
+              type: 'invoice',
+              title: `Facture ${invoice.number}`,
+              subtitle: `${student.firstName} ${student.lastName}`,
+              description: `${invoice.type} - ${invoice.amount}€ ${invoice.academic_year ? `- ${invoice.academic_year}` : ''}`,
+              link: `/documents/${student.id}`,
+              data: { invoice, student }
+            });
+          });
+        }
+
+        // Trier par pertinence (correspondance exacte en premier)
+        const sortedResults = searchResults.sort((a, b) => {
+          const aExact = a.title.toLowerCase().includes(searchQuery) || 
+                         a.subtitle.toLowerCase().includes(searchQuery);
+          const bExact = b.title.toLowerCase().includes(searchQuery) || 
+                         b.subtitle.toLowerCase().includes(searchQuery);
+          
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+          return 0;
         });
+
+        setResults(sortedResults.slice(0, 10)); // Limiter à 10 résultats
+        setIsOpen(sortedResults.length > 0);
+      } catch (error) {
+        console.error('Erreur lors de la recherche:', error);
+        setResults([]);
+        setIsOpen(false);
+      } finally {
+        setIsLoading(false);
       }
-    });
+    };
 
-    // Recherche dans les attestations
-    attestations.forEach(attestation => {
-      const student = students.find(s => s.id === attestation.studentId);
-      if (!student) return;
-
-      const searchableText = [
-        attestation.number,
-        student.firstName,
-        student.lastName,
-        student.reference,
-        attestation.program,
-        attestation.specialty,
-        attestation.academicYear
-      ].join(' ').toLowerCase();
-
-      if (searchableText.includes(searchQuery)) {
-        searchResults.push({
-          id: attestation.id,
-          type: 'attestation',
-          title: `Attestation ${attestation.number}`,
-          subtitle: `${student.firstName} ${student.lastName}`,
-          description: `${attestation.program} - ${attestation.studyYear}ème année - ${attestation.academicYear}`,
-          link: `/documents/${student.id}`,
-          data: { attestation, student }
-        });
-      }
-    });
-
-    // Recherche dans les factures
-    invoices.forEach(invoice => {
-      const student = students.find(s => s.id === invoice.studentId);
-      if (!student) return;
-
-      const searchableText = [
-        invoice.number,
-        student.firstName,
-        student.lastName,
-        student.reference,
-        invoice.type,
-        invoice.amount.toString()
-      ].join(' ').toLowerCase();
-
-      if (searchableText.includes(searchQuery)) {
-        searchResults.push({
-          id: invoice.id,
-          type: 'invoice',
-          title: `Facture ${invoice.number}`,
-          subtitle: `${student.firstName} ${student.lastName}`,
-          description: `${invoice.type} - ${invoice.amount}€ ${invoice.academicYear ? `- ${invoice.academicYear}` : ''}`,
-          link: `/documents/${student.id}`,
-          data: { invoice, student }
-        });
-      }
-    });
-
-    // Trier par pertinence (correspondance exacte en premier)
-    const sortedResults = searchResults.sort((a, b) => {
-      const aExact = a.title.toLowerCase().includes(searchQuery) || 
-                     a.subtitle.toLowerCase().includes(searchQuery);
-      const bExact = b.title.toLowerCase().includes(searchQuery) || 
-                     b.subtitle.toLowerCase().includes(searchQuery);
-      
-      if (aExact && !bExact) return -1;
-      if (!aExact && bExact) return 1;
-      return 0;
-    });
-
-    setResults(sortedResults.slice(0, 10)); // Limiter à 10 résultats
-    setIsOpen(sortedResults.length > 0);
-  }, [query, students, attestations, invoices]);
+    const timeoutId = setTimeout(performSearch, 300); // Debounce de 300ms
+    return () => clearTimeout(timeoutId);
+  }, [query]);
 
   const handleResultClick = (result: SearchResult) => {
     navigate(result.link);
@@ -257,7 +239,7 @@ const GlobalSearch = ({
             <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">Aucun résultat trouvé pour "{query}"</p>
             <p className="text-xs mt-1">
-              Recherchez par nom, référence, numéro d'attestation ou de facture
+              Recherchez par nom, prénom, référence étudiant, numéro d'attestation ou de facture
             </p>
           </CardContent>
         </Card>
