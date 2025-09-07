@@ -173,25 +173,63 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
     const currentDate = new Date().toLocaleDateString('fr-FR');
     const invoiceNumberToUse = invoiceNumber || generateInvoiceNumber(student, payment);
 
-    // Positions pour la facture (ajustez selon votre template)
+    // Positions pour la facture - utilise les mêmes positions que les attestations
     const invoicePositions = {
-      numeroFacture: { x: 120, y: 100 },
-      dateFacture: { x: 400, y: 100 },
-      nomClient: { x: 120, y: 200 },
+      numeroDocument: FIELD_POSITIONS.numeroDocument,
+      dateDocument: FIELD_POSITIONS.dateDocument,
+      civilite: FIELD_POSITIONS.civilite,
+      nomComplet: FIELD_POSITIONS.nomComplet,
+      dateNaissance: FIELD_POSITIONS.dateNaissance,
+      villeNaissance: FIELD_POSITIONS.villeNaissance,
+      paysNaissance: FIELD_POSITIONS.paysNaissance,
+      nationalite: FIELD_POSITIONS.nationalite,
+      numeroIdentite: FIELD_POSITIONS.numeroIdentite,
+      telephone: FIELD_POSITIONS.telephone,
+      email: FIELD_POSITIONS.email,
+      adresse: FIELD_POSITIONS.adresse,
+      programme: FIELD_POSITIONS.programme,
+      niveau: FIELD_POSITIONS.niveau,
+      specialite: FIELD_POSITIONS.specialite,
+      anneeAcademique: FIELD_POSITIONS.anneeAcademique,
+      dateInscription: FIELD_POSITIONS.dateInscription,
       montant: { x: 400, y: 300 },
+      typeFacture: { x: 120, y: 320 },
     };
 
+    // Utiliser l'année académique du paiement, pas celle actuelle de l'étudiant
+    const academicYear = payment.academicYear || student.academicYear;
+    const studyYear = payment.studyYear || student.studyYear;
+
     const invoiceData = {
-      numeroFacture: invoiceNumberToUse,
-      dateFacture: currentDate,
-      nomClient: `${student.firstName} ${student.lastName}`,
+      numeroDocument: invoiceNumberToUse,
+      dateDocument: currentDate,
+      civilite: student.civilite,
+      nomComplet: `${student.firstName} ${student.lastName}`,
+      dateNaissance: new Date(student.dateOfBirth).toLocaleDateString('fr-FR'),
+      villeNaissance: student.cityOfBirth,
+      paysNaissance: student.countryOfBirth,
+      nationalite: student.nationality,
+      numeroIdentite: student.identityNumber,
+      telephone: student.phone,
+      email: student.email,
+      adresse: student.address,
+      programme: student.program,
+      niveau: studyYear === 1 ? '1ère année' : `${studyYear}ème année`,
+      specialite: student.specialty,
+      anneeAcademique: academicYear,
+      dateInscription: new Date(student.registrationDate).toLocaleDateString('fr-FR'),
       montant: `${payment.amount} €`,
+      typeFacture: payment.type,
     };
+
+    console.log('📍 Génération facture PDF avec positionnement x,y');
+    console.log('✅ Police Questrial chargée avec succès');
 
     Object.entries(invoiceData).forEach(([fieldName, value]) => {
       const position = invoicePositions[fieldName as keyof typeof invoicePositions];
       if (position) {
-        firstPage.drawText(value, {
+        console.log(`✏️  ${fieldName}: "${value}" à (${position.x}, ${position.y})`);
+        firstPage.drawText(String(value), {
           x: position.x,
           y: height - position.y,
           size: 12,
