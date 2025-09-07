@@ -667,21 +667,14 @@ const DocumentGeneration = () => {
                                   </span>
                                 </div>
 
-                                {/* Progress bar for payments with installments */}
+                                {/* Payment progress for payments with installments */}
                                 {hasInstallments && !isFullyPaid && (
-                                  <div className="mt-2">
-                                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                      <span>Progression du paiement</span>
-                                      <span>{totalPaid}€ / {payment.amount}€ ({progressPercentage}%)</span>
-                                    </div>
-                                    <div className="w-full bg-muted rounded-full h-2">
-                                      <div 
-                                        className="bg-primary h-2 rounded-full transition-all duration-300" 
-                                        style={{ width: `${progressPercentage}%` }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      Reste à payer: {remainingAmount}€
+                                  <div className="mt-2 text-sm">
+                                    <p className="text-muted-foreground">
+                                      <strong>Payé:</strong> {totalPaid}€ / {payment.amount}€
+                                    </p>
+                                    <p className="text-muted-foreground">
+                                      <strong>Reste:</strong> {remainingAmount}€
                                     </p>
                                   </div>
                                 )}
