@@ -483,86 +483,45 @@ const DocumentGeneration = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {/* Attestation année courante */}
                   {(() => {
                     const attestation = getCurrentAttestation();
                     const hasAttestation = !!attestation;
                     
                     return (
-                      <div className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                        {/* Header avec nom de l'attestation */}
-                        <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
-                          <div className="flex items-center justify-between">
-                            <div className="text-lg font-semibold text-white">
+                      <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <FileCheck className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="font-medium">
                               {hasAttestation ? `Attestation ${attestation.number}` : 'Nouvelle Attestation'}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                                {student?.program}
-                              </span>
-                              {student?.specialty && (
-                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
-                                  {student?.specialty}
-                                </span>
-                              )}
-                            </div>
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {student?.program} - {student?.studyYear === 1 ? '1ère année' : `${student?.studyYear}ème année`} - {student?.academicYear}
+                            </p>
                           </div>
                         </div>
-
-                        {/* Content Section */}
-                        <div className="p-4">
-                          {/* Informations dans une grille avec boutons d'action */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Programme</label>
-                              <p className="text-lg font-semibold text-foreground">{student?.program}</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {student?.studyYear === 1 ? '1ère année' : `${student?.studyYear}ème année`}
-                              </p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année académique</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {student?.academicYear}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Boutons d'action */}
-                          <div className="flex items-center gap-2 justify-end mb-4">
-                            {hasAttestation ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => generateRegistrationDoc(true)}
-                                className="flex items-center gap-2"
-                              >
-                                <Download className="h-4 w-4" />
-                                Duplicata
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                onClick={() => generateRegistrationDoc(false)}
-                                className="flex items-center gap-2"
-                              >
-                                <Download className="h-4 w-4" />
-                                Générer l'attestation
-                              </Button>
-                            )}
-                          </div>
-
-                          {/* Informations de génération */}
-                          {attestation && (
-                            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                              <div className="text-xs text-muted-foreground">
-                                <strong>Date de génération:</strong> {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
-                              </div>
-                            </div>
+                        <div className="flex gap-2">
+                          {hasAttestation ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => generateRegistrationDoc(true)}
+                              className="flex items-center gap-2"
+                            >
+                              <Download className="h-4 w-4" />
+                              Télécharger PDF
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => generateRegistrationDoc(false)}
+                              className="flex items-center gap-2"
+                            >
+                              <Download className="h-4 w-4" />
+                              Générer & Télécharger
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -574,104 +533,63 @@ const DocumentGeneration = () => {
                     .filter(a => !(a.academic_year === student?.academicYear && a.study_year === student?.studyYear))
                     .sort((a, b) => new Date(b.created_at || b.generate_date).getTime() - new Date(a.created_at || a.generate_date).getTime())
                     .map((attestation) => (
-                      <div key={attestation.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                        {/* Header avec nom de l'attestation */}
-                        <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
-                          <div className="flex items-center justify-between">
-                            <div className="text-lg font-semibold text-white">
-                              Attestation {attestation.number}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                                {attestation.program}
-                              </span>
-                              {attestation.specialty && (
-                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
-                                  {attestation.specialty}
-                                </span>
-                              )}
-                            </div>
+                      <div key={attestation.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <FileCheck className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="font-medium">Attestation {attestation.number}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {attestation.program} - {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`} - {attestation.academic_year}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Généré le {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
+                            </p>
                           </div>
                         </div>
-                        
-                        {/* Content Section */}
-                        <div className="p-4">
-                          {/* Informations dans une grille avec boutons d'action */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Programme</label>
-                              <p className="text-lg font-semibold text-foreground">{attestation.program}</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
-                              </p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année académique</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {attestation.academic_year}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Boutons d'action */}
-                          <div className="flex items-center gap-2 justify-end mb-4">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                try {
-                                  // Utiliser les données enrichies de l'attestation si disponibles
-                                  const historicalStudent = {
-                                    ...student!,
-                                    firstName: attestation.student_full_name?.split(' ')[0] || student!.firstName,
-                                    lastName: attestation.student_full_name?.split(' ').slice(1).join(' ') || student!.lastName,
-                                    reference: attestation.student_reference || student!.reference,
-                                    program: attestation.program as Student['program'],
-                                    studyYear: attestation.study_year,
-                                    academicYear: attestation.academic_year,
-                                    specialty: attestation.specialty,
-                                    nationality: attestation.student_nationality || student!.nationality,
-                                    dateOfBirth: attestation.student_birth_date || student!.dateOfBirth,
-                                    cityOfBirth: attestation.student_birth_city || student!.cityOfBirth,
-                                    countryOfBirth: attestation.student_birth_country || student!.countryOfBirth,
-                                    registrationDate: attestation.registration_date || student!.registrationDate
-                                  };
-                                  
-                                  const pdfBytes = await fillRegistrationPdfWithPositions(historicalStudent, attestation.number);
-                                  const studentName = attestation.student_full_name || `${student?.firstName}-${student?.lastName}`;
-                                  const filename = `duplicata-attestation-${studentName.replace(' ', '-')}-${attestation.number}.pdf`;
-                                  downloadPdf(pdfBytes, filename);
-                                  
-                                  toast({
-                                    title: "Duplicata téléchargé",
-                                    description: `Duplicata de l'attestation ${attestation.number} téléchargé.`,
-                                  });
-                                } catch (error) {
-                                  console.error('Erreur lors de la génération du duplicata:', error);
-                                  toast({
-                                    title: "Erreur",
-                                    description: "Erreur lors de la génération du duplicata",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Download className="h-4 w-4" />
-                              Duplicata
-                            </Button>
-                          </div>
-
-                          {/* Informations de génération */}
-                          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                            <div className="text-xs text-muted-foreground">
-                              <strong>Date de génération:</strong> {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
-                            </div>
-                          </div>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const historicalStudent = {
+                                ...student!,
+                                firstName: attestation.student_full_name?.split(' ')[0] || student!.firstName,
+                                lastName: attestation.student_full_name?.split(' ').slice(1).join(' ') || student!.lastName,
+                                reference: attestation.student_reference || student!.reference,
+                                program: attestation.program as Student['program'],
+                                studyYear: attestation.study_year,
+                                academicYear: attestation.academic_year,
+                                specialty: attestation.specialty,
+                                nationality: attestation.student_nationality || student!.nationality,
+                                dateOfBirth: attestation.student_birth_date || student!.dateOfBirth,
+                                cityOfBirth: attestation.student_birth_city || student!.cityOfBirth,
+                                countryOfBirth: attestation.student_birth_country || student!.countryOfBirth,
+                                registrationDate: attestation.registration_date || student!.registrationDate
+                              };
+                              
+                              const pdfBytes = await fillRegistrationPdfWithPositions(historicalStudent, attestation.number);
+                              const studentName = attestation.student_full_name || `${student?.firstName}-${student?.lastName}`;
+                              const filename = `attestation-${studentName.replace(' ', '-')}-${attestation.number}.pdf`;
+                              downloadPdf(pdfBytes, filename);
+                              
+                              toast({
+                                title: "PDF téléchargé",
+                                description: `Attestation ${attestation.number} téléchargée.`,
+                              });
+                            } catch (error) {
+                              console.error('Erreur lors du téléchargement:', error);
+                              toast({
+                                title: "Erreur",
+                                description: "Erreur lors du téléchargement du PDF",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Télécharger PDF
+                        </Button>
                       </div>
                     ))}
                 </div>
@@ -705,7 +623,7 @@ const DocumentGeneration = () => {
                       Aucun paiement enregistré pour cet étudiant.
                     </p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {payments.map((payment) => {
                         const existingInvoice = getExistingInvoice(payment);
                         const hasInvoice = !!existingInvoice;
@@ -717,137 +635,85 @@ const DocumentGeneration = () => {
                         const remainingAmount = payment.amount - totalPaid;
                         
                         return (
-                           <div key={payment.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                             {/* Header avec nom de la facture */}
-                             <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
-                               <div className="flex items-center justify-between">
-                                 <div className="text-lg font-semibold text-white">
-                                   {existingInvoice ? `Facture ${existingInvoice.number}` : `Facture ${payment.type}`}
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                     payment.type === 'Frais de dossier' 
-                                       ? 'bg-slate-100 text-slate-700 border border-slate-200' 
-                                       : 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                                   }`}>
-                                     {payment.type}
-                                   </span>
-                                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${ 
-                                     payment.status === 'Payé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                                     payment.status === 'En attente' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                                     payment.status === 'En retard' ? 'bg-rose-100 text-rose-700 border border-rose-200' :
-                                     'bg-sky-100 text-sky-700 border border-sky-200'
-                                   }`}>
-                                     {payment.status}
-                                   </span>
-                                 </div>
-                               </div>
-                             </div>
-
-                             {/* Content Section */}
-                             <div className="p-4">
-                               {/* Informations dans une grille avec boutons d'action */}
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Montant</label>
-                                  <p className="text-lg font-semibold text-foreground">{payment.amount}€</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Échéance</label>
-                                  <p className="text-sm font-medium text-foreground">
-                                    {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
+                          <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
+                            <div className="flex items-center gap-4">
+                              <Receipt className="h-5 w-5 text-secondary" />
+                              <div>
+                                <p className="font-medium">
+                                  {existingInvoice ? `Facture ${existingInvoice.number}` : `Facture ${payment.type}`}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {payment.type} - {payment.amount}€ - {payment.status}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Échéance: {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
+                                  {existingInvoice && ` • Générée le ${new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}`}
+                                </p>
+                                {hasInstallments && !isFullyPaid && (
+                                  <p className="text-xs text-amber-600">
+                                    Payé: {totalPaid}€ - Reste: {remainingAmount}€
                                   </p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Année académique</label>
-                                  <p className="text-sm font-medium text-foreground">
-                                    {payment.academicYear} - {payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Boutons d'action */}
-                              <div className="flex items-center gap-2 justify-end mb-4">
-                                {hasInvoice && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => generateInvoiceDoc(payment, true)}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Receipt className="h-4 w-4" />
-                                    Facture
-                                  </Button>
                                 )}
-                                
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              {hasInvoice && (
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  onClick={() => generateInvoiceDoc(payment, true)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Download className="h-4 w-4" />
+                                  Télécharger PDF
+                                </Button>
+                              )}
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const summaryContent = generatePaymentSummaryPdf(student, [payment]);
+                                  const filename = `recapitulatif-${payment.type.toLowerCase().replace(/\s+/g, '-')}-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
+                                  downloadPaymentSummary(summaryContent, filename);
+                                  toast({
+                                    title: "Récapitulatif généré",
+                                    description: "Le récapitulatif a été téléchargé.",
+                                  });
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                Récapitulatif HTML
+                              </Button>
+                              
+                              {!isFullyPaid && (
+                                <Button
+                                  size="sm"
                                   onClick={() => {
-                                    const summaryContent = generatePaymentSummaryPdf(student, [payment]);
-                                    const filename = `recapitulatif-${payment.type.toLowerCase().replace(/\s+/g, '-')}-${student.firstName}-${student.lastName}-${new Date().toISOString().split('T')[0]}.html`;
-                                    downloadPaymentSummary(summaryContent, filename);
-                                    toast({
-                                      title: "Récapitulatif généré",
-                                      description: "Le récapitulatif a été téléchargé.",
-                                    });
+                                    if (payment.type === 'Frais de dossier') {
+                                      setPaymentDialog({
+                                        isOpen: true,
+                                        paymentId: payment.id,
+                                        amount: payment.amount.toString(),
+                                        method: '',
+                                        paidDate: new Date().toISOString().split('T')[0]
+                                      });
+                                    } else {
+                                      setInstallmentDialog({
+                                        isOpen: true,
+                                        paymentId: payment.id,
+                                        amount: '',
+                                        method: '',
+                                        paidDate: new Date().toISOString().split('T')[0]
+                                      });
+                                    }
                                   }}
                                   className="flex items-center gap-2"
                                 >
-                                  <Eye className="h-4 w-4" />
-                                  Récapitulatif
+                                  <Euro className="h-4 w-4" />
+                                  Ajouter {payment.type === 'Frais de dossier' ? 'paiement' : 'acompte'}
                                 </Button>
-                                
-                                {/* Only show add payment button if not fully paid */}
-                                {!isFullyPaid && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => {
-                                      if (payment.type === 'Frais de dossier') {
-                                        setPaymentDialog({
-                                          isOpen: true,
-                                          paymentId: payment.id,
-                                          amount: payment.amount.toString(),
-                                          method: '',
-                                          paidDate: new Date().toISOString().split('T')[0]
-                                        });
-                                      } else {
-                                        setInstallmentDialog({
-                                          isOpen: true,
-                                          paymentId: payment.id,
-                                          amount: '',
-                                          method: '',
-                                          paidDate: new Date().toISOString().split('T')[0]
-                                        });
-                                      }
-                                    }}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Euro className="h-4 w-4" />
-                                    Ajouter {payment.type === 'Frais de dossier' ? 'paiement' : 'acompte'}
-                                  </Button>
-                                )}
-                              </div>
-
-                              {/* Avancement des paiements pour paiements partiels - style professionnel */}
-                              {hasInstallments && !isFullyPaid && (
-                                <div className="mb-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
-                                  <div className="text-sm font-medium text-amber-800">
-                                    Payé: {totalPaid}€ - Reste: {remainingAmount}€
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Encadré professionnel avec référence et date de génération */}
-                              {existingInvoice && (
-                                <div className="p-3 bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-md shadow-sm">
-                                  <div className="text-sm text-slate-700 flex items-center">
-                                    <FileText className="h-4 w-4 mr-2 text-slate-600" />
-                                    <span className="font-medium">Facture : {existingInvoice.number}</span>
-                                    <span className="mx-2 text-slate-400">•</span>
-                                    <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}</span>
-                                  </div>
-                                </div>
                               )}
                             </div>
                           </div>
