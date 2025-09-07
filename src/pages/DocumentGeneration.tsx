@@ -643,17 +643,20 @@ const DocumentGeneration = () => {
                         
                         return (
                            <div key={payment.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                             {/* Header avec type de frais */}
-                             <div className={`px-4 py-3 ${
-                               payment.type === 'Frais de dossier' 
-                                 ? 'bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300' 
-                                 : 'bg-gradient-to-r from-indigo-600 to-indigo-700 border-b border-indigo-300'
-                             }`}>
+                             {/* Header avec nom de la facture */}
+                             <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
                                <div className="flex items-center justify-between">
                                  <div className="text-lg font-semibold text-white">
-                                   {payment.type}
+                                   {existingInvoice ? `Facture ${existingInvoice.number}` : `Facture ${payment.type}`}
                                  </div>
                                  <div className="flex items-center gap-2">
+                                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                     payment.type === 'Frais de dossier' 
+                                       ? 'bg-slate-100 text-slate-700 border border-slate-200' 
+                                       : 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                   }`}>
+                                     {payment.type}
+                                   </span>
                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${ 
                                      payment.status === 'Payé' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
                                      payment.status === 'En attente' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
