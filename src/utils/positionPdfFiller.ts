@@ -49,9 +49,17 @@ const loadQuestrialFont = async (): Promise<Uint8Array> => {
 
 // Générer un numéro d'attestation unique
 const generateAttestationNumber = (student: Student): string => {
-  const year = new Date().getFullYear();
-  const studentCode = student.reference.split('-')[0] || student.id.slice(0, 4).toUpperCase();
-  return `ATT-${year}-${studentCode}-${student.studyYear}`;
+  // Déterminer le suffixe selon le programme
+  let programSuffix = '';
+  if (student.program === 'BBA') {
+    programSuffix = 'B';
+  } else if (student.program === 'MBA') {
+    programSuffix = 'M';
+  } else if (student.program === 'MBA Complémentaire') {
+    programSuffix = 'MC';
+  }
+  
+  return `ATT-${student.reference}-${student.studyYear}-${programSuffix}`;
 };
 
 // Remplir le PDF avec positionnement x,y
