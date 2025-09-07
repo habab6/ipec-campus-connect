@@ -1193,7 +1193,7 @@ const DocumentGeneration = () => {
                 Annuler
               </Button>
               <Button onClick={handleMarkAsPaid}>
-                Confirmer le paiement
+                Paiement
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1203,9 +1203,9 @@ const DocumentGeneration = () => {
         <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Ajouter un acompte pour le minerval</DialogTitle>
+              <DialogTitle>Paiement</DialogTitle>
               <DialogDescription>
-                Enregistrez un paiement partiel pour le minerval
+                Enregistrez un paiement pour le minerval
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -1265,7 +1265,7 @@ const DocumentGeneration = () => {
                 Annuler
               </Button>
               <Button onClick={addInstallment}>
-                Ajouter l'acompte
+                Paiement
               </Button>
             </DialogFooter>
           </DialogContent>

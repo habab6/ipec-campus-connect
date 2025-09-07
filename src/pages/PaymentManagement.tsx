@@ -1132,10 +1132,10 @@ const PaymentManagement = () => {
                               {payment.type === 'Minerval' ? (
                                 <>
                                   <Euro className="h-4 w-4 mr-1" />
-                                  Ajouter acompte
+                                  Paiement
                                 </>
                               ) : (
-                                'Marquer payé'
+                                'Paiement'
                               )}
                             </Button>
                           )}
@@ -1192,7 +1192,7 @@ const PaymentManagement = () => {
                     Annuler
                   </Button>
                   <Button onClick={handleMarkAsPaid}>
-                    Confirmer le paiement
+                    Paiement
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -1202,9 +1202,9 @@ const PaymentManagement = () => {
             <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Ajouter un acompte pour le minerval</DialogTitle>
+                  <DialogTitle>Paiement</DialogTitle>
                   <DialogDescription>
-                    Enregistrez un paiement partiel pour le minerval
+                    Enregistrez un paiement pour le minerval
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -1264,7 +1264,7 @@ const PaymentManagement = () => {
                     Annuler
                   </Button>
                   <Button onClick={addInstallment}>
-                    Ajouter l'acompte
+                    Paiement
                   </Button>
                 </DialogFooter>
               </DialogContent>
