@@ -1062,7 +1062,7 @@ const PaymentManagement = () => {
             ) : (
               <div className="space-y-4">
                 {filteredPayments.map((payment) => (
-                  <Card key={payment.id} className={`hover:shadow-soft transition-shadow ${isPaymentOverdue(payment) ? 'border-red-200 bg-red-50/30' : ''}`}>
+                  <Card key={payment.id} className={`hover:shadow-soft transition-shadow ${isPaymentOverdue(payment) ? 'border-red-400 bg-red-100/50' : ''}`}>
                     <CardContent className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div className="flex-1">
@@ -1166,8 +1166,8 @@ const PaymentManagement = () => {
                        
                        {/* Encadré d'avancement des paiements en dessous - complètement séparé */}
                        {payment.status === 'En attente' && (
-                         <div className={`mt-4 p-3 rounded-md shadow-sm ${isPaymentOverdue(payment) ? 'bg-gradient-to-r from-red-50 to-rose-50 border border-red-200' : 'bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200'}`}>
-                           <div className={`text-sm font-medium ${isPaymentOverdue(payment) ? 'text-red-800' : 'text-amber-800'}`}>
+                         <div className={`mt-4 p-3 rounded-md shadow-sm ${isPaymentOverdue(payment) ? 'bg-gradient-to-r from-red-100 to-rose-100 border border-red-400' : 'bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200'}`}>
+                           <div className={`text-sm font-medium ${isPaymentOverdue(payment) ? 'text-red-900' : 'text-amber-800'}`}>
                              Payé: {getTotalPaidForPayment(payment)}€ - Reste: {getRemainingAmount(payment)}€
                            </div>
                          </div>
