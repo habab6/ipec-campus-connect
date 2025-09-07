@@ -580,6 +580,14 @@ const PaymentManagement = () => {
     }, 0);
   };
 
+  // Fonction pour vérifier si un paiement est en retard
+  const isPaymentOverdue = (payment: Payment): boolean => {
+    if (payment.status === 'Payé') return false;
+    const today = new Date();
+    const dueDate = new Date(payment.dueDate);
+    return dueDate < today;
+  };
+
   // Filtrer les paiements par année académique, fiscale et statut
   const filteredPayments = payments.filter(payment => {
     const matchesAcademicYear = selectedAcademicYear === "all" || payment.academicYear === selectedAcademicYear;
@@ -595,15 +603,17 @@ const PaymentManagement = () => {
       matchesFiscalYear = fiscalYear === selectedFiscalYear;
     }
     
-    // Filtre par statut de paiement
-    let matchesStatus = selectedPaymentStatus === "all";
-    if (!matchesStatus) {
-      if (selectedPaymentStatus === "paid") {
-        matchesStatus = payment.status === "Payé";
-      } else if (selectedPaymentStatus === "unpaid") {
-        matchesStatus = payment.status !== "Payé";
-      }
-    }
+     // Filtre par statut de paiement
+     let matchesStatus = selectedPaymentStatus === "all";
+     if (!matchesStatus) {
+       if (selectedPaymentStatus === "paid") {
+         matchesStatus = payment.status === "Payé";
+       } else if (selectedPaymentStatus === "unpaid") {
+         matchesStatus = payment.status !== "Payé";
+       } else if (selectedPaymentStatus === "overdue") {
+         matchesStatus = isPaymentOverdue(payment);
+       }
+     }
     
     return matchesAcademicYear && matchesFiscalYear && matchesStatus;
   });
@@ -633,8 +643,29 @@ const PaymentManagement = () => {
         return total + remainingAmount;
       }
       return total;
-    }, 0);
-  };
+     }, 0);
+   };
+
+   // Calculer le montant en retard
+   const getFilteredOverdueAmount = () => {
+     return filteredPayments.reduce((total, payment) => {
+       if (isPaymentOverdue(payment)) {
+         const remainingAmount = getRemainingAmount(payment);
+         return total + remainingAmount;
+       }
+       return total;
+     }, 0);
+   };
+
+   // Compter les paiements en attente et en retard
+   const getPendingPaymentsStats = () => {
+     const pendingPayments = filteredPayments.filter(payment => payment.status === 'En attente');
+     const overduePayments = pendingPayments.filter(payment => isPaymentOverdue(payment));
+     return {
+       total: pendingPayments.length,
+       overdue: overduePayments.length
+     };
+   };
 
   // Fonction pour générer et télécharger un ZIP avec toutes les factures filtrées
   const downloadFilteredInvoicesZip = async () => {
@@ -740,12 +771,24 @@ const PaymentManagement = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-card shadow-soft">
-            <CardContent className="p-6 text-center">
-              <h3 className="text-lg font-semibold mb-2">En attente</h3>
-              <p className="text-3xl font-bold text-yellow-600">{getFilteredPendingAmount()}€</p>
-            </CardContent>
-          </Card>
+           <Card className="bg-gradient-card shadow-soft">
+             <CardContent className="p-6 text-center">
+               {(() => {
+                 const stats = getPendingPaymentsStats();
+                 return (
+                   <>
+                     <h3 className="text-lg font-semibold mb-2">En attente</h3>
+                     <p className="text-3xl font-bold text-yellow-600">{getFilteredPendingAmount()}€</p>
+                     {stats.overdue > 0 && (
+                       <p className="text-sm text-red-600 mt-2">
+                         {stats.total} dont {stats.overdue} en retard
+                       </p>
+                     )}
+                   </>
+                 );
+               })()}
+             </CardContent>
+           </Card>
         </div>
 
         <Card className="shadow-medium">
@@ -822,9 +865,10 @@ const PaymentManagement = () => {
                       <SelectValue placeholder="Sélectionner le statut" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="paid">Factures payées</SelectItem>
-                      <SelectItem value="unpaid">Factures non payées</SelectItem>
+                       <SelectItem value="all">Tous les statuts</SelectItem>
+                       <SelectItem value="paid">Factures payées</SelectItem>
+                       <SelectItem value="unpaid">Factures non payées</SelectItem>
+                       <SelectItem value="overdue">Factures en retard</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
