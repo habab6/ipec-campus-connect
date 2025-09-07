@@ -943,9 +943,22 @@ const PaymentManagement = () => {
                             <h3 className="text-lg font-semibold">
                               {getStudentName(payment.studentId)}
                             </h3>
-                            <Badge className={getStatusBadgeColor(payment.status)}>
-                              {payment.status}
-                            </Badge>
+                            {(() => {
+                              const existingInvoice = getExistingInvoice(payment);
+                              if (!existingInvoice) {
+                                return (
+                                  <Badge className="bg-red-500 text-white">
+                                    Non générée
+                                  </Badge>
+                                );
+                              } else {
+                                return (
+                                  <Badge className={getStatusBadgeColor(payment.status)}>
+                                    {payment.status}
+                                  </Badge>
+                                );
+                              }
+                            })()}
                             <Badge variant="outline">{payment.type}</Badge>
                           </div>
                           
@@ -968,22 +981,12 @@ const PaymentManagement = () => {
                           
                            {(() => {
                              const existingInvoice = getExistingInvoice(payment);
-                             if (existingInvoice) {
-                               return (
-                                 <p className="text-xs text-primary font-medium mt-1">
-                                   <strong>Facture : {existingInvoice.number}</strong> - 
-                                   Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}
-                                 </p>
-                               );
-                             } else {
-                               return (
-                                 <div className="mt-1">
-                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
-                                     Facture non générée
-                                   </span>
-                                 </div>
-                               );
-                             }
+                             return existingInvoice && (
+                               <p className="text-xs text-primary font-medium mt-1">
+                                 <strong>Facture : {existingInvoice.number}</strong> - 
+                                 Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}
+                               </p>
+                             );
                            })()}
                           
                           {payment.paidDate && (
