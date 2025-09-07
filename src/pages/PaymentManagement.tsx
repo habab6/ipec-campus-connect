@@ -24,6 +24,7 @@ const PaymentManagement = () => {
   // Gestion des filtres spécifiques aux paiements
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("all");
   const [selectedFiscalYear, setSelectedFiscalYear] = useState<string>("all");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string>("all");
   const [academicYears, setAcademicYears] = useState<string[]>([]);
   const [fiscalYears, setFiscalYears] = useState<string[]>([]);
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
@@ -535,7 +536,7 @@ const PaymentManagement = () => {
     }, 0);
   };
 
-  // Filtrer les paiements par année académique et fiscale
+  // Filtrer les paiements par année académique, fiscale et statut
   const filteredPayments = payments.filter(payment => {
     const matchesAcademicYear = selectedAcademicYear === "all" || payment.academicYear === selectedAcademicYear;
     
@@ -550,7 +551,17 @@ const PaymentManagement = () => {
       matchesFiscalYear = fiscalYear === selectedFiscalYear;
     }
     
-    return matchesAcademicYear && matchesFiscalYear;
+    // Filtre par statut de paiement
+    let matchesStatus = selectedPaymentStatus === "all";
+    if (!matchesStatus) {
+      if (selectedPaymentStatus === "paid") {
+        matchesStatus = payment.status === "Payé";
+      } else if (selectedPaymentStatus === "unpaid") {
+        matchesStatus = payment.status !== "Payé";
+      }
+    }
+    
+    return matchesAcademicYear && matchesFiscalYear && matchesStatus;
   });
 
   // Recalculer les statistiques avec les paiements filtrés
@@ -710,7 +721,7 @@ const PaymentManagement = () => {
                 onClick={() => setShowAddPayment(!showAddPayment)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {showAddPayment ? 'Annuler' : 'Nouveau paiement'}
+                {showAddPayment ? 'Annuler' : 'Facture manuelle'}
               </Button>
             </div>
           </CardHeader>
@@ -756,17 +767,33 @@ const PaymentManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Filtre statut de paiement */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Statut:</span>
+                    <Select value={selectedPaymentStatus} onValueChange={setSelectedPaymentStatus}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Sélectionner le statut" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les statuts</SelectItem>
+                        <SelectItem value="paid">Factures payées</SelectItem>
+                        <SelectItem value="unpaid">Factures non payées</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 {/* Boutons d'action */}
                 <div className="flex items-center gap-2">
-                  {(selectedAcademicYear !== "all" || selectedFiscalYear !== "all") && (
+                  {(selectedAcademicYear !== "all" || selectedFiscalYear !== "all" || selectedPaymentStatus !== "all") && (
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => {
                         setSelectedAcademicYear("all");
                         setSelectedFiscalYear("all");
+                        setSelectedPaymentStatus("all");
                       }}
                     >
                       Tout afficher
@@ -803,7 +830,7 @@ const PaymentManagement = () => {
             {showAddPayment && (
               <Card className="mb-6 border-2 border-primary/20">
                 <CardHeader>
-                  <CardTitle className="text-lg">Ajouter un nouveau paiement</CardTitle>
+                  <CardTitle className="text-lg">Créer une facture manuelle</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleAddPayment} className="space-y-4">
@@ -854,10 +881,8 @@ const PaymentManagement = () => {
                           <SelectContent>
                             <SelectItem value="Frais de dossier">Frais de dossier</SelectItem>
                             <SelectItem value="Minerval">Minerval</SelectItem>
-                            <SelectItem value="Frais mensuel">Frais mensuel</SelectItem>
-                            <SelectItem value="Matériel">Matériel</SelectItem>
-                            <SelectItem value="Examen">Examen</SelectItem>
-                            <SelectItem value="Autre">Autre</SelectItem>
+                            <SelectItem value="Frais d'envoi">Frais d'envoi</SelectItem>
+                            <SelectItem value="Duplicata">Duplicata</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -899,9 +924,7 @@ const PaymentManagement = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Espèces">Espèces</SelectItem>
-                            <SelectItem value="Carte">Carte bancaire</SelectItem>
                             <SelectItem value="Virement">Virement bancaire</SelectItem>
-                            <SelectItem value="Chèque">Chèque</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1112,8 +1135,6 @@ const PaymentManagement = () => {
                       <SelectContent>
                         <SelectItem value="Espèces">Espèces</SelectItem>
                         <SelectItem value="Virement">Virement bancaire</SelectItem>
-                        <SelectItem value="Carte">Carte bancaire</SelectItem>
-                        <SelectItem value="Chèque">Chèque</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1186,8 +1207,6 @@ const PaymentManagement = () => {
                       <SelectContent>
                         <SelectItem value="Espèces">Espèces</SelectItem>
                         <SelectItem value="Virement">Virement bancaire</SelectItem>
-                        <SelectItem value="Carte">Carte bancaire</SelectItem>
-                        <SelectItem value="Chèque">Chèque</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
