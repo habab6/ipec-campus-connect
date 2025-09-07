@@ -1138,14 +1138,10 @@ const PaymentManagement = () => {
                        {(() => {
                          const existingInvoice = getExistingInvoice(payment);
                          return existingInvoice && (
-                           <div className="mt-4 p-3 bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-md shadow-sm">
-                             <div className="text-sm text-slate-700 flex items-center">
-                               <Receipt className="h-4 w-4 mr-2 text-slate-600" />
-                               <span className="font-medium">Facture : {existingInvoice.number}</span>
-                               <span className="mx-2 text-slate-400">•</span>
-                               <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}</span>
-                             </div>
-                           </div>
+                           <p className="text-xs text-primary font-medium mt-1">
+                             <strong>Facture : {existingInvoice.number}</strong> - 
+                             Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}
+                           </p>
                          );
                        })()}
                     </CardContent>
