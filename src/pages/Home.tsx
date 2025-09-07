@@ -1,30 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, BookOpen, CreditCard, Search, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GlobalSearch from "@/components/GlobalSearch";
-import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYearFilter } from "@/hooks/useAcademicYearFilter";
 
 const Home = () => {
-  const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [academicYears, setAcademicYears] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchAcademicYears = async () => {
-      const { data } = await supabase
-        .from('academic_years')
-        .select('year')
-        .order('year', { ascending: false });
-      
-      if (data) {
-        setAcademicYears(data.map(item => item.year));
-      }
-    };
-
-    fetchAcademicYears();
-  }, []);
+  const { selectedYear, setSelectedYear, academicYears } = useAcademicYearFilter();
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,6 +27,7 @@ const Home = () => {
               variant="full"
               placeholder="Rechercher un étudiant, une attestation, une facture..."
               autoFocus
+              selectedAcademicYear={selectedYear}
             />
           </div>
           
