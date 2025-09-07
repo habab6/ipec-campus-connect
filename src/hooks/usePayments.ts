@@ -59,22 +59,32 @@ export function usePayments() {
     try {
       console.log('Données de paiement à insérer:', paymentData);
       
+      // Préparer les données en excluant les champs vides ou null
+      const insertData: any = {
+        student_id: paymentData.studentId,
+        amount: paymentData.amount,
+        due_date: paymentData.dueDate,
+        status: paymentData.status,
+        type: paymentData.type,
+        description: paymentData.description,
+        invoice_number: paymentData.invoiceNumber,
+        invoice_date: paymentData.invoiceDate,
+        academic_year: paymentData.academicYear,
+        study_year: paymentData.studyYear
+      };
+
+      // Ajouter seulement les champs optionnels qui ont des valeurs
+      if (paymentData.paidDate) {
+        insertData.paid_date = paymentData.paidDate;
+      }
+      
+      if (paymentData.method && paymentData.method.trim() !== '') {
+        insertData.method = paymentData.method;
+      }
+
       const { data, error } = await supabase
         .from('payments')
-        .insert([{
-          student_id: paymentData.studentId,
-          amount: paymentData.amount,
-          due_date: paymentData.dueDate,
-          paid_date: paymentData.paidDate,
-          status: paymentData.status,
-          type: paymentData.type,
-          description: paymentData.description,
-          method: paymentData.method,
-          invoice_number: paymentData.invoiceNumber,
-          invoice_date: paymentData.invoiceDate,
-          academic_year: paymentData.academicYear,
-          study_year: paymentData.studyYear
-        }])
+        .insert([insertData])
         .select()
         .single();
 
