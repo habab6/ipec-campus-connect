@@ -838,7 +838,7 @@ export const generatePaymentSummary = (student: Student, payment: Payment): stri
                     <th>Date</th>
                     <th>Montant</th>
                     <th>Moyen</th>
-                    <th>Acompte</th>
+                    <th>Paiement</th>
                 </tr>
             </thead>
             <tbody>

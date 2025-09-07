@@ -451,7 +451,7 @@ const DocumentGeneration = () => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Ajouter l'acompte
+      // Ajouter le paiement
       await supabase.from('payment_installments').insert({
         payment_id: installmentDialog.paymentId,
         amount: parseFloat(installmentDialog.amount),
@@ -487,16 +487,16 @@ const DocumentGeneration = () => {
       });
 
       toast({
-        title: "Acompte ajouté",
-        description: isFullyPaid 
-          ? `Acompte de ${amount}€ enregistré. Le paiement est maintenant soldé !`
-          : `Acompte de ${amount}€ enregistré avec succès.`,
+         title: "Paiement ajouté",
+         description: isFullyPaid 
+           ? `Paiement de ${amount}€ enregistré. Le paiement est maintenant soldé !`
+           : `Paiement de ${amount}€ enregistré avec succès.`,
       });
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'acompte:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter l'acompte.",
+        description: "Impossible d'ajouter le paiement.",
         variant: "destructive",
       });
     }
@@ -1199,7 +1199,7 @@ const DocumentGeneration = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog pour acompte minerval */}
+        {/* Dialog pour paiement minerval */}
         <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
           <DialogContent>
             <DialogHeader>
@@ -1210,7 +1210,7 @@ const DocumentGeneration = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="installmentAmount">Montant de l'acompte (€)</Label>
+                <Label htmlFor="installmentAmount">Montant du paiement (€)</Label>
                 {(() => {
                   const payment = payments.find(p => p.id === installmentDialog.paymentId);
                   if (!payment) return null;

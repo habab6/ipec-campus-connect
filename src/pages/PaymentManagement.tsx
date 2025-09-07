@@ -312,7 +312,7 @@ const PaymentManagement = () => {
   const openPaymentDialog = (paymentId: string) => {
     const payment = payments.find(p => p.id === paymentId);
     if (payment?.type === 'Minerval') {
-      // Pour le minerval, ouvrir le dialogue d'acompte
+      // Pour le minerval, ouvrir le dialogue de paiement
       setInstallmentDialog({
         isOpen: true,
         paymentId,
@@ -393,8 +393,8 @@ const PaymentManagement = () => {
       await fetchPayments();
       
       toast({
-        title: "Acompte ajouté",
-        description: `Acompte de ${amount}€ enregistré avec succès.`,
+         title: "Paiement ajouté",
+         description: `Paiement de ${amount}€ enregistré avec succès.`,
       });
 
       setInstallmentDialog({
@@ -407,7 +407,7 @@ const PaymentManagement = () => {
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter l'acompte.",
+        description: "Impossible d'ajouter le paiement.",
         variant: "destructive",
       });
     }
@@ -562,7 +562,7 @@ const PaymentManagement = () => {
       if (payment.status === 'Payé') {
         return total + payment.amount;
       } else if (payment.installments && payment.installments.length > 0) {
-        // Ajouter les acomptes pour les paiements partiels
+         // Ajouter les paiements pour les paiements partiels
         return total + getTotalPaidForPayment(payment);
       }
       return total;
@@ -572,7 +572,7 @@ const PaymentManagement = () => {
   const getPendingAmount = () => {
     return payments.reduce((total, payment) => {
       if (payment.status === 'En attente') {
-        // Pour les paiements en attente, soustraire les acomptes déjà payés
+         // Pour les paiements en attente, soustraire les paiements déjà payés
         const remainingAmount = getRemainingAmount(payment);
         return total + remainingAmount;
       }
@@ -618,7 +618,7 @@ const PaymentManagement = () => {
       if (payment.status === 'Payé') {
         return total + payment.amount;
       } else if (payment.installments && payment.installments.length > 0) {
-        // Ajouter les acomptes pour les paiements partiels
+        // Ajouter les paiements pour les paiements partiels
         return total + getTotalPaidForPayment(payment);
       }
       return total;
@@ -628,7 +628,7 @@ const PaymentManagement = () => {
   const getFilteredPendingAmount = () => {
     return filteredPayments.reduce((total, payment) => {
       if (payment.status === 'En attente') {
-        // Pour les paiements en attente, soustraire les acomptes déjà payés
+        // Pour les paiements en attente, soustraire les paiements déjà payés
         const remainingAmount = getRemainingAmount(payment);
         return total + remainingAmount;
       }
@@ -1193,7 +1193,7 @@ const PaymentManagement = () => {
               </DialogContent>
             </Dialog>
 
-            {/* Dialog pour acompte minerval */}
+            {/* Dialog pour paiement minerval */}
             <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
               <DialogContent>
                 <DialogHeader>
@@ -1204,7 +1204,7 @@ const PaymentManagement = () => {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="installmentAmount">Montant de l'acompte (€)</Label>
+                    <Label htmlFor="installmentAmount">Montant du paiement (€)</Label>
                     {(() => {
                       const payment = payments.find(p => p.id === installmentDialog.paymentId);
                       if (!payment) return null;
@@ -1309,7 +1309,7 @@ const PaymentManagement = () => {
                             {selectedPaymentForSummary.installments.map((installment, index) => (
                               <div key={installment.id} className="flex justify-between items-center p-3 border rounded">
                                 <div>
-                                  <p className="font-medium">Acompte #{index + 1}</p>
+                                  <p className="font-medium">Paiement #{index + 1}</p>
                                   <p className="text-sm text-muted-foreground">
                                     {new Date(installment.paidDate).toLocaleDateString('fr-FR')} - {installment.method}
                                   </p>
