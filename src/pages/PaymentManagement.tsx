@@ -966,15 +966,25 @@ const PaymentManagement = () => {
                             );
                           })()}
                           
-                          {(() => {
-                            const existingInvoice = getExistingInvoice(payment);
-                            return existingInvoice && (
-                              <p className="text-xs text-primary font-medium mt-1">
-                                <strong>Facture : {existingInvoice.number}</strong> - 
-                                Générée le {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}
-                              </p>
-                            );
-                          })()}
+                           {(() => {
+                             const existingInvoice = getExistingInvoice(payment);
+                             if (existingInvoice) {
+                               return (
+                                 <p className="text-xs text-primary font-medium mt-1">
+                                   <strong>Facture : {existingInvoice.number}</strong> - 
+                                   Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}
+                                 </p>
+                               );
+                             } else {
+                               return (
+                                 <div className="mt-1">
+                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
+                                     Facture non générée
+                                   </span>
+                                 </div>
+                               );
+                             }
+                           })()}
                           
                           {payment.paidDate && (
                             <p className="text-xs text-muted-foreground mt-1">
@@ -988,15 +998,30 @@ const PaymentManagement = () => {
                           )}
                         </div>
                         
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => generateInvoiceDocument(payment)}
-                          >
-                            <Receipt className="h-4 w-4 mr-1" />
-                            Facture
-                          </Button>
+                         <div className="flex gap-2">
+                           {(() => {
+                             const existingInvoice = getExistingInvoice(payment);
+                             const hasInvoice = !!existingInvoice;
+                             
+                             return hasInvoice ? (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => generateInvoiceDocument(payment, true)}
+                               >
+                                 <Receipt className="h-4 w-4 mr-1" />
+                                 Télécharger PDF
+                               </Button>
+                             ) : (
+                               <Button
+                                 size="sm"
+                                 onClick={() => generateInvoiceDocument(payment, false)}
+                               >
+                                 <Receipt className="h-4 w-4 mr-1" />
+                                 Générer facture
+                               </Button>
+                             );
+                           })()}
                           
                           <Button
                             variant="outline"
