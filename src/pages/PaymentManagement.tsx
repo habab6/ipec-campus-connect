@@ -900,17 +900,20 @@ const PaymentManagement = () => {
                       </div>
                       
                       <div>
-                        <Label htmlFor="amount">Montant (€) {newPayment.type && (newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') ? '(automatique)' : '*'}</Label>
+                        <Label htmlFor="amount">Montant (€) {newPayment.type && (newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata') ? '(automatique)' : '*'}</Label>
                          <Input
                            id="amount"
                            type="number"
                            step="0.01"
                            value={newPayment.amount}
                            onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
-                           disabled={newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata'}
-                           placeholder={newPayment.type === "Frais d'envoi" ? "120€" : newPayment.type === "Duplicata" ? "35€" : "0.00"}
+                           disabled={newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata'}
+                           placeholder={newPayment.type === 'Frais de dossier' ? "500€" : newPayment.type === "Frais d'envoi" ? "120€" : newPayment.type === "Duplicata" ? "35€" : "0.00"}
                            required
                          />
+                         {newPayment.type === 'Frais de dossier' && (
+                           <p className="text-xs text-muted-foreground mt-1">Montant automatique: 500€</p>
+                         )}
                          {newPayment.type === "Frais d'envoi" && (
                            <p className="text-xs text-muted-foreground mt-1">Montant automatique: 120€</p>
                          )}
@@ -928,7 +931,7 @@ const PaymentManagement = () => {
                              ...prev, 
                              type: value,
                              dueDate: calculateDueDate(value),
-                             amount: value === "Frais d'envoi" ? "120" : value === "Duplicata" ? "35" : prev.amount
+                             amount: value === "Frais de dossier" ? "500" : value === "Frais d'envoi" ? "120" : value === "Duplicata" ? "35" : prev.amount
                            }));
                          }}>
                           <SelectTrigger>
