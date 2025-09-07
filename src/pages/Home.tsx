@@ -1,9 +1,31 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, BookOpen, CreditCard, Search } from "lucide-react";
+import { Users, BookOpen, CreditCard, Search, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GlobalSearch from "@/components/GlobalSearch";
+import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
+  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [academicYears, setAcademicYears] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchAcademicYears = async () => {
+      const { data } = await supabase
+        .from('academic_years')
+        .select('year')
+        .order('year', { ascending: false });
+      
+      if (data) {
+        setAcademicYears(data.map(item => item.year));
+      }
+    };
+
+    fetchAcademicYears();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section with Search */}
@@ -28,6 +50,38 @@ const Home = () => {
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Search className="h-4 w-4" />
             <span>Recherchez par nom, référence, numéro d'attestation ou de facture</span>
+          </div>
+          
+          {/* Filtre année académique */}
+          <div className="max-w-lg mx-auto mt-8 p-4 bg-card rounded-lg border">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Année académique:</span>
+              </div>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Sélectionner l'année" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les années</SelectItem>
+                  {academicYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedYear !== "all" && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedYear("all")}
+                >
+                  Tout afficher
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </section>
