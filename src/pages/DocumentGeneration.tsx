@@ -764,8 +764,8 @@ const DocumentGeneration = () => {
 
                               {/* Avancement des paiements pour paiements partiels - style orange/jaune */}
                               {hasInstallments && !isFullyPaid && (
-                                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                                  <div className="text-sm">
+                                <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded-md">
+                                  <div className="text-xs">
                                     <div className="font-medium text-orange-900">
                                       Payé: {totalPaid}€ / {payment.amount}€
                                     </div>
@@ -776,33 +776,16 @@ const DocumentGeneration = () => {
                                 </div>
                               )}
 
-                              {/* Date de génération - même style que les attestations */}
+                              {/* Encadré bleu avec référence et date de génération */}
                               {existingInvoice && (
-                                <div className="mb-4 p-3 bg-muted rounded-lg border">
-                                  <div className="text-sm">
-                                    <label className="text-muted-foreground font-medium">Date de génération</label>
-                                    <p className="font-medium text-foreground">
-                                      {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}
-                                    </p>
+                                <div className="p-2 bg-blue-50 border border-blue-200 rounded-md">
+                                  <div className="text-xs text-blue-900">
+                                    <span className="font-medium">Facture : {existingInvoice.number}</span>
+                                    <span className="mx-1">•</span>
+                                    <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}</span>
                                   </div>
                                 </div>
                               )}
-
-                              {/* Encadré bleu nom et date */}
-                              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <p className="text-sm font-medium text-blue-800">Généré pour</p>
-                                    <p className="text-blue-900">{student.firstName} {student.lastName}</p>
-                                  </div>
-                                  {existingInvoice && (
-                                    <div className="text-right">
-                                      <p className="text-sm font-medium text-blue-800">Date</p>
-                                      <p className="text-blue-900">{new Date(existingInvoice.generate_date).toLocaleDateString('fr-FR')}</p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
                             </div>
                           </div>
                         );
