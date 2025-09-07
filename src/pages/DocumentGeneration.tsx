@@ -69,6 +69,11 @@ const DocumentGeneration = () => {
     method: '',
     paidDate: new Date().toISOString().split('T')[0]
   });
+  const [manualInvoiceDialog, setManualInvoiceDialog] = useState<{
+    isOpen: boolean;
+  }>({
+    isOpen: false
+  });
 
   useEffect(() => {
     console.log('DocumentGeneration useEffect triggered - studentId:', studentId);
@@ -691,12 +696,13 @@ const DocumentGeneration = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    <Link to={`/payments?studentId=${studentId}`}>
-                      <Button variant="outline">
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        Ajouter un paiement
-                      </Button>
-                    </Link>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setManualInvoiceDialog({ isOpen: true })}
+                    >
+                      <Receipt className="mr-2 h-4 w-4" />
+                      Facture manuelle
+                    </Button>
                   </div>
                   
                   {payments.length === 0 ? (
@@ -823,7 +829,7 @@ const DocumentGeneration = () => {
                                     className="flex items-center gap-2"
                                   >
                                     <Euro className="h-4 w-4" />
-                                    Ajouter {payment.type === 'Frais de dossier' ? 'paiement' : 'acompte'}
+                                    + Paiement
                                   </Button>
                                 )}
                               </div>
