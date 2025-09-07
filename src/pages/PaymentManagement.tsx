@@ -1166,9 +1166,18 @@ const PaymentManagement = () => {
                        
                        {/* Encadré d'avancement des paiements en dessous - complètement séparé */}
                        {payment.status === 'En attente' && (
-                         <div className={`mt-4 p-3 rounded-md shadow-sm ${isPaymentOverdue(payment) ? 'bg-gradient-to-r from-red-100 to-rose-100 border border-red-400' : 'bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200'}`}>
-                           <div className={`text-sm font-medium ${isPaymentOverdue(payment) ? 'text-red-900' : 'text-amber-800'}`}>
+                         <div className={`mt-4 p-3 rounded-md shadow-sm ${isPaymentOverdue(payment) ? 'bg-gradient-to-r from-red-100 to-rose-100 border border-red-400' : 'bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200'}`}>
+                           <div className={`text-sm font-medium ${isPaymentOverdue(payment) ? 'text-red-900' : 'text-orange-800'}`}>
                              Payé: {getTotalPaidForPayment(payment)}€ - Reste: {getRemainingAmount(payment)}€
+                           </div>
+                         </div>
+                       )}
+                       
+                       {/* Encadré pour les factures payées */}
+                       {payment.status === 'Payé' && (
+                         <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-md shadow-sm">
+                           <div className="text-sm font-medium text-green-800">
+                             ✓ Facture payée le {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}
                            </div>
                          </div>
                        )}
