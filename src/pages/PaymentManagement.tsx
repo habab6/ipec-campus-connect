@@ -1105,13 +1105,13 @@ const PaymentManagement = () => {
                               </p>
                             );
                           })()}
-                           
-                           {payment.paidDate && payment.method && (
-                             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                               <span><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}</span>
-                               <span><strong>Moyen:</strong> {payment.method}</span>
-                             </div>
-                           )}
+                            
+                            {payment.paidDate && payment.method && payment.status !== 'Payé' && (
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                                <span><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}</span>
+                                <span><strong>Moyen:</strong> {payment.method}</span>
+                              </div>
+                            )}
                         </div>
                         
                          <div className="flex gap-2">
@@ -1178,6 +1178,7 @@ const PaymentManagement = () => {
                          <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-md shadow-sm">
                            <div className="text-sm font-medium text-green-800">
                              ✓ Facture payée le {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}
+                             {payment.method && ` - ${payment.method}`}
                            </div>
                          </div>
                        )}
