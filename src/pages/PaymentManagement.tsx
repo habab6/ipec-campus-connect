@@ -1138,7 +1138,7 @@ const PaymentManagement = () => {
                        {(() => {
                          const existingInvoice = getExistingInvoice(payment);
                          return existingInvoice && (
-                           <p className="text-xs text-primary font-medium mt-1">
+                           <p className="text-xs text-primary font-medium mt-3">
                              <strong>Facture : {existingInvoice.number}</strong> - 
                              Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}
                            </p>
