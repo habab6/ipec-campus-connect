@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Student, Payment } from "@/types";
-import { generateInvoiceNumber, generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
+import { generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
 const PaymentManagement = () => {
@@ -24,7 +24,8 @@ const PaymentManagement = () => {
     createPayment, 
     updatePayment, 
     fetchPayments,
-    getInvoicesByStudentId 
+    getInvoicesByStudentId,
+    createInvoice
   } = usePayments();
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
@@ -122,7 +123,7 @@ const PaymentManagement = () => {
         type: newPayment.type as Payment['type'],
         description: newPayment.description || `${newPayment.type} - ${getStudentName(selectedStudent)}`,
         method: newPayment.paidMethod as Payment['method'],
-        invoiceNumber: generateInvoiceNumber(),
+        invoiceNumber: null,
         invoiceDate: new Date().toISOString().split('T')[0],
         paidDate: newPayment.paidDate || undefined
       };
@@ -303,7 +304,20 @@ const PaymentManagement = () => {
     return payment.amount - getTotalPaidForPayment(payment);
   };
 
-  const generateInvoiceDocument = async (payment: Payment) => {
+  const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
+    // Use the same logic for unique invoice numbers
+    const { count } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true });
+    
+    const year = new Date().getFullYear();
+    const invoiceCount = (count || 0) + 1;
+    const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
+                     payment.type === 'Minerval' ? 'MIN' : 'FAC';
+    return `IPEC-${year}-${String(invoiceCount).padStart(4, '0')}-${typeCode}`;
+  };
+
+  const generateInvoiceDocument = async (payment: Payment, isDuplicate = false) => {
     const student = getStudent(payment.studentId);
     if (!student) {
       toast({
@@ -315,16 +329,44 @@ const PaymentManagement = () => {
     }
 
     try {
-      // Import the PDF filler function
+      // Import the required modules
       const { fillInvoicePdfWithPositions, downloadPdf } = await import('@/utils/positionPdfFiller');
       
-      // Generate PDF invoice using the same logic as DocumentGeneration
-      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, payment.invoiceNumber);
-      downloadPdf(pdfBytes, `Facture_${payment.invoiceNumber}_${student.lastName}.pdf`);
+      let invoice = getExistingInvoice(payment);
+      
+      // Si c'est une première génération, créer la facture dans Supabase
+      if (!invoice && !isDuplicate) {
+        const invoiceNumber = await generateInvoiceNumber(student, payment);
+        const newInvoiceData = {
+          student_id: student.id,
+          payment_id: payment.id,
+          number: invoiceNumber,
+          amount: payment.amount,
+          type: payment.type,
+          academic_year: payment.academicYear || student.academicYear,
+          study_year: payment.studyYear || student.studyYear,
+          generate_date: new Date().toISOString().split('T')[0]
+        };
+        
+        const createdInvoice = await createInvoice(newInvoiceData);
+        setInvoices(prev => [...prev, createdInvoice]);
+        invoice = createdInvoice;
+      }
+      
+      if (!invoice) return;
+      
+      const invoiceNumber = invoice.number || 'SANS-NUMERO';
+      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
+      const filename = isDuplicate 
+        ? `duplicata-facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`
+        : `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
+      downloadPdf(pdfBytes, filename);
       
       toast({
-        title: "Facture générée",
-        description: "La facture PDF a été téléchargée avec succès.",
+        title: isDuplicate ? "Duplicata téléchargé" : "Facture générée",
+        description: isDuplicate 
+          ? `Duplicata de la facture ${invoiceNumber} téléchargé.`
+          : `Facture ${invoiceNumber} générée pour ${payment.amount}€.`,
       });
     } catch (error) {
       console.error('Error generating PDF invoice:', error);
@@ -351,8 +393,8 @@ const PaymentManagement = () => {
     return invoices.find(i => 
       i.student_id === student.id && 
       i.type === payment.type &&
-      i.academic_year === student.academicYear &&
-      i.study_year === student.studyYear
+      i.academic_year === (payment.academicYear || student.academicYear) &&
+      i.study_year === (payment.studyYear || student.studyYear)
     );
   };
 
