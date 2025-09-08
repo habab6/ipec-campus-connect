@@ -1074,22 +1074,24 @@ const PaymentManagement = () => {
                             <h3 className="text-lg font-semibold">
                               {getStudentName(payment.studentId)}
                             </h3>
-                            {(() => {
-                              const existingInvoice = getExistingInvoice(payment);
-                              if (!existingInvoice) {
-                                return (
-                                  <Badge className="bg-red-500 text-white">
-                                    Non générée
-                                  </Badge>
-                                );
-                              } else {
-                                return (
-                                  <Badge className={getStatusBadgeColor(payment.status)}>
-                                    {payment.status}
-                                  </Badge>
-                                );
-                              }
-                            })()}
+                             {(() => {
+                               const existingInvoice = getExistingInvoice(payment);
+                               if (!existingInvoice) {
+                                 return (
+                                   <Badge className="bg-red-500 text-white">
+                                     Non générée
+                                   </Badge>
+                                 );
+                               } else {
+                                 // Déterminer le statut à afficher
+                                 const displayStatus = isPaymentOverdue(payment) ? 'En retard' : payment.status;
+                                 return (
+                                   <Badge className={getStatusBadgeColor(displayStatus)}>
+                                     {displayStatus}
+                                   </Badge>
+                                 );
+                               }
+                             })()}
                             <Badge variant="outline">{payment.type}</Badge>
                           </div>
                           
