@@ -1366,11 +1366,6 @@ const DocumentGeneration = () => {
                   )}
 
 
-                  {payments.filter(p => p.status === 'Payé').length === 0 && (
-                    <p className="text-muted-foreground text-sm mt-2">
-                      Aucun paiement payé disponible pour remboursement.
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
