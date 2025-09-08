@@ -25,9 +25,9 @@ const PaymentManagement = () => {
   // Gestion des filtres spécifiques aux paiements
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("all");
   const [selectedFiscalYear, setSelectedFiscalYear] = useState<string>("all");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string>("all");
   const [academicYears, setAcademicYears] = useState<string[]>([]);
   const [fiscalYears, setFiscalYears] = useState<string[]>([]);
-  const [manualInvoiceDialog, setManualInvoiceDialog] = useState({ isOpen: false });
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
 
   useEffect(() => {
@@ -60,8 +60,8 @@ const PaymentManagement = () => {
 
     fetchYears();
   }, []);
-
-  const { 
+  
+  const {
     payments, 
     createPayment, 
     updatePayment, 
@@ -71,6 +71,7 @@ const PaymentManagement = () => {
     getCreditNotesByStudentId,
     createCreditNote
   } = usePayments();
+   const [showAddPayment, setShowAddPayment] = useState(false);
    
    // State pour la modale de note de crédit
    const [creditNoteDialog, setCreditNoteDialog] = useState({
@@ -81,7 +82,6 @@ const PaymentManagement = () => {
    });
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [newPayment, setNewPayment] = useState({
-    studentId: "",
     amount: "",
     dueDate: "",
     type: "",
@@ -90,25 +90,8 @@ const PaymentManagement = () => {
     paidDate: "",
     paidMethod: ""
   });
-
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
-
-  // État pour la modale de paiement
-  const [paymentDialog, setPaymentDialog] = useState<{
-    isOpen: boolean;
-    paymentId: string;
-    amount: string;
-    method: string;
-    paidDate: string;
-  }>({
-    isOpen: false,
-    paymentId: '',
-    amount: '',
-    method: '',
-    paidDate: new Date().toISOString().split('T')[0]
-  });
-
-  // État pour la modale d'ajout d'acompte
+  const [showPaymentSummary, setShowPaymentSummary] = useState(false);
+  const [selectedPaymentForSummary, setSelectedPaymentForSummary] = useState<Payment | null>(null);
   const [installmentDialog, setInstallmentDialog] = useState<{
     isOpen: boolean;
     paymentId: string;
@@ -122,55 +105,64 @@ const PaymentManagement = () => {
     method: '',
     paidDate: new Date().toISOString().split('T')[0]
   });
+  const [invoices, setInvoices] = useState<any[]>([]);
 
-  // Fonction pour récupérer la facture existante
+  // Charger les factures pour tous les étudiants ayant des paiements
   useEffect(() => {
-    const checkExistingInvoices = async () => {
-      for (const payment of payments) {
+    const loadInvoices = async () => {
+      const uniqueStudentIds = [...new Set(payments.map(p => p.studentId))];
+      const allInvoices = [];
+      
+      for (const studentId of uniqueStudentIds) {
         try {
-          const invoices = await getInvoicesByStudentId(payment.studentId);
-          const existingInvoice = invoices.find(inv => inv.payment_id === payment.id);
-          if (!existingInvoice) {
-            console.log(`Aucune facture trouvée pour le paiement ${payment.id}`);
-          }
+          const studentInvoices = await getInvoicesByStudentId(studentId);
+          allInvoices.push(...studentInvoices);
         } catch (error) {
-          console.error('Erreur lors de la vérification des factures:', error);
+          console.error('Erreur lors du chargement des factures:', error);
         }
       }
+      
+      setInvoices(allInvoices);
     };
 
     if (payments.length > 0) {
-      checkExistingInvoices();
+      loadInvoices();
     }
   }, [payments, getInvoicesByStudentId]);
 
-  // Filtre de redirection basé sur l'étudiant sélectionné
+  // Gérer les paramètres URL pour auto-sélectionner l'étudiant et ouvrir le dialog d'ajout de versement
   useEffect(() => {
-    const studentParam = searchParams.get('student');
-    if (studentParam) {
-      const studentPayments = payments.filter(p => p.studentId === studentParam);
-      setFilteredPayments(studentPayments);
+    const studentId = searchParams.get('studentId');
+    const installmentPaymentId = searchParams.get('installmentPaymentId');
+    
+    if (studentId) {
+      setSelectedStudent(studentId);
       
-      // Si l'étudiant a des paiements, ajuster automatiquement les filtres d'année
-      if (studentPayments.length > 0) {
-        const studentAcademicYears = [...new Set(studentPayments.map(p => p.academicYear))];
-        if (studentAcademicYears.length === 1) {
-          setSelectedAcademicYear(studentAcademicYears[0]);
-        }
+      // Si un installmentPaymentId est fourni, ouvrir le dialog d'ajout de versement
+      if (installmentPaymentId) {
+        setInstallmentDialog({
+          isOpen: true,
+          paymentId: installmentPaymentId,
+          amount: '',
+          method: '',
+          paidDate: new Date().toISOString().split('T')[0]
+        });
       }
     }
   }, [searchParams]);
+
+  // Les données sont maintenant chargées via les hooks useStudents et usePayments
 
   const calculateDueDate = (type: string): string => {
     const today = new Date();
     
     if (type === 'Frais de dossier' || type === "Frais d'envoi" || type === 'Duplicata') {
-      // 14 jours pour les frais administratifs
+      // 14 jours calendaires après aujourd'hui pour frais de dossier, frais d'envoi et duplicata
       const dueDate = new Date(today);
       dueDate.setDate(today.getDate() + 14);
       return dueDate.toISOString().split('T')[0];
     } else if (type === 'Minerval') {
-      // 31 décembre pour le minerval
+      // 31 décembre de l'année en cours
       return `${today.getFullYear()}-12-31`;
     }
     
@@ -225,32 +217,42 @@ const PaymentManagement = () => {
       // Créer le paiement
       const createdPaymentData = await createPayment(payment);
 
-      // Si on a un paiement créé, générer automatiquement la facture
+      // Générer automatiquement la facture
       if (createdPaymentData) {
-        // Transformer les données pour correspondre au type Payment
-        const paymentForPdf: Payment = {
-          ...payment,
-          id: createdPaymentData.id
+        // Transformer les données de la base en objet Payment
+        const createdPayment: Payment = {
+          id: createdPaymentData.id,
+          studentId: createdPaymentData.student_id,
+          amount: createdPaymentData.amount,
+          dueDate: createdPaymentData.due_date,
+          status: createdPaymentData.status as Payment['status'],
+          type: createdPaymentData.type as Payment['type'],
+          description: createdPaymentData.description,
+          method: createdPaymentData.method as Payment['method'],
+          invoiceNumber: createdPaymentData.invoice_number,
+          invoiceDate: createdPaymentData.invoice_date,
+          paidDate: createdPaymentData.paid_date,
+          academicYear: createdPaymentData.academic_year,
+          studyYear: createdPaymentData.study_year
         };
-        
-        // Attendre un petit délai pour s'assurer que les données sont bien persistées
+
+        // Attendre un court délai pour que le paiement soit bien créé
         setTimeout(async () => {
           try {
-            await generateInvoicePdf(paymentForPdf, false);
+            await generateInvoiceDocument(createdPayment, false);
           } catch (error) {
-            console.error('Erreur lors de la génération de la facture:', error);
+            console.error('Erreur lors de la génération automatique de la facture:', error);
           }
         }, 500);
       }
 
       toast({
-        title: "Facture manuelle créée",
+        title: "Facture créée !",
         description: `Facture manuelle générée pour ${getStudentName(selectedStudent)}.`,
       });
 
-      // Reset du formulaire
+      // Reset form
       setNewPayment({
-        studentId: "",
         amount: "",
         dueDate: "",
         type: "",
@@ -260,7 +262,7 @@ const PaymentManagement = () => {
         paidMethod: ""
       });
       setSelectedStudent("");
-      setManualInvoiceDialog({ isOpen: false });
+      setShowAddPayment(false);
     } catch (error) {
       console.error('Erreur complète:', error);
       toast({
@@ -271,108 +273,93 @@ const PaymentManagement = () => {
     }
   };
 
-  const getStudent = (studentId: string): Student | undefined => {
-    return students.find(student => student.id === studentId);
-  };
-
   const getStudentName = (studentId: string): string => {
-    const student = getStudent(studentId);
+    const student = students.find(s => s.id === studentId);
     return student ? `${student.firstName} ${student.lastName}` : "Étudiant inconnu";
   };
 
-  // Gérer l'ouverture de la modale de paiement
-  const openPaymentDialog = (paymentId: string) => {
-    const payment = payments.find(p => p.id === paymentId);
-    setPaymentDialog({
-      isOpen: true,
-      paymentId,
-      amount: payment?.amount.toString() || '',
-      method: '',
-      paidDate: new Date().toISOString().split('T')[0]
-    });
+  const getStudent = (studentId: string): Student | undefined => {
+    return students.find(s => s.id === studentId);
   };
 
-  const markAsPaid = async () => {
-    if (!paymentDialog.amount || !paymentDialog.method) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs requis.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const [paymentDialog, setPaymentDialog] = useState<{
+    isOpen: boolean;
+    paymentId: string;
+    paidDate: string;
+    method: string;
+  }>({
+    isOpen: false,
+    paymentId: '',
+    paidDate: new Date().toISOString().split('T')[0],
+    method: ''
+  });
 
+  const markAsPaid = async (paymentId: string, paidDate?: string, method?: Payment['method']) => {
     try {
-      await updatePayment(paymentDialog.paymentId, {
-        status: 'Payé' as const,
-        paidDate: paymentDialog.paidDate,
-        method: paymentDialog.method as "Espèces" | "Virement"
+      await updatePayment(paymentId, {
+        status: 'Payé' as Payment['status'],
+        paidDate: paidDate || new Date().toISOString().split('T')[0],
+        method: (method || undefined) as Payment['method']
       });
-
+      
       toast({
-        title: "Paiement enregistré",
-        description: "Paiement enregistré avec succès.",
+        title: "Paiement confirmé",
+        description: "Paiement confirmé avec succès.",
       });
-
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible d'enregistrer le paiement.",
+        description: "Impossible de mettre à jour le paiement.",
         variant: "destructive",
       });
     }
-
-    setPaymentDialog({ isOpen: false, paymentId: '', amount: '', paidDate: new Date().toISOString().split('T')[0], method: '' });
   };
 
-  // Fonction pour gérer le total et le statut des acomptes
-  const getTotalPaidAmount = (payment: Payment): number => {
-    if (payment.status === 'Payé') {
-      return payment.amount;
-    }
-    
-    if (payment.installments && payment.installments.length > 0) {
-      return payment.installments.reduce((total, installment) => total + installment.amount, 0);
-    }
-    
-    return 0;
+  const handleMarkAsPaid = () => {
+    markAsPaid(paymentDialog.paymentId, paymentDialog.paidDate, paymentDialog.method as Payment['method']);
+    setPaymentDialog({ isOpen: false, paymentId: '', paidDate: new Date().toISOString().split('T')[0], method: '' });
   };
 
-  const getRemainingAmount = (payment: Payment): number => {
-    return payment.amount - getTotalPaidAmount(payment);
-  };
-
-  const getPaymentStatus = (payment: Payment): 'Payé' | 'En attente' | 'Partiellement payé' | 'Remboursé' => {
-    if (payment.status === 'Payé' || payment.status === 'Remboursé') {
-      return payment.status;
+  const openPaymentDialog = (paymentId: string) => {
+    const payment = payments.find(p => p.id === paymentId);
+    if (payment?.type === 'Minerval') {
+      // Pour le minerval, ouvrir le dialogue de paiement
+      setInstallmentDialog({
+        isOpen: true,
+        paymentId,
+        amount: '',
+        method: '',
+        paidDate: new Date().toISOString().split('T')[0]
+      });
+    } else {
+      // Pour les autres paiements, dialogue normal
+      setPaymentDialog({
+        isOpen: true,
+        paymentId,
+        paidDate: new Date().toISOString().split('T')[0],
+        method: ''
+      });
     }
-    
-    const totalPaid = getTotalPaidAmount(payment);
-    if (totalPaid >= payment.amount) {
-      return 'Payé';
-    } else if (totalPaid > 0) {
-      return 'Partiellement payé';
-    }
-    
-    return 'En attente';
   };
 
   const addInstallment = async () => {
-    if (!installmentDialog.amount || !installmentDialog.method) {
+    const amount = parseFloat(installmentDialog.amount);
+    if (!amount || amount <= 0) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs requis.",
+        description: "Veuillez saisir un montant valide.",
         variant: "destructive",
       });
       return;
     }
 
     // Validation : vérifier que le montant ne dépasse pas ce qui reste à payer
-    const amount = parseFloat(installmentDialog.amount);
     const payment = payments.find(p => p.id === installmentDialog.paymentId);
     if (!payment) return;
 
-    const remainingAmount = getRemainingAmount(payment);
+    const currentInstallments = payment.installments || [];
+    const totalAlreadyPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+    const remainingAmount = payment.amount - totalAlreadyPaid;
 
     if (amount > remainingAmount) {
       toast({
@@ -384,77 +371,95 @@ const PaymentManagement = () => {
     }
 
     try {
-      // Ajouter l'acompte dans Supabase
+      const payment = payments.find(p => p.id === installmentDialog.paymentId);
+      if (!payment) return;
+
+      // Add installment to the payment_installments table
       const { error: installmentError } = await supabase
         .from('payment_installments')
         .insert({
           payment_id: installmentDialog.paymentId,
-          amount: amount,
+          amount,
           paid_date: installmentDialog.paidDate,
           method: installmentDialog.method
         });
 
-      if (installmentError) {
-        throw installmentError;
-      }
+      if (installmentError) throw installmentError;
 
-      // Vérifier si le paiement est maintenant complet
-      const newTotalPaid = getTotalPaidAmount(payment) + amount;
-      if (newTotalPaid >= payment.amount) {
+      // Calculate total paid including new installment
+      const currentInstallments = payment.installments || [];
+      const totalPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0) + amount;
+      const isFullyPaid = totalPaid >= payment.amount;
+
+      // Update payment status if fully paid
+      if (isFullyPaid) {
         await updatePayment(installmentDialog.paymentId, {
-          status: 'Payé' as const,
+          status: 'Payé' as Payment['status'],
           paidDate: installmentDialog.paidDate,
-          method: installmentDialog.method as "Espèces" | "Virement"
+          method: installmentDialog.method as Payment['method']
         });
       }
 
+      // Refresh payments to get updated installments
+      await fetchPayments();
+      
       toast({
-        title: "Acompte ajouté",
+         title: "Paiement ajouté",
          description: `Paiement de ${amount}€ enregistré avec succès.`,
       });
 
-      setInstallmentDialog({ isOpen: false, paymentId: '', amount: '', method: '', paidDate: new Date().toISOString().split('T')[0] });
-
+      setInstallmentDialog({
+        isOpen: false,
+        paymentId: '',
+        amount: '',
+        method: '',
+        paidDate: new Date().toISOString().split('T')[0]
+      });
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'acompte:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter l'acompte.",
+        description: "Impossible d'ajouter le paiement.",
         variant: "destructive",
       });
     }
   };
 
-  const openInstallmentDialog = (paymentId: string) => {
-    setInstallmentDialog(prev => ({ ...prev, isOpen: true, paymentId }));
+  const openPaymentSummary = (payment: Payment) => {
+    setSelectedPaymentForSummary(payment);
+    setShowPaymentSummary(true);
   };
 
-  const closeInstallmentDialog = () => {
-    setInstallmentDialog({ isOpen: false, paymentId: '', amount: '', method: '', paidDate: new Date().toISOString().split('T')[0] });
+  const getTotalPaidForPayment = (payment: Payment): number => {
+    if (!payment.installments) return 0;
+    return payment.installments.reduce((sum, inst) => sum + inst.amount, 0);
   };
 
-  const generateInvoiceNumber = (student: Student, payment: Payment): string => {
-    const typeMap: { [key: string]: string } = {
-      'Frais de dossier': 'FD',
-      "Frais d'envoi": 'ENV',
-      'Minerval': 'MIN',
-      'Duplicata': 'DC'
-    };
+  const getRemainingAmount = (payment: Payment): number => {
+    return payment.amount - getTotalPaidForPayment(payment);
+  };
 
-    const typeCode = typeMap[payment.type] || 'FAC';
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const hours = String(today.getHours()).padStart(2, '0');
-    const minutes = String(today.getMinutes()).padStart(2, '0');
-    const seconds = String(today.getSeconds()).padStart(2, '0');
+  const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
+    const year = String(new Date().getFullYear()).slice(-2); // Prendre les 2 derniers chiffres de l'année
+    const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
+                     payment.type === 'Minerval' ? 'MIN' : 
+                     payment.type === 'Frais d\'envoi' ? 'ENV' :
+                     payment.type === 'Duplicata' ? 'DC' : 'MIN';
+    
+    // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    // Créer un numéro basé sur la timestamp pour garantir l'unicité
     const timeBasedNumber = `${month}${day}${hours}${minutes}${seconds}`;
-
+    
     return `IPEC-${year}${timeBasedNumber}-${typeCode}`;
   };
 
-  const generateInvoicePdf = async (payment: Payment, isDuplicate = false) => {
+  const generateInvoiceDocument = async (payment: Payment, isDuplicate = false) => {
     const student = getStudent(payment.studentId);
     if (!student) {
       toast({
@@ -466,40 +471,39 @@ const PaymentManagement = () => {
     }
 
     try {
+      // Import the required modules
       const { fillInvoicePdfWithPositions, downloadPdf } = await import('@/utils/positionPdfFiller');
       
-      let invoiceNumber = '';
+      let invoice = getExistingInvoice(payment);
       
-      // Vérifier s'il y a une facture existante
-      const existingInvoice = getExistingInvoice(payment);
-      
-      if (existingInvoice) {
-        invoiceNumber = existingInvoice.number;
-      } else if (!isDuplicate) {
-        // Créer une nouvelle facture seulement si ce n'est pas un duplicata
-        invoiceNumber = generateInvoiceNumber(student, payment);
-        
+      // Si c'est une première génération, créer la facture dans Supabase
+      if (!invoice && !isDuplicate) {
+        const invoiceNumber = await generateInvoiceNumber(student, payment);
         const newInvoiceData = {
           student_id: student.id,
           payment_id: payment.id,
           number: invoiceNumber,
           amount: payment.amount,
           type: payment.type,
-          academic_year: payment.academicYear,
-          study_year: payment.studyYear,
-          generate_date: student.registrationDate
+          academic_year: payment.academicYear || student.academicYear,
+          study_year: payment.studyYear || student.studyYear,
+          generate_date: new Date().toISOString().split('T')[0]
         };
         
-        await createInvoice(newInvoiceData);
+        const createdInvoice = await createInvoice(newInvoiceData);
+        setInvoices(prev => [...prev, createdInvoice]);
+        invoice = createdInvoice;
       }
-
+      
+      if (!invoice) return;
+      
+      const invoiceNumber = invoice.number || 'SANS-NUMERO';
+      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
       const filename = isDuplicate 
         ? `duplicata-facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`
         : `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
-
-      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
       downloadPdf(pdfBytes, filename);
-
+      
       toast({
         title: isDuplicate ? "Duplicata téléchargé" : "Facture générée",
         description: isDuplicate 
@@ -521,13 +525,22 @@ const PaymentManagement = () => {
     const student = getStudent(payment.studentId);
     if (!student) return null;
 
-    // Logique simplifiée pour les tests - on cherche dans les factures existantes par payment_id
-    // Cette fonction sera complétée avec la logique de Supabase plus tard
-    return null;
+    if (payment.type === 'Frais de dossier') {
+      return invoices.find(i => 
+        i.student_id === student.id && 
+        i.type === payment.type
+      );
+    }
+    
+    return invoices.find(i => 
+      i.student_id === student.id && 
+      i.type === payment.type &&
+      i.academic_year === (payment.academicYear || student.academicYear) &&
+      i.study_year === (payment.studyYear || student.studyYear)
+    );
   };
 
-  // Fonction pour générer le récapitulatif de paiement
-  const generatePaymentSummaryDoc = (payment: Payment) => {
+  const generatePaymentSummaryDocument = (payment: Payment) => {
     const student = getStudent(payment.studentId);
     if (!student) {
       toast({
@@ -538,190 +551,308 @@ const PaymentManagement = () => {
       return;
     }
 
-    const existingInvoice = getExistingInvoice(payment);
-    const invoiceNumber = existingInvoice?.number || generateInvoiceNumber(student, payment);
-    
     const summaryHtml = generatePaymentSummary(student, payment);
+    const existingInvoice = getExistingInvoice(payment);
+    const invoiceNumber = existingInvoice?.number || payment.invoiceNumber || 'N/A';
     downloadDocument(summaryHtml, `Recapitulatif_Paiement_${invoiceNumber}_${student.lastName}.html`);
-
+    
     toast({
       title: "Récapitulatif généré",
-      description: `Récapitulatif téléchargé pour ${getStudentName(payment.studentId)}.`,
+      description: "Le récapitulatif de paiement a été téléchargé avec succès.",
     });
   };
 
-  // Déterminer si un paiement est en retard
+  const getStatusBadgeColor = (status: Payment['status']) => {
+    const colors = {
+      'En attente': 'bg-yellow-500',
+      'Payé': 'bg-green-500',
+      'En retard': 'bg-red-500',
+      'Remboursé': 'bg-blue-500'
+    };
+    return colors[status] || 'bg-gray-500';
+  };
+
+  const getTotalAmount = () => {
+    return payments.reduce((total, payment) => total + payment.amount, 0);
+  };
+
+  const getPaidAmount = () => {
+    return payments.reduce((total, payment) => {
+      if (payment.status === 'Payé') {
+        return total + payment.amount;
+      } else if (payment.installments && payment.installments.length > 0) {
+         // Ajouter les paiements pour les paiements partiels
+        return total + getTotalPaidForPayment(payment);
+      }
+      return total;
+    }, 0);
+  };
+
+  const getPendingAmount = () => {
+    return payments.reduce((total, payment) => {
+      if (payment.status === 'En attente') {
+         // Pour les paiements en attente, soustraire les paiements déjà payés
+        const remainingAmount = getRemainingAmount(payment);
+        return total + remainingAmount;
+      }
+      return total;
+    }, 0);
+  };
+
+  // Fonction pour vérifier si un paiement est en retard
   const isPaymentOverdue = (payment: Payment): boolean => {
-    if (payment.status === 'Payé' || payment.status === 'Remboursé') return false;
-    
+    if (payment.status === 'Payé') return false;
     const today = new Date();
     const dueDate = new Date(payment.dueDate);
-    return today > dueDate;
+    return dueDate < today;
   };
 
-  const getStatusColor = (payment: Payment): string => {
-    const status = getPaymentStatus(payment);
-    switch (status) {
-      case 'Payé': return 'bg-green-100 text-green-800';
-      case 'Partiellement payé': return 'bg-yellow-100 text-yellow-800';
-      case 'Remboursé': return 'bg-blue-100 text-blue-800';
-      default: return isPaymentOverdue(payment) ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800';
-    }
-  };
-
-  const getStatusText = (payment: Payment): string => {
-    if (payment.status === 'Remboursé') return 'Remboursé';
+  // Filtrer les paiements par année académique, fiscale et statut
+  const filteredPayments = payments.filter(payment => {
+    const matchesAcademicYear = selectedAcademicYear === "all" || payment.academicYear === selectedAcademicYear;
     
-    const status = getPaymentStatus(payment);
-    if (status === 'En attente' && isPaymentOverdue(payment)) {
-      return 'En retard';
-    } else if (status === 'Partiellement payé') {
-      const remaining = getRemainingAmount(payment);
-      return `Partiel (${remaining}€ restant)`;
+    // Pour l'année fiscale, vérifier la date de génération de la facture associée
+    let matchesFiscalYear = selectedFiscalYear === "all";
+    if (!matchesFiscalYear && payment.invoiceDate) {
+      const fiscalYear = new Date(payment.invoiceDate).getFullYear().toString();
+      matchesFiscalYear = fiscalYear === selectedFiscalYear;
+    } else if (!matchesFiscalYear) {
+      // Si pas de date de facture, utiliser la date de création du paiement
+      const fiscalYear = new Date().getFullYear().toString();
+      matchesFiscalYear = fiscalYear === selectedFiscalYear;
     }
-    return status;
-  };
+    
+     // Filtre par statut de paiement
+     let matchesStatus = selectedPaymentStatus === "all";
+     if (!matchesStatus) {
+       if (selectedPaymentStatus === "paid") {
+         matchesStatus = payment.status === "Payé";
+       } else if (selectedPaymentStatus === "unpaid") {
+         matchesStatus = payment.status !== "Payé";
+       } else if (selectedPaymentStatus === "overdue") {
+         matchesStatus = isPaymentOverdue(payment);
+       }
+     }
+    
+    return matchesAcademicYear && matchesFiscalYear && matchesStatus;
+  });
 
-  // Filtrer les paiements selon les critères sélectionnés
-  useEffect(() => {
-    let filtered = payments;
-
-    // Filtre par année académique
-    if (selectedAcademicYear !== "all") {
-      filtered = filtered.filter(payment => payment.academicYear === selectedAcademicYear);
-    }
-
-    // Filtre par année fiscale (basé sur la date de facture)
-    if (selectedFiscalYear !== "all") {
-      filtered = filtered.filter(payment => {
-        const year = new Date(payment.invoiceDate).getFullYear().toString();
-        return year === selectedFiscalYear;
-      });
-    }
-
-    setFilteredPayments(filtered);
-  }, [payments, selectedAcademicYear, selectedFiscalYear]);
-
-  // Calculs des statistiques
-  const getFilteredTotalAmount = (): number => {
+  // Recalculer les statistiques avec les paiements filtrés
+  const getFilteredTotalAmount = () => {
     return filteredPayments.reduce((total, payment) => total + payment.amount, 0);
   };
 
-  const getFilteredPaidAmount = (): number => {
+  const getFilteredPaidAmount = () => {
     return filteredPayments.reduce((total, payment) => {
       if (payment.status === 'Payé') {
         return total + payment.amount;
+      } else if (payment.installments && payment.installments.length > 0) {
+        // Ajouter les paiements pour les paiements partiels
+        return total + getTotalPaidForPayment(payment);
       }
-      return total + getTotalPaidAmount(payment);
+      return total;
     }, 0);
   };
 
-  const getFilteredPendingAmount = (): number => {
+  const getFilteredPendingAmount = () => {
     return filteredPayments.reduce((total, payment) => {
-      if (payment.status === 'Payé' || payment.status === 'Remboursé') {
-        return total;
+      if (payment.status === 'En attente') {
+        // Pour les paiements en attente, soustraire les paiements déjà payés
+        const remainingAmount = getRemainingAmount(payment);
+        return total + remainingAmount;
       }
-      return total + getRemainingAmount(payment);
-    }, 0);
-  };
+      return total;
+     }, 0);
+   };
 
-  const getPendingPaymentsStats = (): { total: number; overdue: number } => {
-    const pendingPayments = filteredPayments.filter(p => p.status !== 'Payé' && p.status !== 'Remboursé');
-    const overduePayments = pendingPayments.filter(p => isPaymentOverdue(p));
+   // Calculer le montant en retard
+   const getFilteredOverdueAmount = () => {
+     return filteredPayments.reduce((total, payment) => {
+       if (isPaymentOverdue(payment)) {
+         const remainingAmount = getRemainingAmount(payment);
+         return total + remainingAmount;
+       }
+       return total;
+     }, 0);
+   };
+
+   // Compter les paiements en attente et en retard
+   const getPendingPaymentsStats = () => {
+     const pendingPayments = filteredPayments.filter(payment => payment.status === 'En attente');
+     const overduePayments = pendingPayments.filter(payment => isPaymentOverdue(payment));
+     return {
+       total: pendingPayments.length,
+       overdue: overduePayments.length
+     };
+   };
+
+  // Fonction pour générer et télécharger un ZIP avec toutes les factures filtrées
+  const downloadFilteredInvoicesZip = async () => {
+    setIsGeneratingZip(true);
     
-    return {
-      total: pendingPayments.length,
-      overdue: overduePayments.length
-    };
-  };
-
-  // Fonctions pour les notes de crédit
-  const openCreditNoteDialog = (payment: Payment) => {
-    setCreditNoteDialog({
-      isOpen: true,
-      paymentId: payment.id,
-      reason: '',
-      amount: payment.amount.toString()
-    });
-  };
-
-  const generateCreditNote = async () => {
     try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      
+      let addedCount = 0;
+      
+      for (const payment of filteredPayments) {
+        const student = getStudent(payment.studentId);
+        if (!student) continue;
+        
+        const existingInvoice = getExistingInvoice(payment);
+        if (!existingInvoice) continue;
+        
+        try {
+          // Import des modules PDF
+          const { fillInvoicePdfWithPositions } = await import('@/utils/positionPdfFiller');
+          
+          const invoiceNumber = existingInvoice.number || 'SANS-NUMERO';
+          const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
+          
+          // Ajouter le PDF au ZIP
+          const filename = `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
+          zip.file(filename, pdfBytes);
+          addedCount++;
+        } catch (error) {
+          console.error(`Erreur lors de la génération de la facture ${existingInvoice.number}:`, error);
+        }
+      }
+      
+      if (addedCount === 0) {
+        toast({
+          title: "Aucune facture",
+          description: "Aucune facture n'a pu être générée pour les filtres sélectionnés.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Générer le ZIP
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Télécharger le ZIP
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Nom du fichier avec les filtres appliqués
+      const academicFilter = selectedAcademicYear !== "all" ? `-${selectedAcademicYear}` : "";
+      const fiscalFilter = selectedFiscalYear !== "all" ? `-${selectedFiscalYear}` : "";
+      link.download = `factures${academicFilter}${fiscalFilter}-${new Date().toISOString().split('T')[0]}.zip`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "ZIP téléchargé",
+        description: `${addedCount} facture${addedCount > 1 ? 's' : ''} téléchargée${addedCount > 1 ? 's' : ''} dans le fichier ZIP.`,
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération du ZIP:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer le fichier ZIP.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingZip(false);
+    }
+   };
+
+   // Ouvrir la modale de note de crédit
+   const openCreditNoteDialog = (payment: Payment) => {
+     setCreditNoteDialog({
+       isOpen: true,
+       paymentId: payment.id,
+       reason: '',
+       amount: payment.amount.toString()
+     });
+   };
+
+    // Générer la note de crédit (utilise la même logique que DocumentGeneration.tsx)
+    const generateCreditNote = async () => {
       const payment = payments.find(p => p.id === creditNoteDialog.paymentId);
-      const student = getStudent(payment?.studentId || '');
+      const student = payment ? getStudent(payment.studentId) : null;
       
       if (!payment || !student) {
         toast({
           title: "Erreur",
-          description: "Paiement ou étudiant non trouvé.",
+          description: "Informations manquantes pour la note de crédit.",
           variant: "destructive",
         });
         return;
       }
 
-      // Trouver la facture associée au paiement
-      const invoices = await getInvoicesByStudentId(payment.studentId);
-      const invoiceData = invoices.find(inv => inv.payment_id === payment.id);
-      
-      if (!invoiceData) {
+      try {
+        // Récupérer la facture associée au paiement
+        const { data: invoiceData } = await supabase
+          .from('invoices')
+          .select('*')
+          .eq('payment_id', payment.id)
+          .single();
+
+        if (!invoiceData) {
+          toast({
+            title: "Erreur",
+            description: "Aucune facture trouvée pour ce paiement.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Générer un numéro de note de crédit unique
+        const creditNoteNumber = generateCreditNoteNumber(invoiceData.number);
+        
+        // Créer la note de crédit dans la base de données
+        const creditNoteData = {
+          number: creditNoteNumber,
+          student_id: payment.studentId,
+          original_invoice_id: invoiceData.id,
+          amount: parseFloat(creditNoteDialog.amount),
+          reason: creditNoteDialog.reason,
+          date: new Date().toISOString().split('T')[0]
+        };
+        
+        await createCreditNote(creditNoteData);
+        
+        // Mettre à jour le statut du paiement à "Remboursé"
+        await updatePayment(creditNoteDialog.paymentId, {
+          status: 'Remboursé' as Payment['status'],
+          refundDate: new Date().toISOString().split('T')[0],
+          refundMethod: 'Virement' as Payment['method'],
+          refundReason: creditNoteDialog.reason
+        });
+
+        // Générer et télécharger le PDF de la note de crédit
+        const pdfBytes = await fillCreditNotePdf(student, payment, creditNoteDialog.reason, invoiceData.number);
+        const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
+        downloadPdf(pdfBytes, filename);
+
+        // Fermer la modale
+        setCreditNoteDialog({
+          isOpen: false,
+          paymentId: '',
+          reason: '',
+          amount: ''
+        });
+
+        toast({
+          title: "Note de crédit générée",
+          description: `Note de crédit ${creditNoteNumber} créée et téléchargée.`,
+        });
+
+      } catch (error) {
+        console.error('Erreur lors de la génération de la note de crédit:', error);
         toast({
           title: "Erreur",
-          description: "Aucune facture trouvée pour ce paiement.",
+          description: "Impossible de générer la note de crédit.",
           variant: "destructive",
         });
-        return;
       }
-
-      // Générer un numéro de note de crédit unique
-      const creditNoteNumber = generateCreditNoteNumber(invoiceData.number);
-      
-      // Créer la note de crédit dans la base de données
-      const creditNoteData = {
-        number: creditNoteNumber,
-        student_id: payment.studentId,
-        original_invoice_id: invoiceData.id,
-        amount: parseFloat(creditNoteDialog.amount),
-        reason: creditNoteDialog.reason,
-        date: new Date().toISOString().split('T')[0]
-      };
-      
-      await createCreditNote(creditNoteData);
-      
-      // Mettre à jour le statut du paiement à "Remboursé"
-      await updatePayment(creditNoteDialog.paymentId, {
-        status: 'Remboursé' as Payment['status'],
-        refundDate: new Date().toISOString().split('T')[0],
-        refundMethod: 'Virement' as Payment['method'],
-        refundReason: creditNoteDialog.reason
-      });
-
-      // Générer et télécharger le PDF de la note de crédit
-      const pdfBytes = await fillCreditNotePdf(student, payment, creditNoteDialog.reason, invoiceData.number);
-      const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
-      downloadPdf(pdfBytes, filename);
-
-      // Fermer la modale
-      setCreditNoteDialog({
-        isOpen: false,
-        paymentId: '',
-        reason: '',
-        amount: ''
-      });
-
-      toast({
-        title: "Note de crédit générée",
-        description: `Note de crédit ${creditNoteNumber} créée et téléchargée.`,
-      });
-
-    } catch (error) {
-      console.error('Erreur lors de la génération de la note de crédit:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de générer la note de crédit.",
-        variant: "destructive",
-      });
-    }
-  };
+    };
 
    // Générer le PDF de la note de crédit avec coordonnées XY précises
 
@@ -787,10 +918,10 @@ const PaymentManagement = () => {
               </div>
               <Button 
                 variant="secondary" 
-                onClick={() => setManualInvoiceDialog({ isOpen: true })}
+                onClick={() => setShowAddPayment(!showAddPayment)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Facture manuelle
+                {showAddPayment ? 'Annuler' : 'Facture manuelle'}
               </Button>
             </div>
           </CardHeader>
@@ -807,52 +938,87 @@ const PaymentManagement = () => {
                     <span className="text-sm font-medium">Année académique:</span>
                   </div>
                   <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Sélectionner" />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionner l'année" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes les années</SelectItem>
-                      {academicYears.map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      {academicYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
+                
                 {/* Filtre année fiscale */}
                 <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <Euro className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Année fiscale:</span>
-                  </div>
+                  <span className="text-sm font-medium">Année fiscale:</span>
                   <Select value={selectedFiscalYear} onValueChange={setSelectedFiscalYear}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Sélectionner" />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionner l'année" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes les années</SelectItem>
-                      {fiscalYears.map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      {fiscalYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Bouton de génération ZIP */}
+                
+                {/* Filtre statut de paiement */}
                 <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <Printer className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Export:</span>
-                  </div>
-                  <Button
-                    variant="outline"
+                  <span className="text-sm font-medium">Statut:</span>
+                  <Select value={selectedPaymentStatus} onValueChange={setSelectedPaymentStatus}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionner le statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                       <SelectItem value="all">Tous les statuts</SelectItem>
+                       <SelectItem value="paid">Factures payées</SelectItem>
+                       <SelectItem value="unpaid">Factures non payées</SelectItem>
+                       <SelectItem value="overdue">Factures en retard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {/* Deuxième ligne : Actions et statistiques */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span>{filteredPayments.length} facture{filteredPayments.length > 1 ? 's' : ''} affiché{filteredPayments.length > 1 ? 's' : 'e'}</span>
+                </div>
+                
+                {/* Boutons d'action */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {(selectedAcademicYear !== "all" || selectedFiscalYear !== "all" || selectedPaymentStatus !== "all") && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAcademicYear("all");
+                        setSelectedFiscalYear("all");
+                        setSelectedPaymentStatus("all");
+                      }}
+                    >
+                      Tout afficher
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    variant="secondary"
                     size="sm"
+                    onClick={downloadFilteredInvoicesZip}
                     disabled={isGeneratingZip || filteredPayments.length === 0}
-                    className="h-9"
+                    className="flex items-center gap-2 shrink-0"
                   >
                     {isGeneratingZip ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                         Génération...
                       </>
                     ) : (
@@ -865,6 +1031,124 @@ const PaymentManagement = () => {
                 </div>
               </div>
             </div>
+            
+            {showAddPayment && (
+              <Card className="mb-6 border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-lg">Créer une facture manuelle</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleAddPayment} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="student">Étudiant *</Label>
+                        <Select onValueChange={setSelectedStudent} value={selectedStudent}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un étudiant" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {students.map((student) => (
+                              <SelectItem key={student.id} value={student.id}>
+                                {student.firstName} {student.lastName} - {student.program}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="amount">Montant (€) *</Label>
+                         <Input
+                           id="amount"
+                           type="number"
+                           step="0.01"
+                           value={newPayment.amount}
+                           onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
+                           placeholder={newPayment.type === 'Frais de dossier' ? "500€" : newPayment.type === "Frais d'envoi" ? "120€" : newPayment.type === "Duplicata" ? "35€" : "0.00"}
+                           required
+                         />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="type">Type de paiement *</Label>
+                         <Select onValueChange={(value) => {
+                           setNewPayment(prev => ({ 
+                             ...prev, 
+                             type: value,
+                             dueDate: calculateDueDate(value),
+                             amount: value === "Frais de dossier" ? "500" : value === "Frais d'envoi" ? "120" : value === "Duplicata" ? "35" : prev.amount
+                           }));
+                         }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez le type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Frais de dossier">Frais de dossier</SelectItem>
+                            <SelectItem value="Minerval">Minerval</SelectItem>
+                            <SelectItem value="Frais d'envoi">Frais d'envoi</SelectItem>
+                            <SelectItem value="Duplicata">Duplicata</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="dueDate">Date d'échéance *</Label>
+                         <Input
+                           id="dueDate"
+                           type="date"
+                           value={newPayment.dueDate}
+                           onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
+                           placeholder={newPayment.type === 'Frais de dossier' || newPayment.type === "Frais d'envoi" || newPayment.type === 'Duplicata' ? '14 jours' : newPayment.type === 'Minerval' ? '31 décembre' : ''}
+                         />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="paidDate">Date de paiement (si déjà payé)</Label>
+                        <Input
+                          id="paidDate"
+                          type="date"
+                          value={newPayment.paidDate}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, paidDate: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="paidMethod">Moyen de paiement</Label>
+                        <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, paidMethod: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez le moyen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Espèces">Espèces</SelectItem>
+                            <SelectItem value="Virement">Virement bancaire</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={newPayment.description}
+                        onChange={(e) => setNewPayment(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Description du paiement..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <Button type="submit" className="w-full">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Créer la facture manuelle
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Payments List */}
             {filteredPayments.length === 0 ? (
@@ -882,7 +1166,7 @@ const PaymentManagement = () => {
                   }
                 </p>
                 {payments.length === 0 && (
-                  <Button onClick={() => setManualInvoiceDialog({ isOpen: true })}>
+                  <Button onClick={() => setShowAddPayment(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Ajouter un paiement
                   </Button>
@@ -908,171 +1192,196 @@ const PaymentManagement = () => {
                                const existingInvoice = getExistingInvoice(payment);
                                if (!existingInvoice) {
                                  return (
-                                   <Badge variant="secondary" className="text-xs">
-                                     Sans facture
+                                   <Badge className="bg-red-500 text-white">
+                                     Non générée
+                                   </Badge>
+                                 );
+                               } else {
+                                 // Déterminer le statut à afficher
+                                 const displayStatus = isPaymentOverdue(payment) ? 'En retard' : payment.status;
+                                 return (
+                                   <Badge className={getStatusBadgeColor(displayStatus)}>
+                                     {displayStatus}
                                    </Badge>
                                  );
                                }
-                               return null;
                              })()}
-                             <Badge className={getStatusColor(payment)}>
-                               {getStatusText(payment)}
-                             </Badge>
+                            <Badge variant="outline">{payment.type}</Badge>
                           </div>
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            <p><strong>Type:</strong> {payment.type}</p>
-                            <p><strong>Montant:</strong> {payment.amount}€</p>
-                            <p><strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString("fr-FR")}</p>
-                            <p><strong>Année académique:</strong> {payment.academicYear} - {payment.studyYear}</p>
-                            {payment.description && (
-                              <p><strong>Description:</strong> {payment.description}</p>
-                            )}
+                          
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-sm">
+                              <strong>Montant:</strong> {payment.amount}€
+                            </span>
+                            <span className="text-sm">
+                              <strong>Échéance:</strong> {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
+                            </span>
+                          </div>
+                          
+                          {(() => {
+                            return payment.academicYear && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Année académique : {payment.academicYear} - {payment.studyYear === 1 ? '1ère année' : `${payment.studyYear}ème année`}
+                              </p>
+                            );
+                          })()}
                             
-                            {/* Affichage des acomptes s'il y en a */}
-                            {payment.installments && payment.installments.length > 0 && (
-                              <div className="mt-2 p-2 bg-muted/50 rounded-md">
-                                <p className="text-xs font-medium mb-1">Acomptes versés:</p>
-                                {payment.installments.map((installment, index) => (
-                                  <div key={index} className="text-xs flex justify-between">
-                                    <span>{new Date(installment.paidDate).toLocaleDateString("fr-FR")}</span>
-                                    <span>{installment.amount}€ ({installment.method})</span>
-                                  </div>
-                                ))}
-                                <div className="text-xs font-medium pt-1 border-t border-muted-foreground/20 mt-1">
-                                  Total payé: {getTotalPaidAmount(payment)}€ - Reste: {getRemainingAmount(payment)}€
-                                </div>
+                            {payment.paidDate && payment.method && payment.status !== 'Payé' && (
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                                <span><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString('fr-FR')}</span>
+                                <span><strong>Moyen:</strong> {payment.method}</span>
                               </div>
                             )}
-                            
-                            {payment.paidDate && (
-                              <p><strong>Payé le:</strong> {new Date(payment.paidDate).toLocaleDateString("fr-FR")} ({payment.method})</p>
-                            )}
-                          </div>
                         </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => generateInvoicePdf(payment, false)}
-                            className="border-primary text-primary hover:bg-primary/10"
-                          >
-                            <Receipt className="h-4 w-4 mr-1" />
-                            Facture
-                          </Button>
+                        
+                         <div className="flex gap-2">
+                           {(() => {
+                             const existingInvoice = getExistingInvoice(payment);
+                             const hasInvoice = !!existingInvoice;
+                             
+                             return hasInvoice ? (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => generateInvoiceDocument(payment, true)}
+                               >
+                                 <Receipt className="h-4 w-4 mr-1" />
+                                 Télécharger PDF
+                               </Button>
+                             ) : (
+                               <Button
+                                 size="sm"
+                                 onClick={() => generateInvoiceDocument(payment, false)}
+                               >
+                                 <Receipt className="h-4 w-4 mr-1" />
+                                 Générer facture
+                               </Button>
+                             );
+                           })()}
                           
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => generateInvoicePdf(payment, true)}
-                            className="border-secondary text-secondary hover:bg-secondary/10"
-                          >
-                            <FileText className="h-4 w-4 mr-1" />
-                            Duplicata
-                          </Button>
-                          
-                          <Button
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => generatePaymentSummaryDoc(payment)}
-                            className="border-accent text-accent hover:bg-accent/10"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Récapitulatif
-                          </Button>
-
-                          {payment.status !== 'Remboursé' && getPaymentStatus(payment) !== 'Payé' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openInstallmentDialog(payment.id)}
-                              className="border-green-300 text-green-600 hover:bg-green-50"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Acompte
-                            </Button>
-                          )}
-                          
-                          {payment.status === 'Payé' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openCreditNoteDialog(payment)}
-                              className="border-red-300 text-red-600 hover:bg-red-50"
-                            >
-                              <RefreshCcw className="h-4 w-4 mr-1" />
-                              Rembourser
-                            </Button>
-                          )}
-                          
-                          {payment.status === 'Remboursé' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                const student = students.find(s => s.id === payment.studentId);
-                                if (student) {
-                                  try {
-                                    // Trouver la note de crédit existante pour ce paiement
-                                    const creditNotes = await getCreditNotesByStudentId(payment.studentId);
-                                    const invoices = await getInvoicesByStudentId(payment.studentId);
-                                    
-                                    // Trouver la facture associée à ce paiement
-                                    const paymentInvoice = invoices.find(inv => inv.payment_id === payment.id);
-                                    
-                                    // Trouver la note de crédit correspondante
-                                    const correspondingCreditNote = creditNotes.find(cn => 
-                                      cn.original_invoice_id === paymentInvoice?.id
-                                    );
-                                    
-                                    if (correspondingCreditNote && paymentInvoice) {
-                                      // Utiliser les données existantes avec le bon numéro de facture d'origine
-                                      const pdfBytes = await fillCreditNotePdf(
-                                        student, 
-                                        payment, 
-                                        correspondingCreditNote.reason || payment.refundReason || 'Remboursement',
-                                        paymentInvoice.number
-                                      );
-                                      const filename = `note-credit-${student.firstName}-${student.lastName}-${correspondingCreditNote.number}.pdf`;
-                                      downloadPdf(pdfBytes, filename);
-                                    } else {
-                                      // Fallback si aucune note de crédit trouvée
-                                      const pdfBytes = await fillCreditNotePdf(student, payment, payment.refundReason || 'Remboursement');
-                                      const filename = `note-credit-${student.firstName}-${student.lastName}.pdf`;
-                                      downloadPdf(pdfBytes, filename);
-                                    }
-                                  } catch (error) {
-                                    console.error('Erreur de téléchargement NC:', error);
-                                    toast({
-                                      title: "Erreur",
-                                      description: "Impossible de télécharger la note de crédit.",
-                                      variant: "destructive",
-                                    });
-                                  }
-                                }
-                              }}
-                              className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              Télécharger Note de crédit
-                            </Button>
-                          )}
-                         
-                         {payment.status === 'En attente' && (
                            <Button
-                             variant="default"
+                             variant="outline"
                              size="sm"
-                             onClick={() => openPaymentDialog(payment.id)}
+                             onClick={() => openPaymentSummary(payment)}
                            >
-                             <>
-                               <CreditCard className="h-4 w-4 mr-1" />
-                               Marquer payé
-                             </>
+                             <Eye className="h-4 w-4 mr-1" />
+                             Récapitulatif
                            </Button>
-                         )}
-                        </div>
+                           
+                            {payment.status === 'Payé' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openCreditNoteDialog(payment)}
+                                className="border-red-300 text-red-600 hover:bg-red-50"
+                              >
+                                <RefreshCcw className="h-4 w-4 mr-1" />
+                                Rembourser
+                              </Button>
+                            )}
+                            
+                             {payment.status === 'Remboursé' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  const student = getStudent(payment.studentId);
+                                  if (student) {
+                                    try {
+                                      // Trouver la note de crédit existante pour ce paiement
+                                      const creditNotes = await getCreditNotesByStudentId(payment.studentId);
+                                      const invoices = await getInvoicesByStudentId(payment.studentId);
+                                      
+                                      // Trouver la facture associée à ce paiement
+                                      const paymentInvoice = invoices.find(inv => inv.payment_id === payment.id);
+                                      
+                                      // Trouver la note de crédit correspondante
+                                      const correspondingCreditNote = creditNotes.find(cn => 
+                                        cn.original_invoice_id === paymentInvoice?.id
+                                      );
+                                      
+                                      if (correspondingCreditNote && paymentInvoice) {
+                                        // Utiliser les données existantes avec le bon numéro de facture d'origine
+                                        const pdfBytes = await fillCreditNotePdf(
+                                          student, 
+                                          payment, 
+                                          correspondingCreditNote.reason || payment.refundReason || 'Remboursement',
+                                          paymentInvoice.number
+                                        );
+                                        const filename = `note-credit-${student.firstName}-${student.lastName}-${correspondingCreditNote.number}.pdf`;
+                                        downloadPdf(pdfBytes, filename);
+                                      } else {
+                                        // Fallback si aucune note de crédit trouvée
+                                        const pdfBytes = await fillCreditNotePdf(student, payment, payment.refundReason || 'Remboursement');
+                                        const filename = `note-credit-${student.firstName}-${student.lastName}.pdf`;
+                                        downloadPdf(pdfBytes, filename);
+                                      }
+                                    } catch (error) {
+                                      console.error('Erreur de téléchargement NC:', error);
+                                      toast({
+                                        title: "Erreur",
+                                        description: "Impossible de télécharger la note de crédit.",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }
+                                }}
+                                className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                Télécharger Note de crédit
+                              </Button>
+                            )}
+                           
+                           {payment.status === 'En attente' && (
+                             <Button
+                               variant="default"
+                               size="sm"
+                               onClick={() => openPaymentDialog(payment.id)}
+                             >
+                               <>
+                                 <Euro className="h-4 w-4 mr-1" />
+                                 Paiement
+                               </>
+                             </Button>
+                           )}
 
+                         </div>
+                       </div>
+                       
+                       {/* Encadré d'avancement des paiements en dessous - complètement séparé */}
+                       {payment.status === 'En attente' && (
+                         <div className={`mt-4 p-3 rounded-md shadow-sm ${isPaymentOverdue(payment) ? 'bg-gradient-to-r from-red-100 to-rose-100 border border-red-400' : 'bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200'}`}>
+                           <div className={`text-sm font-medium ${isPaymentOverdue(payment) ? 'text-red-900' : 'text-orange-800'}`}>
+                             Payé: {getTotalPaidForPayment(payment)}€ - Reste: {getRemainingAmount(payment)}€
+                           </div>
+                         </div>
+                       )}
+                       
+                        {/* Encadré pour les factures payées */}
+                        {payment.status === 'Payé' && (
+                          <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-md shadow-sm">
+                            <div className="text-sm font-medium text-green-800">
+                              ✓ Facture payée le {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}
+                              {payment.method && ` - ${payment.method}`}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Encadré pour les factures remboursées */}
+                        {payment.status === 'Remboursé' && (
+                          <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200 rounded-md shadow-sm">
+                            <div className="text-sm font-medium text-blue-800">
+                              ↩ Remboursé le {payment.refundDate ? new Date(payment.refundDate).toLocaleDateString('fr-FR') : 'N/A'}
+                              {payment.refundMethod && ` - ${payment.refundMethod}`}
+                              {payment.refundReason && (
+                                <div className="text-xs text-blue-600 mt-1">Motif: {payment.refundReason}</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                       
+                       {/* Informations de la facture en dessous de l'encadré */}
                        {(() => {
                          const existingInvoice = getExistingInvoice(payment);
                          return existingInvoice && (
@@ -1082,7 +1391,6 @@ const PaymentManagement = () => {
                            </p>
                          );
                        })()}
-                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -1100,14 +1408,12 @@ const PaymentManagement = () => {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="amount">Montant (€)</Label>
+                    <Label htmlFor="paidDate">Date de paiement</Label>
                     <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      value={paymentDialog.amount}
-                      onChange={(e) => setPaymentDialog(prev => ({ ...prev, amount: e.target.value }))}
-                      placeholder="0.00"
+                      id="paidDate"
+                      type="date"
+                      value={paymentDialog.paidDate}
+                      onChange={(e) => setPaymentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
                     />
                   </div>
                   <div>
@@ -1122,50 +1428,68 @@ const PaymentManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="paidDate">Date de paiement</Label>
-                    <Input
-                      id="paidDate"
-                      type="date"
-                      value={paymentDialog.paidDate}
-                      onChange={(e) => setPaymentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
-                    />
-                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setPaymentDialog(prev => ({ ...prev, isOpen: false }))}>
                     Annuler
                   </Button>
-                  <Button onClick={markAsPaid}>
-                    Marquer comme payé
+                  <Button onClick={handleMarkAsPaid}>
+                    Paiement
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
 
-            {/* Dialog pour ajouter un acompte */}
+            {/* Dialog pour paiement minerval */}
             <Dialog open={installmentDialog.isOpen} onOpenChange={(open) => setInstallmentDialog(prev => ({ ...prev, isOpen: open }))}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Ajouter un acompte</DialogTitle>
+                  <DialogTitle>Paiement</DialogTitle>
                   <DialogDescription>
-                    Enregistrer un paiement partiel pour cette facture
+                    Enregistrez un paiement pour le minerval
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="installment-amount">Montant de l'acompte (€)</Label>
+                    <Label htmlFor="installmentAmount">Montant du paiement (€)</Label>
+                    {(() => {
+                      const payment = payments.find(p => p.id === installmentDialog.paymentId);
+                      if (!payment) return null;
+                      
+                      const currentInstallments = payment.installments || [];
+                      const totalAlreadyPaid = currentInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+                      const remainingAmount = payment.amount - totalAlreadyPaid;
+                      
+                      return (
+                        <>
+                          <Input
+                            id="installmentAmount"
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            max={remainingAmount}
+                            value={installmentDialog.amount}
+                            onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
+                            placeholder="0.00"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Montant maximum : {remainingAmount}€ (reste à payer)
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <div>
+                    <Label htmlFor="installmentDate">Date de paiement</Label>
                     <Input
-                      id="installment-amount"
-                      type="number"
-                      step="0.01"
-                      value={installmentDialog.amount}
-                      onChange={(e) => setInstallmentDialog(prev => ({ ...prev, amount: e.target.value }))}
-                      placeholder="0.00"
+                      id="installmentDate"
+                      type="date"
+                      value={installmentDialog.paidDate}
+                      onChange={(e) => setInstallmentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="installment-method">Moyen de paiement</Label>
+                    <Label htmlFor="installmentMethod">Moyen de paiement</Label>
                     <Select onValueChange={(value) => setInstallmentDialog(prev => ({ ...prev, method: value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez le moyen" />
@@ -1176,18 +1500,9 @@ const PaymentManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="installment-date">Date de paiement</Label>
-                    <Input
-                      id="installment-date"
-                      type="date"
-                      value={installmentDialog.paidDate}
-                      onChange={(e) => setInstallmentDialog(prev => ({ ...prev, paidDate: e.target.value }))}
-                    />
-                  </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={closeInstallmentDialog}>
+                  <Button variant="outline" onClick={() => setInstallmentDialog(prev => ({ ...prev, isOpen: false }))}>
                     Annuler
                   </Button>
                   <Button onClick={addInstallment}>
@@ -1197,177 +1512,151 @@ const PaymentManagement = () => {
               </DialogContent>
             </Dialog>
 
-            {/* Dialog pour note de crédit */}
-            <Dialog open={creditNoteDialog.isOpen} onOpenChange={(open) => setCreditNoteDialog(prev => ({ ...prev, isOpen: open }))}>
-              <DialogContent>
+            {/* Dialog récapitulatif de paiements */}
+            <Dialog open={showPaymentSummary} onOpenChange={setShowPaymentSummary}>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Générer une note de crédit</DialogTitle>
+                  <DialogTitle>Récapitulatif des paiements</DialogTitle>
                   <DialogDescription>
-                    Rembourser ce paiement et générer une note de crédit
+                    Détail des paiements pour {selectedPaymentForSummary && getStudentName(selectedPaymentForSummary.studentId)}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="credit-amount">Montant à rembourser (€)</Label>
-                    <Input
-                      id="credit-amount"
-                      type="number"
-                      step="0.01"
-                      value={creditNoteDialog.amount}
-                      onChange={(e) => setCreditNoteDialog(prev => ({ ...prev, amount: e.target.value }))}
-                      placeholder="0.00"
-                    />
+                {selectedPaymentForSummary && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Type de paiement</Label>
+                        <p className="font-medium">{selectedPaymentForSummary.type}</p>
+                      </div>
+                      <div>
+                        <Label>Montant total</Label>
+                        <p className="font-medium">{selectedPaymentForSummary.amount}€</p>
+                      </div>
+                      <div>
+                        <Label>Échéance</Label>
+                        <p className="font-medium">{new Date(selectedPaymentForSummary.dueDate).toLocaleDateString('fr-FR')}</p>
+                      </div>
+                      <div>
+                        <Label>Statut</Label>
+                        <div className="mt-2">
+                          <Badge className={`${getStatusBadgeColor(selectedPaymentForSummary.status)} text-white`}>
+                            {selectedPaymentForSummary.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedPaymentForSummary.type === 'Minerval' && selectedPaymentForSummary.installments && (
+                      <div>
+                        <Label className="text-base font-semibold">Historique des paiements</Label>
+                        {selectedPaymentForSummary.installments.length === 0 ? (
+                          <p className="text-muted-foreground mt-2">Aucun paiement enregistré</p>
+                        ) : (
+                          <div className="mt-2 space-y-2">
+                            {selectedPaymentForSummary.installments.map((installment, index) => (
+                              <div key={installment.id} className="flex justify-between items-center p-3 border rounded">
+                                <div>
+                                  <p className="font-medium">Paiement #{index + 1}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {new Date(installment.paidDate).toLocaleDateString('fr-FR')} - {installment.method}
+                                  </p>
+                                </div>
+                                <p className="font-semibold">{installment.amount}€</p>
+                              </div>
+                            ))}
+                            <div className="border-t pt-2 mt-2">
+                              <div className="flex justify-between items-center font-semibold">
+                                <span>Total payé:</span>
+                                <span>{getTotalPaidForPayment(selectedPaymentForSummary)}€</span>
+                              </div>
+                              <div className="flex justify-between items-center text-muted-foreground">
+                                <span>Reste à payer:</span>
+                                <span>{getRemainingAmount(selectedPaymentForSummary)}€</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedPaymentForSummary.status === 'Payé' && !selectedPaymentForSummary.installments && (
+                      <div>
+                        <Label className="text-base font-semibold">Informations de paiement</Label>
+                        <div className="mt-2 p-3 border rounded">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-medium">Paiement complet</p>
+                              <p className="text-sm text-muted-foreground">
+                                {selectedPaymentForSummary.paidDate && new Date(selectedPaymentForSummary.paidDate).toLocaleDateString('fr-FR')} - {selectedPaymentForSummary.method}
+                              </p>
+                            </div>
+                            <p className="font-semibold">{selectedPaymentForSummary.amount}€</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <Label htmlFor="credit-reason">Motif du remboursement</Label>
-                    <Textarea
-                      id="credit-reason"
-                      value={creditNoteDialog.reason}
-                      onChange={(e) => setCreditNoteDialog(prev => ({ ...prev, reason: e.target.value }))}
-                      placeholder="Motif du remboursement..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
+                )}
                 <DialogFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setCreditNoteDialog(prev => ({ ...prev, isOpen: false }))}
-                  >
-                    Annuler
+                  <Button onClick={() => generatePaymentSummaryDocument(selectedPaymentForSummary)}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimer
                   </Button>
-                  <Button 
-                    onClick={generateCreditNote}
-                    disabled={!creditNoteDialog.amount || !creditNoteDialog.reason}
-                  >
-                    Générer la note de crédit
+                  <Button variant="outline" onClick={() => setShowPaymentSummary(false)}>
+                    Fermer
                   </Button>
                 </DialogFooter>
               </DialogContent>
-            </Dialog>
+             </Dialog>
 
-            {/* Manual Invoice Dialog */}
-            <Dialog open={manualInvoiceDialog.isOpen} onOpenChange={(open) => setManualInvoiceDialog({ isOpen: open })}>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Facture manuelle</DialogTitle>
-                  <DialogDescription>
-                    Créer un nouveau paiement et générer sa facture
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <form onSubmit={handleAddPayment} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="studentSelect">Étudiant</Label>
-                      <Select onValueChange={setSelectedStudent} value={selectedStudent}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez un étudiant" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {students.map((student) => (
-                            <SelectItem key={student.id} value={student.id}>
-                              {student.firstName} {student.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="amount">Montant (€)</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={newPayment.amount}
-                        onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
-                        placeholder="0.00"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="type">Type de paiement</Label>
-                      <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, type: value }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Type de paiement" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Frais de dossier">Frais de dossier (FD)</SelectItem>
-                          <SelectItem value="Frais d'envoi">Frais d'envoi (ENV)</SelectItem>
-                          <SelectItem value="Minerval">Minerval (MIN)</SelectItem>
-                          <SelectItem value="Duplicata">Duplicata (DC)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="dueDate">Date d'échéance</Label>
-                      <Input
-                        id="dueDate"
-                        type="date"
-                        value={newPayment.dueDate}
-                        onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="paidDate">Date de paiement (si déjà payé)</Label>
-                      <Input
-                        id="paidDate"
-                        type="date"
-                        value={newPayment.paidDate}
-                        onChange={(e) => setNewPayment(prev => ({ ...prev, paidDate: e.target.value }))}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="paidMethod">Moyen de paiement</Label>
-                      <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, paidMethod: value }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez le moyen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Espèces">Espèces</SelectItem>
-                          <SelectItem value="Virement">Virement bancaire</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={newPayment.description}
-                      onChange={(e) => setNewPayment(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Description du paiement..."
-                      rows={2}
-                    />
-                  </div>
-
-                  <DialogFooter>
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      onClick={() => setManualInvoiceDialog({ isOpen: false })}
-                    >
-                      Annuler
-                    </Button>
-                    <Button type="submit">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Créer la facture manuelle
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+             {/* Dialog pour note de crédit */}
+             <Dialog open={creditNoteDialog.isOpen} onOpenChange={(open) => setCreditNoteDialog(prev => ({ ...prev, isOpen: open }))}>
+               <DialogContent className="max-w-md">
+                 <DialogHeader>
+                   <DialogTitle>Générer une note de crédit</DialogTitle>
+                   <DialogDescription>
+                     Créer une note de crédit pour rembourser tout ou partie de cette facture
+                   </DialogDescription>
+                 </DialogHeader>
+                 <div className="space-y-4">
+                   <div>
+                     <Label htmlFor="creditAmount">Montant à rembourser (€)</Label>
+                     <Input
+                       id="creditAmount"
+                       type="number"
+                       step="0.01"
+                       value={creditNoteDialog.amount}
+                       onChange={(e) => setCreditNoteDialog(prev => ({ ...prev, amount: e.target.value }))}
+                       placeholder="0.00"
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="creditReason">Motif du remboursement</Label>
+                     <Textarea
+                       id="creditReason"
+                       value={creditNoteDialog.reason}
+                       onChange={(e) => setCreditNoteDialog(prev => ({ ...prev, reason: e.target.value }))}
+                       placeholder="Indiquez le motif du remboursement..."
+                       rows={3}
+                     />
+                   </div>
+                 </div>
+                 <DialogFooter>
+                   <Button 
+                     variant="outline" 
+                     onClick={() => setCreditNoteDialog(prev => ({ ...prev, isOpen: false }))}
+                   >
+                     Annuler
+                   </Button>
+                   <Button 
+                     onClick={generateCreditNote}
+                     disabled={!creditNoteDialog.amount || !creditNoteDialog.reason}
+                   >
+                     Générer la note de crédit
+                   </Button>
+                 </DialogFooter>
+               </DialogContent>
+             </Dialog>
           </CardContent>
         </Card>
       </div>

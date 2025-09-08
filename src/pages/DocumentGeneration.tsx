@@ -1614,32 +1614,6 @@ const DocumentGeneration = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* Manual Invoice Dialog */}
-        <Dialog open={manualInvoiceDialog.isOpen} onOpenChange={(open) => setManualInvoiceDialog({ isOpen: open })}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Facture manuelle</DialogTitle>
-              <DialogDescription>
-                Créer un nouveau paiement et générer sa facture pour cet étudiant
-              </DialogDescription>
-            </DialogHeader>
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                La création de factures manuelles n'est disponible que dans l'onglet "Paiements".
-              </p>
-              <Button 
-                onClick={() => {
-                  window.location.href = `/payments?student=${studentId}`;
-                }}
-                className="mt-4"
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Aller aux paiements
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
