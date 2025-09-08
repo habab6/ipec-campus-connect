@@ -439,36 +439,22 @@ const PaymentManagement = () => {
   };
 
   const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
-    // Utiliser une approche plus robuste pour éviter les doublons
     const year = new Date().getFullYear();
     const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
                      payment.type === 'Minerval' ? 'MIN' : 'FAC';
     
-    // Récupérer le count actuel ET créer immédiatement l'entrée pour éviter les race conditions
-    const timestamp = Date.now();
-    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
     
-    // Générer un numéro unique avec timestamp pour éviter les collisions
-    const { count } = await supabase
-      .from('invoices')
-      .select('*', { count: 'exact', head: true });
+    // Créer un numéro basé sur la timestamp pour garantir l'unicité
+    const timeBasedNumber = `${month}${day}${hours}${minutes}${seconds}`;
     
-    const invoiceCount = (count || 0) + 1;
-    const baseNumber = `IPEC-${year}-${String(invoiceCount).padStart(4, '0')}-${typeCode}`;
-    
-    // Vérifier si ce numéro existe déjà
-    const { data: existingInvoice } = await supabase
-      .from('invoices')
-      .select('number')
-      .eq('number', baseNumber)
-      .single();
-    
-    // Si le numéro existe déjà, ajouter un suffixe unique
-    if (existingInvoice) {
-      return `${baseNumber}-${randomSuffix}`;
-    }
-    
-    return baseNumber;
+    return `IPEC-${year}-${timeBasedNumber}-${typeCode}`;
   };
 
   const generateInvoiceDocument = async (payment: Payment, isDuplicate = false) => {
