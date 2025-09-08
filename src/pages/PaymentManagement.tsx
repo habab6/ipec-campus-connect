@@ -227,10 +227,16 @@ const PaymentManagement = () => {
 
       // Si on a un paiement créé, générer automatiquement la facture
       if (createdPaymentData) {
+        // Transformer les données pour correspondre au type Payment
+        const paymentForPdf: Payment = {
+          ...payment,
+          id: createdPaymentData.id
+        };
+        
         // Attendre un petit délai pour s'assurer que les données sont bien persistées
         setTimeout(async () => {
           try {
-            await generateInvoicePdf(createdPaymentData, false);
+            await generateInvoicePdf(paymentForPdf, false);
           } catch (error) {
             console.error('Erreur lors de la génération de la facture:', error);
           }
@@ -316,7 +322,7 @@ const PaymentManagement = () => {
       });
     }
 
-    setPaymentDialog({ isOpen: false, paymentId: '', paidDate: new Date().toISOString().split('T')[0], method: '' });
+    setPaymentDialog({ isOpen: false, paymentId: '', amount: '', paidDate: new Date().toISOString().split('T')[0], method: '' });
   };
 
   // Fonction pour gérer le total et le statut des acomptes
@@ -336,7 +342,7 @@ const PaymentManagement = () => {
     return payment.amount - getTotalPaidAmount(payment);
   };
 
-  const getPaymentStatus = (payment: Payment): 'Payé' | 'En attente' | 'Partiellement payé' => {
+  const getPaymentStatus = (payment: Payment): 'Payé' | 'En attente' | 'Partiellement payé' | 'Remboursé' => {
     if (payment.status === 'Payé' || payment.status === 'Remboursé') {
       return payment.status;
     }
@@ -1081,6 +1087,7 @@ const PaymentManagement = () => {
                   </Card>
                 ))}
               </div>
+            )}
 
             {/* Dialog pour marquer comme payé */}
             <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
