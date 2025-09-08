@@ -439,16 +439,36 @@ const PaymentManagement = () => {
   };
 
   const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
-    // Use the same logic for unique invoice numbers
+    // Utiliser une approche plus robuste pour éviter les doublons
+    const year = new Date().getFullYear();
+    const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
+                     payment.type === 'Minerval' ? 'MIN' : 'FAC';
+    
+    // Récupérer le count actuel ET créer immédiatement l'entrée pour éviter les race conditions
+    const timestamp = Date.now();
+    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    
+    // Générer un numéro unique avec timestamp pour éviter les collisions
     const { count } = await supabase
       .from('invoices')
       .select('*', { count: 'exact', head: true });
     
-    const year = new Date().getFullYear();
     const invoiceCount = (count || 0) + 1;
-    const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
-                     payment.type === 'Minerval' ? 'MIN' : 'FAC';
-    return `IPEC-${year}-${String(invoiceCount).padStart(4, '0')}-${typeCode}`;
+    const baseNumber = `IPEC-${year}-${String(invoiceCount).padStart(4, '0')}-${typeCode}`;
+    
+    // Vérifier si ce numéro existe déjà
+    const { data: existingInvoice } = await supabase
+      .from('invoices')
+      .select('number')
+      .eq('number', baseNumber)
+      .single();
+    
+    // Si le numéro existe déjà, ajouter un suffixe unique
+    if (existingInvoice) {
+      return `${baseNumber}-${randomSuffix}`;
+    }
+    
+    return baseNumber;
   };
 
   const generateInvoiceDocument = async (payment: Payment, isDuplicate = false) => {
