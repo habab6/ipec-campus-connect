@@ -1568,18 +1568,12 @@ const PaymentManagement = () => {
                         {/* Encadré pour les factures remboursées */}
                         {payment.status === 'Remboursé' && (
                           <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200 rounded-md shadow-sm">
-                            <div className="text-sm font-medium text-blue-800 space-y-1">
-                              <div>
-                                ✓ Facture payée le {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}
-                                {payment.method && ` - ${payment.method}`}
-                              </div>
-                              <div className="border-t border-blue-200 pt-1">
-                                ↩ Remboursé le {payment.refundDate ? new Date(payment.refundDate).toLocaleDateString('fr-FR') : 'N/A'}
-                                {payment.refundMethod && ` - ${payment.refundMethod}`}
-                                {payment.refundReason && (
-                                  <div className="text-xs text-blue-600 mt-1">Motif: {payment.refundReason}</div>
-                                )}
-                              </div>
+                            <div className="text-sm font-medium text-blue-800">
+                              ↩ Remboursé le {payment.refundDate ? new Date(payment.refundDate).toLocaleDateString('fr-FR') : 'N/A'}
+                              {payment.refundMethod && ` - ${payment.refundMethod}`}
+                              {payment.refundReason && (
+                                <div className="text-xs text-blue-600 mt-1">Motif: {payment.refundReason}</div>
+                              )}
                             </div>
                           </div>
                         )}
