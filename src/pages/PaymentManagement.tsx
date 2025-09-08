@@ -13,7 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer, RefreshCcw } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Student, Payment } from "@/types";
-import { generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
+import { generateInvoice, generatePaymentSummary, downloadDocument, generateCreditNoteNumber } from "@/utils/documentGenerator";
+import { fillCreditNotePdf, downloadPdf } from "@/utils/positionPdfFiller";
 import { supabase } from "@/integrations/supabase/client";
 
 const PaymentManagement = () => {
@@ -66,7 +67,9 @@ const PaymentManagement = () => {
     updatePayment, 
     fetchPayments,
     getInvoicesByStudentId,
-    createInvoice
+    createInvoice,
+    getCreditNotesByStudentId,
+    createCreditNote
   } = usePayments();
    const [showAddPayment, setShowAddPayment] = useState(false);
    
@@ -761,8 +764,8 @@ const PaymentManagement = () => {
      });
    };
 
-    // Générer la note de crédit
-    const generateCreditNote = async () => {
+    // Générer la note de crédit (utilise la même logique que DocumentGeneration.tsx)
+    const generateCreditNoteFromPayment = async () => {
       const payment = payments.find(p => p.id === creditNoteDialog.paymentId);
       const student = payment ? getStudent(payment.studentId) : null;
       
@@ -776,9 +779,36 @@ const PaymentManagement = () => {
       }
 
       try {
-        // Générer un numéro de note de crédit basé sur la facture d'origine
-        const invoiceNumber = payment.invoiceNumber || 'FACTURE';
-        const creditNoteNumber = `${invoiceNumber}-NC`;
+        // Récupérer la facture associée au paiement
+        const { data: invoiceData } = await supabase
+          .from('invoices')
+          .select('*')
+          .eq('payment_id', payment.id)
+          .single();
+
+        if (!invoiceData) {
+          toast({
+            title: "Erreur",
+            description: "Aucune facture trouvée pour ce paiement.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Générer un numéro de note de crédit unique
+        const creditNoteNumber = await generateCreditNoteNumber();
+        
+        // Créer la note de crédit dans la base de données
+        const creditNoteData = {
+          number: creditNoteNumber,
+          student_id: payment.studentId,
+          original_invoice_id: invoiceData.id,
+          amount: parseFloat(creditNoteDialog.amount),
+          reason: creditNoteDialog.reason,
+          date: new Date().toISOString().split('T')[0]
+        };
+        
+        await createCreditNote(creditNoteData);
         
         // Mettre à jour le statut du paiement à "Remboursé"
         await updatePayment(creditNoteDialog.paymentId, {
@@ -787,38 +817,11 @@ const PaymentManagement = () => {
           refundMethod: 'Virement' as Payment['method'],
           refundReason: creditNoteDialog.reason
         });
-        
-        // Créer la note de crédit en base
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data: invoiceData } = await supabase
-          .from('invoices')
-          .select('*')
-          .eq('payment_id', payment.id)
-          .single();
 
-        await supabase.from('credit_notes').insert({
-          number: creditNoteNumber,
-          student_id: payment.studentId,
-          original_invoice_id: invoiceData?.id,
-          amount: parseFloat(creditNoteDialog.amount),
-          reason: creditNoteDialog.reason,
-          date: new Date().toISOString().split('T')[0]
-        });
-
-        // Générer le PDF de la note de crédit
-        const pdfBytes = await generateCreditNotePDF(student, payment, creditNoteNumber, parseFloat(creditNoteDialog.amount), creditNoteDialog.reason, invoiceData);
+        // Générer et télécharger le PDF de la note de crédit
+        const pdfBytes = await fillCreditNotePdf(student, payment, creditNoteDialog.reason, invoiceData.number);
         const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
-        
-        // Télécharger le PDF
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        downloadPdf(pdfBytes, filename);
 
         // Fermer la modale
         setCreditNoteDialog({
@@ -844,236 +847,6 @@ const PaymentManagement = () => {
     };
 
    // Générer le PDF de la note de crédit avec coordonnées XY précises
-   const generateCreditNotePDF = async (student: any, payment: any, creditNoteNumber: string, amount: number, reason: string, originalInvoice: any) => {
-     const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
-     
-     const pdfDoc = await PDFDocument.create();
-     const page = pdfDoc.addPage([595, 842]); // A4 size
-     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-     
-     // Coordonnées XY précises pour chaque élément
-     
-     // En-tête - NOTE DE CRÉDIT
-     page.drawText('NOTE DE CRÉDIT', {
-       x: 200,
-       y: 800,
-       size: 20,
-       font: boldFont,
-       color: rgb(0.8, 0, 0),
-     });
-     
-     // Numéro de note de crédit
-     page.drawText(`N° ${creditNoteNumber}`, {
-       x: 430,
-       y: 800,
-       size: 12,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     // Date
-     page.drawText(`Date: ${new Date().toLocaleDateString('fr-FR')}`, {
-       x: 430,
-       y: 780,
-       size: 10,
-       font: font,
-       color: rgb(0, 0, 0),
-     });
-     
-     // Informations entreprise (coordonnées fixes en haut à gauche)
-     page.drawText('IPEC', {
-       x: 50,
-       y: 750,
-       size: 14,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText('Institut Privé d\'Enseignement Commercial', {
-       x: 50,
-       y: 730,
-       size: 10,
-       font: font,
-       color: rgb(0, 0, 0),
-     });
-     
-     // Informations client (coordonnées fixes)
-     page.drawText('FACTURÉ À:', {
-       x: 50,
-       y: 680,
-       size: 12,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText(`${student.firstName} ${student.lastName}`, {
-       x: 50,
-       y: 660,
-       size: 11,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText(`Programme: ${student.program}`, {
-       x: 50,
-       y: 640,
-       size: 10,
-       font: font,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText(`Spécialité: ${student.specialty}`, {
-       x: 50,
-       y: 620,
-       size: 10,
-       font: font,
-       color: rgb(0, 0, 0),
-     });
-     
-     // Référence à la facture originale (coordonnées fixes)
-     page.drawText('FACTURE ORIGINALE:', {
-       x: 320,
-       y: 680,
-       size: 12,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-      // Afficher les informations de la facture de référence même si originalInvoice n'est pas disponible
-      const invoiceNumber = originalInvoice?.number || payment.invoiceNumber || 'N/A';
-      const invoiceDate = originalInvoice?.generate_date ? new Date(originalInvoice.generate_date).toLocaleDateString('fr-FR') : 'N/A';
-      const invoiceAmount = originalInvoice?.amount || payment.amount;
-      
-      page.drawText(`N° Facture: ${invoiceNumber}`, {
-        x: 320,
-        y: 660,
-        size: 10,
-        font: font,
-        color: rgb(0, 0, 0),
-      });
-      
-      page.drawText(`Date facture: ${invoiceDate}`, {
-        x: 320,
-        y: 640,
-        size: 10,
-        font: font,
-        color: rgb(0, 0, 0),
-      });
-      
-      page.drawText(`Montant facture: ${invoiceAmount}€`, {
-        x: 320,
-        y: 620,
-        size: 10,
-        font: font,
-        color: rgb(0, 0, 0),
-      });
-     
-     // Tableau des détails (coordonnées fixes)
-     const tableStartY = 550;
-     
-     // En-têtes du tableau
-     page.drawText('Description', {
-       x: 50,
-       y: tableStartY,
-       size: 10,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText('Motif', {
-       x: 250,
-       y: tableStartY,
-       size: 10,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText('Montant', {
-       x: 450,
-       y: tableStartY,
-       size: 10,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     // Ligne de séparation
-     page.drawLine({
-       start: { x: 50, y: tableStartY - 10 },
-       end: { x: 545, y: tableStartY - 10 },
-       thickness: 1,
-       color: rgb(0, 0, 0),
-     });
-     
-     // Contenu du tableau
-     page.drawText(`Remboursement ${payment.type}`, {
-       x: 50,
-       y: tableStartY - 30,
-       size: 10,
-       font: font,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText(reason, {
-       x: 250,
-       y: tableStartY - 30,
-       size: 10,
-       font: font,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText(`${amount}€`, {
-       x: 450,
-       y: tableStartY - 30,
-       size: 10,
-       font: font,
-       color: rgb(0, 0, 0),
-     });
-     
-     // Total (coordonnées fixes en bas à droite)
-     page.drawText('TOTAL À REMBOURSER:', {
-       x: 350,
-       y: tableStartY - 70,
-       size: 12,
-       font: boldFont,
-       color: rgb(0, 0, 0),
-     });
-     
-     page.drawText(`${amount}€`, {
-       x: 500,
-       y: tableStartY - 70,
-       size: 14,
-       font: boldFont,
-       color: rgb(0.8, 0, 0),
-     });
-     
-     // Notes légales (coordonnées fixes en bas)
-     page.drawText('Cette note de crédit annule et remplace partiellement ou totalement', {
-       x: 50,
-       y: 200,
-       size: 9,
-       font: font,
-       color: rgb(0.3, 0.3, 0.3),
-     });
-     
-     page.drawText('la facture mentionnée ci-dessus.', {
-       x: 50,
-       y: 185,
-       size: 9,
-       font: font,
-       color: rgb(0.3, 0.3, 0.3),
-     });
-     
-     page.drawText('Le remboursement sera effectué selon les modalités convenues.', {
-       x: 50,
-       y: 165,
-       size: 9,
-       font: font,
-       color: rgb(0.3, 0.3, 0.3),
-     });
-     
-     return await pdfDoc.save();
-   };
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
@@ -1507,20 +1280,20 @@ const PaymentManagement = () => {
                                   const student = getStudent(payment.studentId);
                                   if (student) {
                                     const creditNoteNumber = `${payment.invoiceNumber || 'FACTURE'}-NC`;
-                                    // Télécharger la note de crédit existante
-                                    generateCreditNotePDF(student, payment, creditNoteNumber, payment.amount, payment.refundReason || 'Remboursement', null)
-                                      .then(pdfBytes => {
-                                        const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
-                                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                                        const url = URL.createObjectURL(blob);
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = filename;
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        URL.revokeObjectURL(url);
-                                      });
+                                     // Utiliser la même fonction que DocumentGeneration.tsx
+                                     fillCreditNotePdf(student, payment, payment.refundReason || 'Remboursement')
+                                       .then(pdfBytes => {
+                                         const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
+                                         downloadPdf(pdfBytes, filename);
+                                       })
+                                       .catch(error => {
+                                         console.error('Erreur de téléchargement NC:', error);
+                                         toast({
+                                           title: "Erreur",
+                                           description: "Impossible de télécharger la note de crédit.",
+                                           variant: "destructive",
+                                         });
+                                       });
                                   }
                                 }}
                                 className="border-blue-300 text-blue-600 hover:bg-blue-50"
@@ -1846,7 +1619,7 @@ const PaymentManagement = () => {
                      Annuler
                    </Button>
                    <Button 
-                     onClick={generateCreditNote}
+                     onClick={generateCreditNoteFromPayment}
                      disabled={!creditNoteDialog.amount || !creditNoteDialog.reason}
                    >
                      Générer la note de crédit
