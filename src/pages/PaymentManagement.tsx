@@ -765,7 +765,7 @@ const PaymentManagement = () => {
    };
 
     // Générer la note de crédit (utilise la même logique que DocumentGeneration.tsx)
-    const generateCreditNoteFromPayment = async () => {
+    const generateCreditNote = async () => {
       const payment = payments.find(p => p.id === creditNoteDialog.paymentId);
       const student = payment ? getStudent(payment.studentId) : null;
       
@@ -1619,7 +1619,7 @@ const PaymentManagement = () => {
                      Annuler
                    </Button>
                    <Button 
-                     onClick={generateCreditNoteFromPayment}
+                     onClick={generateCreditNote}
                      disabled={!creditNoteDialog.amount || !creditNoteDialog.reason}
                    >
                      Générer la note de crédit
