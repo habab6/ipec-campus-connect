@@ -78,6 +78,15 @@ const DocumentGeneration = () => {
     isOpen: false
   });
 
+  // State pour la modale de remboursement (note de crédit)
+  const [refundDialog, setRefundDialog] = useState({
+    isOpen: false,
+    paymentId: '',
+    invoiceNumber: '',
+    amount: '',
+    reason: ''
+  });
+
   useEffect(() => {
     console.log('DocumentGeneration useEffect triggered - studentId:', studentId);
     
@@ -526,6 +535,106 @@ const DocumentGeneration = () => {
       toast({
         title: "Erreur",
         description: "Impossible d'ajouter le paiement.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fonction pour gérer le remboursement depuis la modale
+  const handleRefund = async () => {
+    if (!student || !refundDialog.paymentId || !refundDialog.reason.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir un motif de remboursement.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Trouver le paiement
+      const payment = payments.find(p => p.id === refundDialog.paymentId);
+      if (!payment) {
+        toast({
+          title: "Erreur",
+          description: "Paiement introuvable.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Trouver la facture correspondante
+      const correspondingInvoice = getExistingInvoice(payment);
+      if (!correspondingInvoice) {
+        toast({
+          title: "Erreur",
+          description: "Aucune facture trouvée pour ce paiement.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Créer un objet payment avec le bon numéro de facture pour le PDF
+      const paymentWithInvoice = {
+        ...payment,
+        invoiceNumber: correspondingInvoice.number
+      };
+
+      // Générer le numéro de note de crédit
+      const creditNoteNumber = `${correspondingInvoice.number}-NC`;
+
+      // Créer la note de crédit dans la base de données
+      const creditNoteData = {
+        student_id: student.id,
+        original_invoice_id: correspondingInvoice.id,
+        number: creditNoteNumber,
+        amount: parseFloat(refundDialog.amount),
+        reason: refundDialog.reason,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      console.log('Création de la note de crédit avec les données:', creditNoteData);
+      const createdCreditNote = await createCreditNote(creditNoteData);
+
+      // Mettre à jour le paiement comme remboursé
+      await updatePayment(payment.id, {
+        status: 'Remboursé' as const,
+        refundDate: new Date().toISOString().split('T')[0],
+        refundReason: refundDialog.reason
+      });
+
+      // Générer le PDF avec le bon numéro de facture
+      console.log('Génération du PDF avec facture:', correspondingInvoice.number);
+      const pdfBytes = await fillCreditNotePdf(student, paymentWithInvoice, refundDialog.reason);
+      const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
+      downloadPdf(pdfBytes, filename);
+
+      // Recharger les données
+      if (studentId) {
+        const updatedPayments = await getPaymentsByStudentId(studentId);
+        setPayments(updatedPayments);
+        const updatedCreditNotes = await getCreditNotesByStudentId(studentId);
+        setCreditNotes(updatedCreditNotes);
+      }
+      
+      // Fermer la modale
+      setRefundDialog({
+        isOpen: false,
+        paymentId: '',
+        invoiceNumber: '',
+        amount: '',
+        reason: ''
+      });
+
+      toast({
+        title: "Note de crédit générée",
+        description: `Note de crédit ${creditNoteNumber} créée et téléchargée.`,
+      });
+    } catch (error) {
+      console.error('Erreur complète:', error);
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de générer la note de crédit",
         variant: "destructive",
       });
     }
@@ -1029,8 +1138,14 @@ const DocumentGeneration = () => {
                                           variant="destructive"
                                           size="sm"
                                           onClick={() => {
-                                            setSelectedPayment(payment);
-                                            setShowCreditNoteForm(true);
+                                            const correspondingInvoice = getExistingInvoice(payment);
+                                            setRefundDialog({
+                                              isOpen: true,
+                                              paymentId: payment.id,
+                                              invoiceNumber: correspondingInvoice?.number || '',
+                                              amount: payment.amount.toString(),
+                                              reason: ''
+                                            });
                                           }}
                                           className="flex items-center gap-2"
                                         >
@@ -1326,6 +1441,63 @@ const DocumentGeneration = () => {
             </Card>
           </CardContent>
         </Card>
+
+        {/* Dialog pour le remboursement (note de crédit) */}
+        <Dialog open={refundDialog.isOpen} onOpenChange={(open) => setRefundDialog(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Rembourser le paiement</DialogTitle>
+              <DialogDescription>
+                Créer une note de crédit pour rembourser ce paiement
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Facture à rembourser</Label>
+                <p className="text-sm text-muted-foreground">
+                  {refundDialog.invoiceNumber || 'Facture non trouvée'}
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="refundAmount">Montant à rembourser (€)</Label>
+                <Input
+                  id="refundAmount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={refundDialog.amount}
+                  onChange={(e) => setRefundDialog(prev => ({ ...prev, amount: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="refundReason">Motif du remboursement</Label>
+                <Textarea
+                  id="refundReason"
+                  value={refundDialog.reason}
+                  onChange={(e) => setRefundDialog(prev => ({ ...prev, reason: e.target.value }))}
+                  placeholder="Décrivez la raison du remboursement..."
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setRefundDialog(prev => ({ ...prev, isOpen: false }))}
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleRefund}
+                disabled={!refundDialog.amount || !refundDialog.reason.trim()}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Créer la note de crédit
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog pour paiement complet (frais de dossier) */}
         <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
