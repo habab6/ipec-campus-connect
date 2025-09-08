@@ -255,7 +255,7 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
 };
 
 // Fonction temporaire pour les avoirs
-export const fillCreditNotePdf = async (student: Student, payment: Payment, reason: string): Promise<Uint8Array> => {
+export const fillCreditNotePdf = async (student: Student, payment: Payment, reason: string, originalInvoiceNumber?: string): Promise<Uint8Array> => {
   try {
     console.log('Génération du PDF de note de crédit pour:', student.firstName, student.lastName);
     
@@ -272,15 +272,11 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     const fontBytes = await loadQuestrialFont();
     const customFont = await pdfDoc.embedFont(fontBytes);
     
-    // Récupérer le vrai numéro de facture depuis la base de données
-    let invoiceNumber = 'FACTURE-INCONNUE';
+    // Utiliser le numéro de facture fourni ou récupérer depuis le paiement
+    let invoiceNumber = originalInvoiceNumber || payment.invoiceNumber || 'FACTURE-INCONNUE';
     
-    // Utiliser une approche plus simple pour récupérer le numéro de facture
-    // On peut utiliser payment.invoiceNumber s'il existe, sinon on construit un numéro basique
-    if (payment.invoiceNumber && payment.invoiceNumber.trim() !== '') {
-      invoiceNumber = payment.invoiceNumber;
-    } else {
-      // Si pas de numéro de facture, on crée un basé sur le type et l'ID
+    // Si toujours pas de numéro, construire un basique
+    if (!originalInvoiceNumber && (!payment.invoiceNumber || payment.invoiceNumber.trim() === '')) {
       const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
                        payment.type === 'Minerval' ? 'MIN' : 'FAC';
       invoiceNumber = `IPEC-${new Date().getFullYear()}-${typeCode}`;
@@ -454,7 +450,7 @@ export const combineInvoiceAndCreditNotePdf = async (
     const invoicePdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
     
     // Générer la note de crédit
-    const creditNotePdfBytes = await fillCreditNotePdf(student, payment, creditNote.reason);
+    const creditNotePdfBytes = await fillCreditNotePdf(student, payment, creditNote.reason, invoiceNumber);
     
     // Créer un nouveau document PDF
     const combinedPdf = await PDFDocument.create();
