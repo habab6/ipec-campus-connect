@@ -28,6 +28,7 @@ const PaymentManagement = () => {
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string>("all");
   const [academicYears, setAcademicYears] = useState<string[]>([]);
   const [fiscalYears, setFiscalYears] = useState<string[]>([]);
+  const [manualInvoiceDialog, setManualInvoiceDialog] = useState({ isOpen: false });
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
 
   useEffect(() => {
@@ -71,7 +72,7 @@ const PaymentManagement = () => {
     getCreditNotesByStudentId,
     createCreditNote
   } = usePayments();
-   const [showAddPayment, setShowAddPayment] = useState(false);
+   
    
    // State pour la modale de note de crédit
    const [creditNoteDialog, setCreditNoteDialog] = useState({
@@ -262,7 +263,7 @@ const PaymentManagement = () => {
         paidMethod: ""
       });
       setSelectedStudent("");
-      setShowAddPayment(false);
+      setManualInvoiceDialog({ isOpen: false });
     } catch (error) {
       console.error('Erreur complète:', error);
       toast({
@@ -918,10 +919,10 @@ const PaymentManagement = () => {
               </div>
               <Button 
                 variant="secondary" 
-                onClick={() => setShowAddPayment(!showAddPayment)}
+                onClick={() => setManualInvoiceDialog({ isOpen: true })}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {showAddPayment ? 'Annuler' : 'Facture manuelle'}
+                Facture manuelle
               </Button>
             </div>
           </CardHeader>
@@ -1157,6 +1158,13 @@ const PaymentManagement = () => {
                 <h3 className="text-lg font-semibold mb-2">
                   {payments.length === 0 ? "Aucun paiement enregistré" : "Aucun paiement pour cette année"}
                 </h3>
+            {/* Payments List */}
+            {filteredPayments.length === 0 ? (
+              <div className="text-center py-12">
+                <CreditCard className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  {payments.length === 0 ? "Aucun paiement enregistré" : "Aucun paiement pour cette année"}
+                </h3>
                 <p className="text-muted-foreground mb-4">
                   {payments.length === 0 
                     ? "Commencez par ajouter un premier paiement."
@@ -1166,7 +1174,7 @@ const PaymentManagement = () => {
                   }
                 </p>
                 {payments.length === 0 && (
-                  <Button onClick={() => setShowAddPayment(true)}>
+                  <Button onClick={() => setManualInvoiceDialog({ isOpen: true })}>
                     <Plus className="mr-2 h-4 w-4" />
                     Ajouter un paiement
                   </Button>
@@ -1396,8 +1404,9 @@ const PaymentManagement = () => {
                 ))}
               </div>
             )}
+          </CardContent>
 
-            {/* Dialog pour marquer comme payé */}
+          {/* Dialog pour marquer comme payé */}
             <Dialog open={paymentDialog.isOpen} onOpenChange={(open) => setPaymentDialog(prev => ({ ...prev, isOpen: open }))}>
               <DialogContent>
                 <DialogHeader>
@@ -1656,10 +1665,134 @@ const PaymentManagement = () => {
                    </Button>
                  </DialogFooter>
                </DialogContent>
-             </Dialog>
-          </CardContent>
-        </Card>
-      </div>
+              </Dialog>
+
+              {/* Manual Invoice Dialog */}
+              <Dialog open={manualInvoiceDialog.isOpen} onOpenChange={(open) => setManualInvoiceDialog({ isOpen: open })}>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Facture manuelle</DialogTitle>
+                    <DialogDescription>
+                      Créer un nouveau paiement et générer sa facture
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <form onSubmit={handleAddPayment} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="studentSelect">Étudiant</Label>
+                        <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, studentId: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un étudiant" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {students.map((student) => (
+                              <SelectItem key={student.id} value={student.id}>
+                                {student.firstName} {student.lastName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="amount">Montant (€)</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={newPayment.amount}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="type">Type de paiement</Label>
+                        <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, type: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Type de paiement" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Frais de dossier">Frais de dossier (FD)</SelectItem>
+                            <SelectItem value="Frais d'envoi">Frais d'envoi (ENV)</SelectItem>
+                            <SelectItem value="Minerval">Minerval (MIN)</SelectItem>
+                            <SelectItem value="Duplicata">Duplicata (DC)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="dueDate">Date d'échéance</Label>
+                        <Input
+                          id="dueDate"
+                          type="date"
+                          value={newPayment.dueDate}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="paidDate">Date de paiement (si déjà payé)</Label>
+                        <Input
+                          id="paidDate"
+                          type="date"
+                          value={newPayment.paidDate}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, paidDate: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="paidMethod">Moyen de paiement</Label>
+                        <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, paidMethod: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez le moyen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Espèces">Espèces</SelectItem>
+                            <SelectItem value="Virement">Virement bancaire</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={newPayment.description}
+                        onChange={(e) => setNewPayment(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Description du paiement..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <DialogFooter>
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        onClick={() => setManualInvoiceDialog({ isOpen: false })}
+                      >
+                        Annuler
+                      </Button>
+                      <Button type="submit">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Créer la facture manuelle
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+           </CardContent>
+         </Card>
+       </div>
+     </div>
     </div>
   );
 };
