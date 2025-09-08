@@ -33,7 +33,9 @@ const DocumentGeneration = () => {
     createAttestation, 
     getInvoicesByStudentId, 
     createInvoice,
-    updatePayment 
+    updatePayment,
+    getCreditNotesByStudentId,
+    createCreditNote
   } = usePayments();
   const [student, setStudent] = useState<Student | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -42,6 +44,7 @@ const DocumentGeneration = () => {
   const [showCreditNoteForm, setShowCreditNoteForm] = useState(false);
   const [attestations, setAttestations] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [creditNotes, setCreditNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentDialog, setPaymentDialog] = useState<{
     isOpen: boolean;
@@ -105,6 +108,11 @@ const DocumentGeneration = () => {
           const invoicesData = await getInvoicesByStudentId(studentId);
           console.log('Factures trouvées:', invoicesData);
           setInvoices(invoicesData);
+
+          // Charger les notes de crédit depuis Supabase
+          const creditNotesData = await getCreditNotesByStudentId(studentId);
+          console.log('Notes de crédit trouvées:', creditNotesData);
+          setCreditNotes(creditNotesData);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -196,11 +204,32 @@ const DocumentGeneration = () => {
         )
         .subscribe();
 
+      // Écouter les nouvelles notes de crédit
+      const creditNotesChannel = supabase
+        .channel('credit-notes-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'credit_notes',
+            filter: `student_id=eq.${studentId}`
+          },
+          async (payload) => {
+            console.log('Nouvelle note de crédit détectée:', payload.new);
+            // Recharger les notes de crédit
+            const updatedCreditNotes = await getCreditNotesByStudentId(studentId);
+            setCreditNotes(updatedCreditNotes);
+          }
+        )
+        .subscribe();
+
       // Cleanup function pour désabonner les channels
       return () => {
         supabase.removeChannel(paymentsChannel);
         supabase.removeChannel(invoicesChannel);
         supabase.removeChannel(attestationsChannel);
+        supabase.removeChannel(creditNotesChannel);
       };
     };
 
@@ -964,37 +993,90 @@ const DocumentGeneration = () => {
                                        Récapitulatif
                                      </Button>
                                      
-                                     {/* Only show add payment button if not fully paid */}
-                                     {!isFullyPaid && (
-                                       <Button
-                                         size="sm"
-                                         onClick={() => {
-                                           if (payment.type === 'Frais de dossier') {
-                                             setPaymentDialog({
-                                               isOpen: true,
-                                               paymentId: payment.id,
-                                               amount: payment.amount.toString(),
-                                               method: '',
-                                               paidDate: new Date().toISOString().split('T')[0]
-                                             });
-                                           } else {
-                                             setInstallmentDialog({
-                                               isOpen: true,
-                                               paymentId: payment.id,
-                                               amount: '',
-                                               method: '',
-                                               paidDate: new Date().toISOString().split('T')[0]
-                                             });
-                                           }
-                                         }}
-                                         className="flex items-center gap-2"
-                                       >
-                                         <Euro className="h-4 w-4" />
-                                         + Paiement
-                                       </Button>
-                                     )}
-                                   </>
-                                 )}
+                                      {/* Only show add payment button if not fully paid */}
+                                      {!isFullyPaid && (
+                                        <Button
+                                          size="sm"
+                                          onClick={() => {
+                                            if (payment.type === 'Frais de dossier') {
+                                              setPaymentDialog({
+                                                isOpen: true,
+                                                paymentId: payment.id,
+                                                amount: payment.amount.toString(),
+                                                method: '',
+                                                paidDate: new Date().toISOString().split('T')[0]
+                                              });
+                                            } else {
+                                              setInstallmentDialog({
+                                                isOpen: true,
+                                                paymentId: payment.id,
+                                                amount: '',
+                                                method: '',
+                                                paidDate: new Date().toISOString().split('T')[0]
+                                              });
+                                            }
+                                          }}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <Euro className="h-4 w-4" />
+                                          + Paiement
+                                        </Button>
+                                      )}
+
+                                      {/* Bouton rembourser pour les paiements payés */}
+                                      {isFullyPaid && payment.status !== 'Remboursé' && (
+                                        <Button
+                                          variant="destructive"
+                                          size="sm"
+                                          onClick={() => {
+                                            setSelectedPayment(payment);
+                                            setShowCreditNoteForm(true);
+                                          }}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <CreditCard className="h-4 w-4" />
+                                          Rembourser
+                                        </Button>
+                                      )}
+
+                                      {/* Bouton voir note de crédit pour les paiements remboursés */}
+                                      {payment.status === 'Remboursé' && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
+                                            if (correspondingCreditNote) {
+                                              // Télécharger la note de crédit existante
+                                              const generateExistingCreditNote = async () => {
+                                                try {
+                                                  const pdfBytes = await fillCreditNotePdf(student!, payment, correspondingCreditNote.reason);
+                                                  const filename = `note-credit-${student!.firstName}-${student!.lastName}-${correspondingCreditNote.number}.pdf`;
+                                                  downloadPdf(pdfBytes, filename);
+                                                  
+                                                  toast({
+                                                    title: "Note de crédit téléchargée",
+                                                    description: `Note de crédit ${correspondingCreditNote.number} téléchargée.`,
+                                                  });
+                                                } catch (error) {
+                                                  toast({
+                                                    title: "Erreur",
+                                                    description: "Erreur lors du téléchargement de la note de crédit",
+                                                    variant: "destructive",
+                                                  });
+                                                }
+                                              };
+                                              generateExistingCreditNote();
+                                            }
+                                          }}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <Download className="h-4 w-4" />
+                                          Note de crédit
+                                        </Button>
+                                      )}
+                                    </>
+                                  )}
                                </div>
 
                                {/* Avancement des paiements pour paiements partiels - style professionnel - seulement si facture générée */}
@@ -1054,78 +1136,189 @@ const DocumentGeneration = () => {
                   Notes de crédit (Avoirs)
                 </CardTitle>
                 <CardDescription>
-                  Générer des avoirs pour remboursements
+                  Gérer les avoirs et remboursements
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {!showCreditNoteForm ? (
-                  <Button 
-                    onClick={() => setShowCreditNoteForm(true)}
-                    variant="outline"
-                    className="w-full"
-                    disabled={payments.filter(p => p.status === 'Payé').length === 0}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Créer une note de crédit
-                  </Button>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="payment">Paiement à rembourser</Label>
-                      <select
-                        className="w-full p-2 border rounded-md"
-                        onChange={(e) => {
-                          const payment = payments.find(p => p.id === e.target.value);
-                          setSelectedPayment(payment || null);
-                        }}
-                      >
-                        <option value="">Sélectionnez un paiement</option>
-                        {payments.filter(p => p.status === 'Payé').map((payment) => (
-                          <option key={payment.id} value={payment.id}>
-                            {payment.description} - {payment.amount}€ ({payment.invoiceNumber})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="space-y-4">
+                  {/* Affichage des notes de crédit existantes */}
+                  {creditNotes.length > 0 && (
+                    <div className="space-y-3 mb-6">
+                      <h4 className="font-medium text-sm text-muted-foreground">Notes de crédit existantes</h4>
+                      {creditNotes.map((creditNote) => (
+                        <div key={creditNote.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                          {/* Header avec numéro de la note de crédit */}
+                          <div className="px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 border-b border-red-300">
+                            <div className="flex items-center justify-between">
+                              <div className="text-lg font-semibold text-white">
+                                Note de crédit {creditNote.number}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700 border border-red-200">
+                                  {creditNote.amount}€
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Content Section */}
+                          <div className="p-4">
+                            {/* Informations de la facture liée */}
+                            {creditNote.invoices && (
+                              <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                                <h5 className="font-medium text-sm text-muted-foreground mb-2">Facture remboursée :</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                  <div>
+                                    <label className="text-sm font-medium text-muted-foreground">Numéro</label>
+                                    <p className="text-sm font-medium text-foreground">{creditNote.invoices.number}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-muted-foreground">Type</label>
+                                    <p className="text-sm font-medium text-foreground">{creditNote.invoices.type}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-muted-foreground">Montant original</label>
+                                    <p className="text-sm font-medium text-foreground">{creditNote.invoices.amount}€</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
 
-                    <div>
-                      <Label htmlFor="reason">Motif du remboursement</Label>
-                      <Textarea
-                        id="reason"
-                        value={creditNoteReason}
-                        onChange={(e) => setCreditNoteReason(e.target.value)}
-                        placeholder="Décrivez la raison du remboursement..."
-                        rows={3}
-                      />
-                    </div>
+                            {/* Informations de la note de crédit */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Date d'émission</label>
+                                <p className="text-sm font-medium text-foreground">
+                                  {new Date(creditNote.date).toLocaleDateString('fr-FR')}
+                                </p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Montant remboursé</label>
+                                <p className="text-lg font-semibold text-red-600">{creditNote.amount}€</p>
+                              </div>
+                            </div>
 
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={generateCreditNoteDoc}
-                        className="flex-1"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Générer la note de crédit
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          setShowCreditNoteForm(false);
-                          setCreditNoteReason("");
-                          setSelectedPayment(null);
-                        }}
-                      >
-                        Annuler
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                            {/* Motif */}
+                            <div className="mb-4">
+                              <label className="text-sm font-medium text-muted-foreground">Motif du remboursement</label>
+                              <p className="text-sm text-foreground mt-1">{creditNote.reason}</p>
+                            </div>
 
-                {payments.filter(p => p.status === 'Payé').length === 0 && (
-                  <p className="text-muted-foreground text-sm mt-2">
-                    Aucun paiement payé disponible pour remboursement.
-                  </p>
-                )}
+                            {/* Bouton de téléchargement */}
+                            <div className="flex justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    // Récupérer le paiement correspondant
+                                    const correspondingPayment = payments.find(p => {
+                                      const invoice = getExistingInvoice(p);
+                                      return invoice && invoice.id === creditNote.original_invoice_id;
+                                    });
+                                    
+                                    if (correspondingPayment) {
+                                      const pdfBytes = await fillCreditNotePdf(student!, correspondingPayment, creditNote.reason);
+                                      const filename = `note-credit-${student!.firstName}-${student!.lastName}-${creditNote.number}.pdf`;
+                                      downloadPdf(pdfBytes, filename);
+                                      
+                                      toast({
+                                        title: "PDF téléchargé",
+                                        description: `Note de crédit ${creditNote.number} téléchargée.`,
+                                      });
+                                    }
+                                  } catch (error) {
+                                    toast({
+                                      title: "Erreur",
+                                      description: "Erreur lors du téléchargement du PDF",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                Télécharger PDF
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Formulaire de création de nouvelle note de crédit */}
+                  {!showCreditNoteForm ? (
+                    <Button 
+                      onClick={() => setShowCreditNoteForm(true)}
+                      variant="outline"
+                      className="w-full"
+                      disabled={payments.filter(p => p.status === 'Payé').length === 0}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Créer une note de crédit
+                    </Button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="payment">Paiement à rembourser</Label>
+                        <select
+                          className="w-full p-2 border rounded-md"
+                          value={selectedPayment?.id || ''}
+                          onChange={(e) => {
+                            const payment = payments.find(p => p.id === e.target.value);
+                            setSelectedPayment(payment || null);
+                          }}
+                        >
+                          <option value="">Sélectionnez un paiement</option>
+                          {payments.filter(p => p.status === 'Payé').map((payment) => (
+                            <option key={payment.id} value={payment.id}>
+                              {payment.description} - {payment.amount}€ ({getExistingInvoice(payment)?.number || 'Sans facture'})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="reason">Motif du remboursement</Label>
+                        <Textarea
+                          id="reason"
+                          value={creditNoteReason}
+                          onChange={(e) => setCreditNoteReason(e.target.value)}
+                          placeholder="Décrivez la raison du remboursement..."
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={generateCreditNoteDoc}
+                          className="flex-1"
+                          disabled={!selectedPayment || !creditNoteReason.trim()}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Générer la note de crédit
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setShowCreditNoteForm(false);
+                            setCreditNoteReason("");
+                            setSelectedPayment(null);
+                          }}
+                        >
+                          Annuler
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {payments.filter(p => p.status === 'Payé').length === 0 && (
+                    <p className="text-muted-foreground text-sm mt-2">
+                      Aucun paiement payé disponible pour remboursement.
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </CardContent>

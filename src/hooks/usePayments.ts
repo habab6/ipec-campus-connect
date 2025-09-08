@@ -262,6 +262,48 @@ export function usePayments() {
     }
   };
 
+  // Fonction pour récupérer les notes de crédit d'un étudiant
+  const getCreditNotesByStudentId = async (studentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('credit_notes')
+        .select(`
+          *,
+          invoices!credit_notes_original_invoice_id_fkey (
+            number,
+            type,
+            amount,
+            generate_date
+          )
+        `)
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des notes de crédit:', error);
+      return [];
+    }
+  };
+
+  // Fonction pour créer une note de crédit
+  const createCreditNote = async (creditNoteData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('credit_notes')
+        .insert([creditNoteData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erreur lors de la création de la note de crédit:', error);
+      throw error;
+    }
+  };
+
   return {
     payments,
     loading,
@@ -273,6 +315,8 @@ export function usePayments() {
     getAttestationsByStudentId,
     createAttestation,
     getInvoicesByStudentId,
-    createInvoice
+    createInvoice,
+    getCreditNotesByStudentId,
+    createCreditNote
   };
 }
