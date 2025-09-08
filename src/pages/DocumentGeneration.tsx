@@ -19,7 +19,7 @@ import {
   downloadDocument,
   generateCreditNoteNumber
 } from "@/utils/documentGenerator";
-import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCreditNotePdf, downloadPdf } from "@/utils/positionPdfFiller";
+import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCreditNotePdf, downloadPdf, combineInvoiceAndCreditNotePdf } from "@/utils/positionPdfFiller";
 import { generatePaymentSummaryPdf, downloadPaymentSummary } from "@/utils/paymentSummaryGenerator";
 import { AttestationDisplay } from "@/components/AttestationDisplay";
 
@@ -405,6 +405,39 @@ const DocumentGeneration = () => {
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de générer la facture",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateCombinedInvoiceAndCreditNote = async (payment: Payment) => {
+    if (!student) return;
+    
+    try {
+      const existingInvoice = getExistingInvoice(payment);
+      const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
+      
+      if (!existingInvoice || !correspondingCreditNote) {
+        toast({
+          title: "Erreur",
+          description: "Facture ou note de crédit introuvable.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const pdfBytes = await combineInvoiceAndCreditNotePdf(student, payment, existingInvoice.number, correspondingCreditNote);
+      const filename = `facture-avoir-${student.firstName}-${student.lastName}-${existingInvoice.number}.pdf`;
+      downloadPdf(pdfBytes, filename);
+      
+      toast({
+        title: "PDF combiné téléchargé",
+        description: `PDF avec facture et note de crédit téléchargé: ${existingInvoice.number}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de générer le PDF combiné",
         variant: "destructive",
       });
     }
@@ -1064,7 +1097,13 @@ const DocumentGeneration = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => generateInvoiceDoc(payment, true)}
+                                      onClick={() => {
+                                        if (payment.status === 'Remboursé') {
+                                          generateCombinedInvoiceAndCreditNote(payment);
+                                        } else {
+                                          generateInvoiceDoc(payment, true);
+                                        }
+                                      }}
                                       className="flex items-center gap-2"
                                     >
                                       <Download className="h-4 w-4" />

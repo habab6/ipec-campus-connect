@@ -441,3 +441,40 @@ export const debugPositions = () => {
 et ajustez progressivement.
   `);
 };
+
+// Fonction pour combiner une facture et sa note de crédit en un seul PDF
+export const combineInvoiceAndCreditNotePdf = async (
+  student: Student, 
+  payment: Payment, 
+  invoiceNumber: string,
+  creditNote: any
+): Promise<Uint8Array> => {
+  try {
+    // Générer la facture
+    const invoicePdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
+    
+    // Générer la note de crédit
+    const creditNotePdfBytes = await fillCreditNotePdf(student, payment, creditNote.reason);
+    
+    // Créer un nouveau document PDF
+    const combinedPdf = await PDFDocument.create();
+    
+    // Charger les deux PDFs
+    const invoicePdf = await PDFDocument.load(invoicePdfBytes);
+    const creditNotePdf = await PDFDocument.load(creditNotePdfBytes);
+    
+    // Copier toutes les pages de la facture
+    const invoicePages = await combinedPdf.copyPages(invoicePdf, invoicePdf.getPageIndices());
+    invoicePages.forEach((page) => combinedPdf.addPage(page));
+    
+    // Copier toutes les pages de la note de crédit
+    const creditNotePages = await combinedPdf.copyPages(creditNotePdf, creditNotePdf.getPageIndices());
+    creditNotePages.forEach((page) => combinedPdf.addPage(page));
+    
+    // Retourner le PDF combiné
+    return await combinedPdf.save();
+  } catch (error) {
+    console.error('Erreur lors de la combinaison des PDFs:', error);
+    throw error;
+  }
+};
