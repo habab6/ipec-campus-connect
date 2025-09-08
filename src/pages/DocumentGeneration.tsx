@@ -1158,7 +1158,7 @@ const DocumentGeneration = () => {
                                </div>
 
                                {/* Avancement des paiements pour paiements partiels - style professionnel - seulement si facture générée */}
-                               {hasInvoice && hasInstallments && !isFullyPaid && (
+                               {hasInvoice && hasInstallments && !isFullyPaid && payment.status !== 'Remboursé' && (
                                  <div className="mb-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md shadow-sm">
                                    <div className="text-sm font-medium text-amber-800">
                                      Payé: {totalPaid}€ - Reste: {remainingAmount}€
