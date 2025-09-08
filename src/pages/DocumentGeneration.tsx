@@ -993,8 +993,8 @@ const DocumentGeneration = () => {
                                        Récapitulatif
                                      </Button>
                                      
-                                      {/* Only show add payment button if not fully paid */}
-                                      {!isFullyPaid && (
+                                      {/* Only show add payment button if not fully paid and not refunded */}
+                                      {!isFullyPaid && payment.status !== 'Remboursé' && (
                                         <Button
                                           size="sm"
                                           onClick={() => {
@@ -1023,7 +1023,7 @@ const DocumentGeneration = () => {
                                         </Button>
                                       )}
 
-                                      {/* Bouton rembourser pour les paiements payés */}
+                                      {/* Bouton rembourser pour les paiements payés mais non remboursés */}
                                       {isFullyPaid && payment.status !== 'Remboursé' && (
                                         <Button
                                           variant="destructive"
@@ -1036,43 +1036,6 @@ const DocumentGeneration = () => {
                                         >
                                           <CreditCard className="h-4 w-4" />
                                           Rembourser
-                                        </Button>
-                                      )}
-
-                                      {/* Bouton voir note de crédit pour les paiements remboursés */}
-                                      {payment.status === 'Remboursé' && (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => {
-                                            const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
-                                            if (correspondingCreditNote) {
-                                              // Télécharger la note de crédit existante
-                                              const generateExistingCreditNote = async () => {
-                                                try {
-                                                  const pdfBytes = await fillCreditNotePdf(student!, payment, correspondingCreditNote.reason);
-                                                  const filename = `note-credit-${student!.firstName}-${student!.lastName}-${correspondingCreditNote.number}.pdf`;
-                                                  downloadPdf(pdfBytes, filename);
-                                                  
-                                                  toast({
-                                                    title: "Note de crédit téléchargée",
-                                                    description: `Note de crédit ${correspondingCreditNote.number} téléchargée.`,
-                                                  });
-                                                } catch (error) {
-                                                  toast({
-                                                    title: "Erreur",
-                                                    description: "Erreur lors du téléchargement de la note de crédit",
-                                                    variant: "destructive",
-                                                  });
-                                                }
-                                              };
-                                              generateExistingCreditNote();
-                                            }
-                                          }}
-                                          className="flex items-center gap-2"
-                                        >
-                                          <Download className="h-4 w-4" />
-                                          Note de crédit
                                         </Button>
                                       )}
                                     </>
@@ -1091,11 +1054,24 @@ const DocumentGeneration = () => {
                               {/* Encadré professionnel avec référence et date de génération */}
                               {existingInvoice && (
                                 <div className="p-3 bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-md shadow-sm">
-                                  <div className="text-sm text-slate-700 flex items-center">
-                                    <FileText className="h-4 w-4 mr-2 text-slate-600" />
-                                    <span className="font-medium">Facture : {existingInvoice.number}</span>
-                                    <span className="mx-2 text-slate-400">•</span>
-                                    <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}</span>
+                                  <div className="text-sm text-slate-700">
+                                    <div className="flex items-center mb-1">
+                                      <FileText className="h-4 w-4 mr-2 text-slate-600" />
+                                      <span className="font-medium">Facture : {existingInvoice.number}</span>
+                                      <span className="mx-2 text-slate-400">•</span>
+                                      <span>Générée le {new Date(existingInvoice.generate_date).toLocaleDateString("fr-FR")}</span>
+                                    </div>
+                                    {payment.status === 'Remboursé' && (() => {
+                                      const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice.id);
+                                      return correspondingCreditNote && (
+                                        <div className="flex items-center text-red-600">
+                                          <CreditCard className="h-4 w-4 mr-2" />
+                                          <span className="font-medium">Note de crédit : {correspondingCreditNote.number}</span>
+                                          <span className="mx-2 text-red-400">•</span>
+                                          <span>Émise le {new Date(correspondingCreditNote.date).toLocaleDateString("fr-FR")}</span>
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
                               )}
