@@ -259,100 +259,182 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
   try {
     console.log('Génération du PDF de note de crédit pour:', student.firstName, student.lastName);
     
-    // Charger le template PDF (on peut utiliser le même template que pour la facture ou créer un spécifique)
-    const templateBytes = await loadPdfTemplate('/templates/facture-template.pdf');
+    // Créer un nouveau document PDF au lieu d'utiliser un template
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.registerFontkit(fontkit);
     
-    // Créer le document PDF
-    const pdfDoc = await PDFDocument.load(templateBytes);
-    const pages = pdfDoc.getPages();
-    const firstPage = pages[0];
+    // Ajouter une page
+    const page = pdfDoc.addPage([595, 842]); // Format A4
     
-    // Charger la police
-    const fontBytes = await loadQuestrialFont();
-    const customFont = await pdfDoc.embedFont(fontBytes);
+    // Utiliser une police standard
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     
     // Générer le numéro de note de crédit
     const correspondingInvoiceNumber = payment.invoiceNumber || 'FACTURE';
     const creditNoteNumber = `${correspondingInvoiceNumber}-NC`;
     
+    // En-tête
+    page.drawText('INSTITUT PRIVÉ D\'ENSEIGNEMENT COMMERCIAL', {
+      x: 50,
+      y: 780,
+      size: 14,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
     // Titre "NOTE DE CRÉDIT" 
-    firstPage.drawText('NOTE DE CRÉDIT', {
+    page.drawText('NOTE DE CRÉDIT', {
       x: 200,
-      y: 750,
-      size: 16,
-      font: customFont,
-      color: rgb(0.7, 0.1, 0.1), // Rouge pour la note de crédit
+      y: 720,
+      size: 20,
+      font: boldFont,
+      color: rgb(0.8, 0.1, 0.1), // Rouge pour la note de crédit
     });
     
     // Numéro de la note de crédit
-    firstPage.drawText(`N° ${creditNoteNumber}`, {
-      x: FIELD_POSITIONS.numeroDocument.x,
-      y: FIELD_POSITIONS.numeroDocument.y,
+    page.drawText(`Numéro: ${creditNoteNumber}`, {
+      x: 50,
+      y: 680,
       size: 12,
-      font: customFont,
+      font: boldFont,
       color: rgb(0, 0, 0),
     });
     
     // Date d'émission
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    firstPage.drawText(`Date: ${currentDate}`, {
-      x: FIELD_POSITIONS.dateDocument.x,
-      y: FIELD_POSITIONS.dateDocument.y,
-      size: 10,
-      font: customFont,
+    page.drawText(`Date d'émission: ${currentDate}`, {
+      x: 350,
+      y: 680,
+      size: 12,
+      font: font,
       color: rgb(0, 0, 0),
     });
     
     // Informations de l'étudiant
-    firstPage.drawText(`${student.firstName} ${student.lastName}`, {
-      x: FIELD_POSITIONS.nomComplet.x,
-      y: FIELD_POSITIONS.nomComplet.y,
+    page.drawText('INFORMATIONS ÉTUDIANT:', {
+      x: 50,
+      y: 620,
       size: 12,
-      font: customFont,
+      font: boldFont,
       color: rgb(0, 0, 0),
     });
     
-    firstPage.drawText(student.reference, {
-      x: 100,
-      y: 250,
-      size: 10,
-      font: customFont,
-      color: rgb(0, 0, 0),
-    });
-    
-    // Type de paiement remboursé
-    firstPage.drawText(`Remboursement: ${payment.type}`, {
-      x: 100,
-      y: 220,
+    page.drawText(`Nom: ${student.firstName} ${student.lastName}`, {
+      x: 50,
+      y: 590,
       size: 11,
-      font: customFont,
+      font: font,
       color: rgb(0, 0, 0),
     });
     
-    // Montant remboursé (en rouge)
-    firstPage.drawText(`Montant: ${payment.amount}€`, {
-      x: 100,
-      y: 190,
+    page.drawText(`Référence: ${student.reference}`, {
+      x: 50,
+      y: 570,
+      size: 11,
+      font: font,
+      color: rgb(0, 0, 0),
+    });
+    
+    page.drawText(`Programme: ${student.program}`, {
+      x: 50,
+      y: 550,
+      size: 11,
+      font: font,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Informations de remboursement
+    page.drawText('DÉTAILS DU REMBOURSEMENT:', {
+      x: 50,
+      y: 490,
       size: 12,
-      font: customFont,
-      color: rgb(0.7, 0.1, 0.1),
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    page.drawText(`Facture d'origine: ${correspondingInvoiceNumber}`, {
+      x: 50,
+      y: 460,
+      size: 11,
+      font: font,
+      color: rgb(0, 0, 0),
+    });
+    
+    page.drawText(`Type de paiement: ${payment.type}`, {
+      x: 50,
+      y: 440,
+      size: 11,
+      font: font,
+      color: rgb(0, 0, 0),
+    });
+    
+    page.drawText(`Montant remboursé: ${payment.amount}€`, {
+      x: 50,
+      y: 420,
+      size: 14,
+      font: boldFont,
+      color: rgb(0.8, 0.1, 0.1),
     });
     
     // Motif du remboursement
-    firstPage.drawText(`Motif: ${reason}`, {
-      x: 100,
-      y: 160,
-      size: 10,
-      font: customFont,
+    page.drawText('Motif du remboursement:', {
+      x: 50,
+      y: 380,
+      size: 11,
+      font: boldFont,
       color: rgb(0, 0, 0),
     });
     
-    // Facture d'origine
-    firstPage.drawText(`Facture d'origine: ${correspondingInvoiceNumber}`, {
-      x: 100,
-      y: 130,
-      size: 10,
-      font: customFont,
+    // Découper le motif si trop long
+    const maxWidth = 500;
+    const words = reason.split(' ');
+    let currentLine = '';
+    let yPosition = 360;
+    
+    for (const word of words) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const textWidth = font.widthOfTextAtSize(testLine, 11);
+      
+      if (textWidth > maxWidth && currentLine) {
+        page.drawText(currentLine, {
+          x: 50,
+          y: yPosition,
+          size: 11,
+          font: font,
+          color: rgb(0, 0, 0),
+        });
+        currentLine = word;
+        yPosition -= 20;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      page.drawText(currentLine, {
+        x: 50,
+        y: yPosition,
+        size: 11,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+    }
+    
+    // Signature
+    page.drawText('Signature autorisée:', {
+      x: 350,
+      y: 200,
+      size: 11,
+      font: font,
+      color: rgb(0, 0, 0),
+    });
+    
+    page.drawText('_________________________', {
+      x: 350,
+      y: 170,
+      size: 11,
+      font: font,
       color: rgb(0, 0, 0),
     });
     
