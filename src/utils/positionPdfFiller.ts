@@ -259,186 +259,147 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
   try {
     console.log('Génération du PDF de note de crédit pour:', student.firstName, student.lastName);
     
-    // Créer un nouveau document PDF au lieu d'utiliser un template
-    const pdfDoc = await PDFDocument.create();
+    // Charger le template PDF
+    const templateBytes = await loadPdfTemplate('/templates/facture-template.pdf');
+    
+    // Créer le document PDF
+    const pdfDoc = await PDFDocument.load(templateBytes);
     pdfDoc.registerFontkit(fontkit);
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
     
-    // Ajouter une page
-    const page = pdfDoc.addPage([595, 842]); // Format A4
+    // Charger la police personnalisée
+    const fontBytes = await loadQuestrialFont();
+    const customFont = await pdfDoc.embedFont(fontBytes);
     
-    // Utiliser une police standard
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    // Récupérer le vrai numéro de facture depuis la base de données
+    let invoiceNumber = 'FACTURE-INCONNUE';
     
-    // Générer le numéro de note de crédit
-    const correspondingInvoiceNumber = payment.invoiceNumber || 'FACTURE';
-    const creditNoteNumber = `${correspondingInvoiceNumber}-NC`;
+    // Utiliser une approche plus simple pour récupérer le numéro de facture
+    // On peut utiliser payment.invoiceNumber s'il existe, sinon on construit un numéro basique
+    if (payment.invoiceNumber && payment.invoiceNumber.trim() !== '') {
+      invoiceNumber = payment.invoiceNumber;
+    } else {
+      // Si pas de numéro de facture, on crée un basé sur le type et l'ID
+      const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
+                       payment.type === 'Minerval' ? 'MIN' : 'FAC';
+      invoiceNumber = `IPEC-${new Date().getFullYear()}-${typeCode}`;
+    }
     
-    // En-tête
-    page.drawText('INSTITUT PRIVÉ D\'ENSEIGNEMENT COMMERCIAL', {
-      x: 50,
-      y: 780,
-      size: 14,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
+    const creditNoteNumber = `${invoiceNumber}-NC`;
     
-    // Titre "NOTE DE CRÉDIT" 
-    page.drawText('NOTE DE CRÉDIT', {
+    // Titre "NOTE DE CRÉDIT" (remplacer le titre facture)
+    firstPage.drawText('NOTE DE CRÉDIT', {
       x: 200,
-      y: 720,
-      size: 20,
-      font: boldFont,
+      y: 750,
+      size: 16,
+      font: customFont,
       color: rgb(0.8, 0.1, 0.1), // Rouge pour la note de crédit
     });
     
     // Numéro de la note de crédit
-    page.drawText(`Numéro: ${creditNoteNumber}`, {
-      x: 50,
-      y: 680,
+    firstPage.drawText(`N° ${creditNoteNumber}`, {
+      x: FIELD_POSITIONS.numeroDocument.x,
+      y: FIELD_POSITIONS.numeroDocument.y,
       size: 12,
-      font: boldFont,
+      font: customFont,
       color: rgb(0, 0, 0),
     });
     
     // Date d'émission
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    page.drawText(`Date d'émission: ${currentDate}`, {
-      x: 350,
-      y: 680,
-      size: 12,
-      font: font,
+    firstPage.drawText(`Date: ${currentDate}`, {
+      x: FIELD_POSITIONS.dateDocument.x,
+      y: FIELD_POSITIONS.dateDocument.y,
+      size: 10,
+      font: customFont,
       color: rgb(0, 0, 0),
     });
     
     // Informations de l'étudiant
-    page.drawText('INFORMATIONS ÉTUDIANT:', {
-      x: 50,
-      y: 620,
+    firstPage.drawText(`${student.firstName} ${student.lastName}`, {
+      x: FIELD_POSITIONS.nomComplet.x,
+      y: FIELD_POSITIONS.nomComplet.y,
       size: 12,
-      font: boldFont,
+      font: customFont,
       color: rgb(0, 0, 0),
     });
     
-    page.drawText(`Nom: ${student.firstName} ${student.lastName}`, {
-      x: 50,
-      y: 590,
+    firstPage.drawText(`Réf: ${student.reference}`, {
+      x: FIELD_POSITIONS.nomComplet.x,
+      y: FIELD_POSITIONS.nomComplet.y - 20,
+      size: 10,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Facture d'origine (très important !)
+    firstPage.drawText(`Facture d'origine: ${invoiceNumber}`, {
+      x: FIELD_POSITIONS.nomComplet.x,
+      y: FIELD_POSITIONS.nomComplet.y - 40,
       size: 11,
-      font: font,
+      font: customFont,
       color: rgb(0, 0, 0),
     });
     
-    page.drawText(`Référence: ${student.reference}`, {
-      x: 50,
-      y: 570,
+    // Type de paiement remboursé
+    firstPage.drawText(`Type: ${payment.type}`, {
+      x: FIELD_POSITIONS.nomComplet.x,
+      y: FIELD_POSITIONS.nomComplet.y - 60,
       size: 11,
-      font: font,
+      font: customFont,
       color: rgb(0, 0, 0),
     });
     
-    page.drawText(`Programme: ${student.program}`, {
-      x: 50,
-      y: 550,
-      size: 11,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    
-    // Informations de remboursement
-    page.drawText('DÉTAILS DU REMBOURSEMENT:', {
-      x: 50,
-      y: 490,
-      size: 12,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-    
-    page.drawText(`Facture d'origine: ${correspondingInvoiceNumber}`, {
-      x: 50,
-      y: 460,
-      size: 11,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    
-    page.drawText(`Type de paiement: ${payment.type}`, {
-      x: 50,
-      y: 440,
-      size: 11,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    
-    page.drawText(`Montant remboursé: ${payment.amount}€`, {
-      x: 50,
-      y: 420,
+    // Montant remboursé (en rouge et plus visible)
+    firstPage.drawText(`MONTANT REMBOURSÉ: ${payment.amount}€`, {
+      x: FIELD_POSITIONS.nomComplet.x,
+      y: FIELD_POSITIONS.nomComplet.y - 90,
       size: 14,
-      font: boldFont,
+      font: customFont,
       color: rgb(0.8, 0.1, 0.1),
     });
     
     // Motif du remboursement
-    page.drawText('Motif du remboursement:', {
-      x: 50,
-      y: 380,
+    firstPage.drawText('MOTIF DU REMBOURSEMENT:', {
+      x: FIELD_POSITIONS.nomComplet.x,
+      y: FIELD_POSITIONS.nomComplet.y - 120,
       size: 11,
-      font: boldFont,
+      font: customFont,
       color: rgb(0, 0, 0),
     });
     
-    // Découper le motif si trop long
-    const maxWidth = 500;
-    const words = reason.split(' ');
+    // Découper le motif en plusieurs lignes si nécessaire
+    const maxLineLength = 60; // Nombre approximatif de caractères par ligne
+    const reasonLines = [];
     let currentLine = '';
-    let yPosition = 360;
+    const words = reason.split(' ');
     
     for (const word of words) {
-      const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      const textWidth = font.widthOfTextAtSize(testLine, 11);
-      
-      if (textWidth > maxWidth && currentLine) {
-        page.drawText(currentLine, {
-          x: 50,
-          y: yPosition,
-          size: 11,
-          font: font,
-          color: rgb(0, 0, 0),
-        });
-        currentLine = word;
-        yPosition -= 20;
+      if ((currentLine + ' ' + word).length <= maxLineLength) {
+        currentLine += (currentLine ? ' ' : '') + word;
       } else {
-        currentLine = testLine;
+        if (currentLine) reasonLines.push(currentLine);
+        currentLine = word;
       }
     }
+    if (currentLine) reasonLines.push(currentLine);
     
-    if (currentLine) {
-      page.drawText(currentLine, {
-        x: 50,
-        y: yPosition,
-        size: 11,
-        font: font,
+    // Afficher chaque ligne du motif
+    reasonLines.forEach((line, index) => {
+      firstPage.drawText(line, {
+        x: FIELD_POSITIONS.nomComplet.x,
+        y: FIELD_POSITIONS.nomComplet.y - 140 - (index * 15),
+        size: 10,
+        font: customFont,
         color: rgb(0, 0, 0),
       });
-    }
-    
-    // Signature
-    page.drawText('Signature autorisée:', {
-      x: 350,
-      y: 200,
-      size: 11,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    
-    page.drawText('_________________________', {
-      x: 350,
-      y: 170,
-      size: 11,
-      font: font,
-      color: rgb(0, 0, 0),
     });
     
     console.log('PDF de note de crédit généré avec succès');
+    console.log('Facture d\'origine utilisée:', invoiceNumber);
+    console.log('Numéro de note de crédit:', creditNoteNumber);
+    
     return await pdfDoc.save();
   } catch (error) {
     console.error('Erreur lors de la génération du PDF de note de crédit:', error);

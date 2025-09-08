@@ -1199,8 +1199,15 @@ const DocumentGeneration = () => {
                                     console.log('Paiement correspondant trouvé:', correspondingPayment);
                                     
                                     if (correspondingPayment) {
-                                      console.log('Génération du PDF...');
-                                      const pdfBytes = await fillCreditNotePdf(student!, correspondingPayment, creditNote.reason);
+                                      // Créer un objet payment avec le numéro de facture correct
+                                      const correspondingInvoice = invoices.find(inv => inv.id === creditNote.original_invoice_id);
+                                      const paymentWithInvoice = {
+                                        ...correspondingPayment,
+                                        invoiceNumber: correspondingInvoice?.number || creditNote.number.replace('-NC', '')
+                                      };
+                                      
+                                      console.log('Téléchargement NC avec facture:', paymentWithInvoice.invoiceNumber);
+                                      const pdfBytes = await fillCreditNotePdf(student!, paymentWithInvoice, creditNote.reason);
                                       const filename = `note-credit-${student!.firstName}-${student!.lastName}-${creditNote.number}.pdf`;
                                       downloadPdf(pdfBytes, filename);
                                       
