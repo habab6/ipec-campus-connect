@@ -73,6 +73,10 @@ export interface Payment {
   installments?: PaymentInstallment[]; // Pour les paiements échelonnés
   academicYear?: string; // Année académique pour le paiement
   studyYear?: number; // Année d'études pour le paiement
+  // Informations de remboursement
+  refundDate?: string;
+  refundMethod?: 'Espèces' | 'Virement';
+  refundReason?: string;
 }
 
 export interface PaymentInstallment {

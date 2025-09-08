@@ -761,78 +761,87 @@ const PaymentManagement = () => {
      });
    };
 
-   // Générer la note de crédit
-   const generateCreditNote = async () => {
-     const payment = payments.find(p => p.id === creditNoteDialog.paymentId);
-     const student = payment ? getStudent(payment.studentId) : null;
-     
-     if (!payment || !student) {
-       toast({
-         title: "Erreur",
-         description: "Informations manquantes pour la note de crédit.",
-         variant: "destructive",
-       });
-       return;
-     }
+    // Générer la note de crédit
+    const generateCreditNote = async () => {
+      const payment = payments.find(p => p.id === creditNoteDialog.paymentId);
+      const student = payment ? getStudent(payment.studentId) : null;
+      
+      if (!payment || !student) {
+        toast({
+          title: "Erreur",
+          description: "Informations manquantes pour la note de crédit.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-     try {
-       // Générer un numéro de note de crédit
-       const creditNoteNumber = `NC-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
-       
-       // Créer la note de crédit en base
-       const { supabase } = await import('@/integrations/supabase/client');
-       const { data: invoiceData } = await supabase
-         .from('invoices')
-         .select('*')
-         .eq('payment_id', payment.id)
-         .single();
+      try {
+        // Générer un numéro de note de crédit basé sur la facture d'origine
+        const invoiceNumber = payment.invoiceNumber || 'FACTURE';
+        const creditNoteNumber = `${invoiceNumber}-NC`;
+        
+        // Mettre à jour le statut du paiement à "Remboursé"
+        await updatePayment(creditNoteDialog.paymentId, {
+          status: 'Remboursé' as Payment['status'],
+          refundDate: new Date().toISOString().split('T')[0],
+          refundMethod: 'Virement' as Payment['method'],
+          refundReason: creditNoteDialog.reason
+        });
+        
+        // Créer la note de crédit en base
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: invoiceData } = await supabase
+          .from('invoices')
+          .select('*')
+          .eq('payment_id', payment.id)
+          .single();
 
-       await supabase.from('credit_notes').insert({
-         number: creditNoteNumber,
-         student_id: payment.studentId,
-         original_invoice_id: invoiceData?.id,
-         amount: parseFloat(creditNoteDialog.amount),
-         reason: creditNoteDialog.reason,
-         date: new Date().toISOString().split('T')[0]
-       });
+        await supabase.from('credit_notes').insert({
+          number: creditNoteNumber,
+          student_id: payment.studentId,
+          original_invoice_id: invoiceData?.id,
+          amount: parseFloat(creditNoteDialog.amount),
+          reason: creditNoteDialog.reason,
+          date: new Date().toISOString().split('T')[0]
+        });
 
-       // Générer le PDF de la note de crédit
-       const pdfBytes = await generateCreditNotePDF(student, payment, creditNoteNumber, parseFloat(creditNoteDialog.amount), creditNoteDialog.reason, invoiceData);
-       const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
-       
-       // Télécharger le PDF
-       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-       const url = URL.createObjectURL(blob);
-       const link = document.createElement('a');
-       link.href = url;
-       link.download = filename;
-       document.body.appendChild(link);
-       link.click();
-       document.body.removeChild(link);
-       URL.revokeObjectURL(url);
+        // Générer le PDF de la note de crédit
+        const pdfBytes = await generateCreditNotePDF(student, payment, creditNoteNumber, parseFloat(creditNoteDialog.amount), creditNoteDialog.reason, invoiceData);
+        const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
+        
+        // Télécharger le PDF
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
-       // Fermer la modale
-       setCreditNoteDialog({
-         isOpen: false,
-         paymentId: '',
-         reason: '',
-         amount: ''
-       });
+        // Fermer la modale
+        setCreditNoteDialog({
+          isOpen: false,
+          paymentId: '',
+          reason: '',
+          amount: ''
+        });
 
-       toast({
-         title: "Note de crédit générée",
-         description: `Note de crédit ${creditNoteNumber} créée et téléchargée.`,
-       });
+        toast({
+          title: "Note de crédit générée",
+          description: `Note de crédit ${creditNoteNumber} créée et téléchargée.`,
+        });
 
-     } catch (error) {
-       console.error('Erreur lors de la génération de la note de crédit:', error);
-       toast({
-         title: "Erreur",
-         description: "Impossible de générer la note de crédit.",
-         variant: "destructive",
-       });
-     }
-   };
+      } catch (error) {
+        console.error('Erreur lors de la génération de la note de crédit:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de générer la note de crédit.",
+          variant: "destructive",
+        });
+      }
+    };
 
    // Générer le PDF de la note de crédit avec coordonnées XY précises
    const generateCreditNotePDF = async (student: any, payment: any, creditNoteNumber: string, amount: number, reason: string, originalInvoice: any) => {
@@ -1385,7 +1394,8 @@ const PaymentManagement = () => {
                    <Card key={payment.id} className={`hover:shadow-soft transition-shadow ${
                      isPaymentOverdue(payment) ? 'border-red-400' : 
                      payment.status === 'En attente' ? 'border-orange-300' :
-                     payment.status === 'Payé' ? 'border-green-300' : ''
+                     payment.status === 'Payé' ? 'border-green-300' : 
+                     payment.status === 'Remboursé' ? 'border-blue-400' : ''
                    }`}>
                     <CardContent className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -1474,17 +1484,48 @@ const PaymentManagement = () => {
                              Récapitulatif
                            </Button>
                            
-                           {payment.status === 'Payé' && (
-                             <Button
-                               variant="outline"
-                               size="sm"
-                               onClick={() => openCreditNoteDialog(payment)}
-                               className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                             >
-                               <RefreshCcw className="h-4 w-4 mr-1" />
-                               Rembourser
-                             </Button>
-                           )}
+                            {payment.status === 'Payé' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openCreditNoteDialog(payment)}
+                                className="border-red-300 text-red-600 hover:bg-red-50"
+                              >
+                                <RefreshCcw className="h-4 w-4 mr-1" />
+                                Rembourser
+                              </Button>
+                            )}
+                            
+                            {payment.status === 'Remboursé' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const student = getStudent(payment.studentId);
+                                  if (student) {
+                                    const creditNoteNumber = `${payment.invoiceNumber || 'FACTURE'}-NC`;
+                                    // Télécharger la note de crédit existante
+                                    generateCreditNotePDF(student, payment, creditNoteNumber, payment.amount, payment.refundReason || 'Remboursement', null)
+                                      .then(pdfBytes => {
+                                        const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
+                                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                                        const url = URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = filename;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      });
+                                  }
+                                }}
+                                className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                Télécharger Note de crédit
+                              </Button>
+                            )}
                            
                            {payment.status === 'En attente' && (
                              <Button
@@ -1511,15 +1552,34 @@ const PaymentManagement = () => {
                          </div>
                        )}
                        
-                       {/* Encadré pour les factures payées */}
-                       {payment.status === 'Payé' && (
-                         <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-md shadow-sm">
-                           <div className="text-sm font-medium text-green-800">
-                             ✓ Facture payée le {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}
-                             {payment.method && ` - ${payment.method}`}
-                           </div>
-                         </div>
-                       )}
+                        {/* Encadré pour les factures payées */}
+                        {payment.status === 'Payé' && (
+                          <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-md shadow-sm">
+                            <div className="text-sm font-medium text-green-800">
+                              ✓ Facture payée le {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}
+                              {payment.method && ` - ${payment.method}`}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Encadré pour les factures remboursées */}
+                        {payment.status === 'Remboursé' && (
+                          <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200 rounded-md shadow-sm">
+                            <div className="text-sm font-medium text-blue-800 space-y-1">
+                              <div>
+                                ✓ Facture payée le {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('fr-FR') : 'N/A'}
+                                {payment.method && ` - ${payment.method}`}
+                              </div>
+                              <div className="border-t border-blue-200 pt-1">
+                                ↩ Remboursé le {payment.refundDate ? new Date(payment.refundDate).toLocaleDateString('fr-FR') : 'N/A'}
+                                {payment.refundMethod && ` - ${payment.refundMethod}`}
+                                {payment.refundReason && (
+                                  <div className="text-xs text-blue-600 mt-1">Motif: {payment.refundReason}</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                        
                        {/* Informations de la facture en dessous de l'encadré */}
                        {(() => {
