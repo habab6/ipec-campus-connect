@@ -256,7 +256,112 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
 
 // Fonction temporaire pour les avoirs
 export const fillCreditNotePdf = async (student: Student, payment: Payment, reason: string): Promise<Uint8Array> => {
-  throw new Error('Avoir pas encore implémenté avec positions x,y');
+  try {
+    console.log('Génération du PDF de note de crédit pour:', student.firstName, student.lastName);
+    
+    // Charger le template PDF (on peut utiliser le même template que pour la facture ou créer un spécifique)
+    const templateBytes = await loadPdfTemplate('/templates/facture-template.pdf');
+    
+    // Créer le document PDF
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+    
+    // Charger la police
+    const fontBytes = await loadQuestrialFont();
+    const customFont = await pdfDoc.embedFont(fontBytes);
+    
+    // Générer le numéro de note de crédit
+    const correspondingInvoiceNumber = payment.invoiceNumber || 'FACTURE';
+    const creditNoteNumber = `${correspondingInvoiceNumber}-NC`;
+    
+    // Titre "NOTE DE CRÉDIT" 
+    firstPage.drawText('NOTE DE CRÉDIT', {
+      x: 200,
+      y: 750,
+      size: 16,
+      font: customFont,
+      color: rgb(0.7, 0.1, 0.1), // Rouge pour la note de crédit
+    });
+    
+    // Numéro de la note de crédit
+    firstPage.drawText(`N° ${creditNoteNumber}`, {
+      x: FIELD_POSITIONS.numeroDocument.x,
+      y: FIELD_POSITIONS.numeroDocument.y,
+      size: 12,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Date d'émission
+    const currentDate = new Date().toLocaleDateString('fr-FR');
+    firstPage.drawText(`Date: ${currentDate}`, {
+      x: FIELD_POSITIONS.dateDocument.x,
+      y: FIELD_POSITIONS.dateDocument.y,
+      size: 10,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Informations de l'étudiant
+    firstPage.drawText(`${student.firstName} ${student.lastName}`, {
+      x: FIELD_POSITIONS.nomComplet.x,
+      y: FIELD_POSITIONS.nomComplet.y,
+      size: 12,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    firstPage.drawText(student.reference, {
+      x: 100,
+      y: 250,
+      size: 10,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Type de paiement remboursé
+    firstPage.drawText(`Remboursement: ${payment.type}`, {
+      x: 100,
+      y: 220,
+      size: 11,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Montant remboursé (en rouge)
+    firstPage.drawText(`Montant: ${payment.amount}€`, {
+      x: 100,
+      y: 190,
+      size: 12,
+      font: customFont,
+      color: rgb(0.7, 0.1, 0.1),
+    });
+    
+    // Motif du remboursement
+    firstPage.drawText(`Motif: ${reason}`, {
+      x: 100,
+      y: 160,
+      size: 10,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Facture d'origine
+    firstPage.drawText(`Facture d'origine: ${correspondingInvoiceNumber}`, {
+      x: 100,
+      y: 130,
+      size: 10,
+      font: customFont,
+      color: rgb(0, 0, 0),
+    });
+    
+    console.log('PDF de note de crédit généré avec succès');
+    return await pdfDoc.save();
+  } catch (error) {
+    console.error('Erreur lors de la génération du PDF de note de crédit:', error);
+    throw new Error(`Impossible de générer la note de crédit: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+  }
 };
 
 

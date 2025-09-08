@@ -1187,13 +1187,19 @@ const DocumentGeneration = () => {
                                 size="sm"
                                 onClick={async () => {
                                   try {
+                                    console.log('Tentative de téléchargement de note de crédit:', creditNote);
+                                    
                                     // Récupérer le paiement correspondant
                                     const correspondingPayment = payments.find(p => {
                                       const invoice = getExistingInvoice(p);
+                                      console.log('Vérification paiement:', p.id, 'facture:', invoice?.id, 'vs original_invoice_id:', creditNote.original_invoice_id);
                                       return invoice && invoice.id === creditNote.original_invoice_id;
                                     });
                                     
+                                    console.log('Paiement correspondant trouvé:', correspondingPayment);
+                                    
                                     if (correspondingPayment) {
+                                      console.log('Génération du PDF...');
                                       const pdfBytes = await fillCreditNotePdf(student!, correspondingPayment, creditNote.reason);
                                       const filename = `note-credit-${student!.firstName}-${student!.lastName}-${creditNote.number}.pdf`;
                                       downloadPdf(pdfBytes, filename);
@@ -1202,11 +1208,19 @@ const DocumentGeneration = () => {
                                         title: "PDF téléchargé",
                                         description: `Note de crédit ${creditNote.number} téléchargée.`,
                                       });
+                                    } else {
+                                      console.error('Aucun paiement correspondant trouvé pour la note de crédit');
+                                      toast({
+                                        title: "Erreur",
+                                        description: "Aucun paiement correspondant trouvé pour cette note de crédit",
+                                        variant: "destructive",
+                                      });
                                     }
                                   } catch (error) {
+                                    console.error('Erreur lors du téléchargement:', error);
                                     toast({
                                       title: "Erreur",
-                                      description: "Erreur lors du téléchargement du PDF",
+                                      description: `Erreur lors du téléchargement du PDF: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
                                       variant: "destructive",
                                     });
                                   }
