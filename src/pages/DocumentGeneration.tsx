@@ -322,17 +322,25 @@ const DocumentGeneration = () => {
   };
 
   const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
-    // Use the same logic for unique invoice numbers
-    const { supabase } = await import('@/integrations/supabase/client');
-    const { count } = await supabase
-      .from('invoices')
-      .select('*', { count: 'exact', head: true });
-    
-    const year = new Date().getFullYear();
-    const invoiceCount = (count || 0) + 1;
+    const year = String(new Date().getFullYear()).slice(-2); // Prendre les 2 derniers chiffres de l'année
     const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
-                     payment.type === 'Minerval' ? 'MIN' : 'FAC';
-    return `IPEC-${year}-${String(invoiceCount).padStart(4, '0')}-${typeCode}`;
+                     payment.type === 'Minerval' ? 'MIN' : 
+                     payment.type === 'Frais mensuel' ? 'FM' :
+                     payment.type === 'Matériel' ? 'MAT' :
+                     payment.type === 'Examen' ? 'EX' : 'FAC';
+    
+    // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    // Créer un numéro basé sur la timestamp pour garantir l'unicité
+    const timeBasedNumber = `${month}${day}${hours}${minutes}${seconds}`;
+    
+    return `IPEC-${year}${timeBasedNumber}-${typeCode}`;
   };
 
   const getInvoiceKey = (payment: Payment) => {

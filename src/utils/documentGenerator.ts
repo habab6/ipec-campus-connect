@@ -1,19 +1,29 @@
 import { Student, Payment, Document } from "@/types";
 
-export const generateInvoiceNumber = (): string => {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const timestamp = Date.now();
-  return `IPEC-${year}${month}-${timestamp.toString().slice(-6)}`;
+export const generateInvoiceNumber = (paymentType: string): string => {
+  const year = String(new Date().getFullYear()).slice(-2); // Prendre les 2 derniers chiffres de l'année
+  const typeCode = paymentType === 'Frais de dossier' ? 'FD' : 
+                   paymentType === 'Minerval' ? 'MIN' : 
+                   paymentType === 'Frais mensuel' ? 'FM' :
+                   paymentType === 'Matériel' ? 'MAT' :
+                   paymentType === 'Examen' ? 'EX' : 'FAC';
+  
+  // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  // Créer un numéro basé sur la timestamp pour garantir l'unicité
+  const timeBasedNumber = `${month}${day}${hours}${minutes}${seconds}`;
+  
+  return `IPEC-${year}${timeBasedNumber}-${typeCode}`;
 };
 
-export const generateCreditNoteNumber = (): string => {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const timestamp = Date.now();
-  return `CN-${year}${month}-${timestamp.toString().slice(-6)}`;
+export const generateCreditNoteNumber = (originalInvoiceNumber: string): string => {
+  return `${originalInvoiceNumber}-NC`;
 };
 
 export const generateRegistrationDocument = (student: Student): string => {
@@ -258,7 +268,7 @@ export const generateRegistrationDocument = (student: Student): string => {
 };
 
 export const generateInvoice = (student: Student, payment: Payment): string => {
-  const invoiceNumber = payment.invoiceNumber || generateInvoiceNumber();
+  const invoiceNumber = payment.invoiceNumber || generateInvoiceNumber(payment.type);
   
   return `
 <!DOCTYPE html>
@@ -487,8 +497,8 @@ export const generateInvoice = (student: Student, payment: Payment): string => {
   `;
 };
 
-export const generateCreditNote = (student: Student, payment: Payment, reason: string): string => {
-  const creditNumber = generateCreditNoteNumber();
+export const generateCreditNote = (student: Student, payment: Payment, reason: string, originalInvoiceNumber: string): string => {
+  const creditNumber = generateCreditNoteNumber(originalInvoiceNumber);
   
   return `
 <!DOCTYPE html>

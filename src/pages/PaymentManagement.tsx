@@ -439,9 +439,12 @@ const PaymentManagement = () => {
   };
 
   const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
-    const year = new Date().getFullYear();
+    const year = String(new Date().getFullYear()).slice(-2); // Prendre les 2 derniers chiffres de l'année
     const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
-                     payment.type === 'Minerval' ? 'MIN' : 'FAC';
+                     payment.type === 'Minerval' ? 'MIN' : 
+                     payment.type === 'Frais mensuel' ? 'FM' :
+                     payment.type === 'Matériel' ? 'MAT' :
+                     payment.type === 'Examen' ? 'EX' : 'FAC';
     
     // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
     const now = new Date();
@@ -454,7 +457,7 @@ const PaymentManagement = () => {
     // Créer un numéro basé sur la timestamp pour garantir l'unicité
     const timeBasedNumber = `${month}${day}${hours}${minutes}${seconds}`;
     
-    return `IPEC-${year}-${timeBasedNumber}-${typeCode}`;
+    return `IPEC-${year}${timeBasedNumber}-${typeCode}`;
   };
 
   const generateInvoiceDocument = async (payment: Payment, isDuplicate = false) => {
@@ -802,7 +805,7 @@ const PaymentManagement = () => {
         }
 
         // Générer un numéro de note de crédit unique
-        const creditNoteNumber = await generateCreditNoteNumber();
+        const creditNoteNumber = generateCreditNoteNumber(invoiceData.number);
         
         // Créer la note de crédit dans la base de données
         const creditNoteData = {
