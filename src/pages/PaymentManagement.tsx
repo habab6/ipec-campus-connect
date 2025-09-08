@@ -921,7 +921,7 @@ const PaymentManagement = () => {
                 onClick={() => setShowAddPayment(!showAddPayment)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {showAddPayment ? 'Annuler' : 'Générer la facture'}
+                {showAddPayment ? 'Annuler' : 'Facture manuelle'}
               </Button>
             </div>
           </CardHeader>
@@ -1143,7 +1143,7 @@ const PaymentManagement = () => {
 
                     <Button type="submit" className="w-full">
                       <Plus className="mr-2 h-4 w-4" />
-                      Générer la facture
+                      Créer la facture manuelle
                     </Button>
                   </form>
                 </CardContent>
