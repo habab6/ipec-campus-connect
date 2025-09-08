@@ -190,6 +190,9 @@ export type Database = {
           invoice_number: string | null
           method: string | null
           paid_date: string | null
+          refund_date: string | null
+          refund_method: string | null
+          refund_reason: string | null
           status: string
           student_id: string
           study_year: number | null
@@ -207,6 +210,9 @@ export type Database = {
           invoice_number?: string | null
           method?: string | null
           paid_date?: string | null
+          refund_date?: string | null
+          refund_method?: string | null
+          refund_reason?: string | null
           status?: string
           student_id: string
           study_year?: number | null
@@ -224,6 +230,9 @@ export type Database = {
           invoice_number?: string | null
           method?: string | null
           paid_date?: string | null
+          refund_date?: string | null
+          refund_method?: string | null
+          refund_reason?: string | null
           status?: string
           student_id?: string
           study_year?: number | null

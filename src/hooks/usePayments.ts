@@ -40,6 +40,9 @@ export function usePayments() {
         invoiceDate: p.invoice_date,
         academicYear: p.academic_year,
         studyYear: p.study_year,
+        refundDate: p.refund_date,
+        refundMethod: p.refund_method,
+        refundReason: p.refund_reason,
         installments: p.payment_installments?.map((inst: any) => ({
           id: inst.id,
           amount: inst.amount,
@@ -115,6 +118,9 @@ export function usePayments() {
           case 'invoiceDate': dbUpdates.invoice_date = value; break;
           case 'academicYear': dbUpdates.academic_year = value; break;
           case 'studyYear': dbUpdates.study_year = value; break;
+          case 'refundDate': dbUpdates.refund_date = value; break;
+          case 'refundMethod': dbUpdates.refund_method = value; break;
+          case 'refundReason': dbUpdates.refund_reason = value; break;
           default: (dbUpdates as any)[key] = value;
         }
       });
@@ -166,6 +172,9 @@ export function usePayments() {
         invoiceDate: p.invoice_date,
         academicYear: p.academic_year,
         studyYear: p.study_year,
+        refundDate: p.refund_date,
+        refundMethod: p.refund_method,
+        refundReason: p.refund_reason,
         installments: p.payment_installments?.map((inst: any) => ({
           id: inst.id,
           amount: inst.amount,
