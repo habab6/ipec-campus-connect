@@ -940,31 +940,34 @@ const PaymentManagement = () => {
        color: rgb(0, 0, 0),
      });
      
-     if (originalInvoice) {
-       page.drawText(`N° Facture: ${originalInvoice.number || 'N/A'}`, {
-         x: 320,
-         y: 660,
-         size: 10,
-         font: font,
-         color: rgb(0, 0, 0),
-       });
-       
-       page.drawText(`Date facture: ${new Date(originalInvoice.generate_date).toLocaleDateString('fr-FR')}`, {
-         x: 320,
-         y: 640,
-         size: 10,
-         font: font,
-         color: rgb(0, 0, 0),
-       });
-       
-       page.drawText(`Montant facture: ${originalInvoice.amount}€`, {
-         x: 320,
-         y: 620,
-         size: 10,
-         font: font,
-         color: rgb(0, 0, 0),
-       });
-     }
+      // Afficher les informations de la facture de référence même si originalInvoice n'est pas disponible
+      const invoiceNumber = originalInvoice?.number || payment.invoiceNumber || 'N/A';
+      const invoiceDate = originalInvoice?.generate_date ? new Date(originalInvoice.generate_date).toLocaleDateString('fr-FR') : 'N/A';
+      const invoiceAmount = originalInvoice?.amount || payment.amount;
+      
+      page.drawText(`N° Facture: ${invoiceNumber}`, {
+        x: 320,
+        y: 660,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+      
+      page.drawText(`Date facture: ${invoiceDate}`, {
+        x: 320,
+        y: 640,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+      
+      page.drawText(`Montant facture: ${invoiceAmount}€`, {
+        x: 320,
+        y: 620,
+        size: 10,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
      
      // Tableau des détails (coordonnées fixes)
      const tableStartY = 550;
