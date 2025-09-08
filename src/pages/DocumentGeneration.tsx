@@ -325,9 +325,8 @@ const DocumentGeneration = () => {
     const year = String(new Date().getFullYear()).slice(-2); // Prendre les 2 derniers chiffres de l'année
     const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
                      payment.type === 'Minerval' ? 'MIN' : 
-                     payment.type === 'Frais mensuel' ? 'FM' :
-                     payment.type === 'Matériel' ? 'MAT' :
-                     payment.type === 'Examen' ? 'EX' : 'FAC';
+                     payment.type === 'Frais d\'envoi' ? 'ENV' :
+                     payment.type === 'Duplicata' ? 'DC' : 'MIN';
     
     // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
     const now = new Date();

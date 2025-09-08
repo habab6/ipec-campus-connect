@@ -65,7 +65,7 @@ export interface Payment {
   dueDate: string;
   paidDate?: string;
   status: 'En attente' | 'Payé' | 'En retard' | 'Remboursé';
-  type: 'Frais de dossier' | 'Minerval' | 'Frais mensuel' | 'Matériel' | 'Examen' | 'Autre';
+  type: 'Frais de dossier' | 'Minerval' | 'Frais d\'envoi' | 'Duplicata';
   description: string;
   method?: 'Espèces' | 'Virement';
   invoiceNumber?: string;

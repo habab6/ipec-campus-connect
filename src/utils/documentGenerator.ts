@@ -4,9 +4,8 @@ export const generateInvoiceNumber = (paymentType: string): string => {
   const year = String(new Date().getFullYear()).slice(-2); // Prendre les 2 derniers chiffres de l'année
   const typeCode = paymentType === 'Frais de dossier' ? 'FD' : 
                    paymentType === 'Minerval' ? 'MIN' : 
-                   paymentType === 'Frais mensuel' ? 'FM' :
-                   paymentType === 'Matériel' ? 'MAT' :
-                   paymentType === 'Examen' ? 'EX' : 'FAC';
+                   paymentType === 'Frais d\'envoi' ? 'ENV' :
+                   paymentType === 'Duplicata' ? 'DC' : 'MIN';
   
   // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
   const now = new Date();
