@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer } from "lucide-react";
+import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer, RefreshCcw } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { generateInvoice, generatePaymentSummary, downloadDocument } from "@/utils/documentGenerator";
@@ -68,7 +68,15 @@ const PaymentManagement = () => {
     getInvoicesByStudentId,
     createInvoice
   } = usePayments();
-  const [showAddPayment, setShowAddPayment] = useState(false);
+   const [showAddPayment, setShowAddPayment] = useState(false);
+   
+   // State pour la modale de note de crédit
+   const [creditNoteDialog, setCreditNoteDialog] = useState({
+     isOpen: false,
+     paymentId: '',
+     reason: '',
+     amount: ''
+   });
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [newPayment, setNewPayment] = useState({
     amount: "",
@@ -743,6 +751,318 @@ const PaymentManagement = () => {
     }
    };
 
+   // Ouvrir la modale de note de crédit
+   const openCreditNoteDialog = (payment: Payment) => {
+     setCreditNoteDialog({
+       isOpen: true,
+       paymentId: payment.id,
+       reason: '',
+       amount: payment.amount.toString()
+     });
+   };
+
+   // Générer la note de crédit
+   const generateCreditNote = async () => {
+     const payment = payments.find(p => p.id === creditNoteDialog.paymentId);
+     const student = payment ? getStudent(payment.studentId) : null;
+     
+     if (!payment || !student) {
+       toast({
+         title: "Erreur",
+         description: "Informations manquantes pour la note de crédit.",
+         variant: "destructive",
+       });
+       return;
+     }
+
+     try {
+       // Générer un numéro de note de crédit
+       const creditNoteNumber = `NC-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+       
+       // Créer la note de crédit en base
+       const { supabase } = await import('@/integrations/supabase/client');
+       const { data: invoiceData } = await supabase
+         .from('invoices')
+         .select('*')
+         .eq('payment_id', payment.id)
+         .single();
+
+       await supabase.from('credit_notes').insert({
+         number: creditNoteNumber,
+         student_id: payment.studentId,
+         original_invoice_id: invoiceData?.id,
+         amount: parseFloat(creditNoteDialog.amount),
+         reason: creditNoteDialog.reason,
+         date: new Date().toISOString().split('T')[0]
+       });
+
+       // Générer le PDF de la note de crédit
+       const pdfBytes = await generateCreditNotePDF(student, payment, creditNoteNumber, parseFloat(creditNoteDialog.amount), creditNoteDialog.reason, invoiceData);
+       const filename = `note-credit-${student.firstName}-${student.lastName}-${creditNoteNumber}.pdf`;
+       
+       // Télécharger le PDF
+       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+       const url = URL.createObjectURL(blob);
+       const link = document.createElement('a');
+       link.href = url;
+       link.download = filename;
+       document.body.appendChild(link);
+       link.click();
+       document.body.removeChild(link);
+       URL.revokeObjectURL(url);
+
+       // Fermer la modale
+       setCreditNoteDialog({
+         isOpen: false,
+         paymentId: '',
+         reason: '',
+         amount: ''
+       });
+
+       toast({
+         title: "Note de crédit générée",
+         description: `Note de crédit ${creditNoteNumber} créée et téléchargée.`,
+       });
+
+     } catch (error) {
+       console.error('Erreur lors de la génération de la note de crédit:', error);
+       toast({
+         title: "Erreur",
+         description: "Impossible de générer la note de crédit.",
+         variant: "destructive",
+       });
+     }
+   };
+
+   // Générer le PDF de la note de crédit avec coordonnées XY précises
+   const generateCreditNotePDF = async (student: any, payment: any, creditNoteNumber: string, amount: number, reason: string, originalInvoice: any) => {
+     const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
+     
+     const pdfDoc = await PDFDocument.create();
+     const page = pdfDoc.addPage([595, 842]); // A4 size
+     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+     
+     // Coordonnées XY précises pour chaque élément
+     
+     // En-tête - NOTE DE CRÉDIT
+     page.drawText('NOTE DE CRÉDIT', {
+       x: 200,
+       y: 800,
+       size: 20,
+       font: boldFont,
+       color: rgb(0.8, 0, 0),
+     });
+     
+     // Numéro de note de crédit
+     page.drawText(`N° ${creditNoteNumber}`, {
+       x: 430,
+       y: 800,
+       size: 12,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Date
+     page.drawText(`Date: ${new Date().toLocaleDateString('fr-FR')}`, {
+       x: 430,
+       y: 780,
+       size: 10,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Informations entreprise (coordonnées fixes en haut à gauche)
+     page.drawText('IPEC', {
+       x: 50,
+       y: 750,
+       size: 14,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText('Institut Privé d\'Enseignement Commercial', {
+       x: 50,
+       y: 730,
+       size: 10,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Informations client (coordonnées fixes)
+     page.drawText('FACTURÉ À:', {
+       x: 50,
+       y: 680,
+       size: 12,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText(`${student.firstName} ${student.lastName}`, {
+       x: 50,
+       y: 660,
+       size: 11,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText(`Programme: ${student.program}`, {
+       x: 50,
+       y: 640,
+       size: 10,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText(`Spécialité: ${student.specialty}`, {
+       x: 50,
+       y: 620,
+       size: 10,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Référence à la facture originale (coordonnées fixes)
+     page.drawText('FACTURE ORIGINALE:', {
+       x: 320,
+       y: 680,
+       size: 12,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     if (originalInvoice) {
+       page.drawText(`N° Facture: ${originalInvoice.number || 'N/A'}`, {
+         x: 320,
+         y: 660,
+         size: 10,
+         font: font,
+         color: rgb(0, 0, 0),
+       });
+       
+       page.drawText(`Date facture: ${new Date(originalInvoice.generate_date).toLocaleDateString('fr-FR')}`, {
+         x: 320,
+         y: 640,
+         size: 10,
+         font: font,
+         color: rgb(0, 0, 0),
+       });
+       
+       page.drawText(`Montant facture: ${originalInvoice.amount}€`, {
+         x: 320,
+         y: 620,
+         size: 10,
+         font: font,
+         color: rgb(0, 0, 0),
+       });
+     }
+     
+     // Tableau des détails (coordonnées fixes)
+     const tableStartY = 550;
+     
+     // En-têtes du tableau
+     page.drawText('Description', {
+       x: 50,
+       y: tableStartY,
+       size: 10,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText('Motif', {
+       x: 250,
+       y: tableStartY,
+       size: 10,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText('Montant', {
+       x: 450,
+       y: tableStartY,
+       size: 10,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Ligne de séparation
+     page.drawLine({
+       start: { x: 50, y: tableStartY - 10 },
+       end: { x: 545, y: tableStartY - 10 },
+       thickness: 1,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Contenu du tableau
+     page.drawText(`Remboursement ${payment.type}`, {
+       x: 50,
+       y: tableStartY - 30,
+       size: 10,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText(reason, {
+       x: 250,
+       y: tableStartY - 30,
+       size: 10,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText(`${amount}€`, {
+       x: 450,
+       y: tableStartY - 30,
+       size: 10,
+       font: font,
+       color: rgb(0, 0, 0),
+     });
+     
+     // Total (coordonnées fixes en bas à droite)
+     page.drawText('TOTAL À REMBOURSER:', {
+       x: 350,
+       y: tableStartY - 70,
+       size: 12,
+       font: boldFont,
+       color: rgb(0, 0, 0),
+     });
+     
+     page.drawText(`${amount}€`, {
+       x: 500,
+       y: tableStartY - 70,
+       size: 14,
+       font: boldFont,
+       color: rgb(0.8, 0, 0),
+     });
+     
+     // Notes légales (coordonnées fixes en bas)
+     page.drawText('Cette note de crédit annule et remplace partiellement ou totalement', {
+       x: 50,
+       y: 200,
+       size: 9,
+       font: font,
+       color: rgb(0.3, 0.3, 0.3),
+     });
+     
+     page.drawText('la facture mentionnée ci-dessus.', {
+       x: 50,
+       y: 185,
+       size: 9,
+       font: font,
+       color: rgb(0.3, 0.3, 0.3),
+     });
+     
+     page.drawText('Le remboursement sera effectué selon les modalités convenues.', {
+       x: 50,
+       y: 165,
+       size: 9,
+       font: font,
+       color: rgb(0.3, 0.3, 0.3),
+     });
+     
+     return await pdfDoc.save();
+   };
+
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto">
@@ -1154,6 +1474,18 @@ const PaymentManagement = () => {
                              Récapitulatif
                            </Button>
                            
+                           {payment.status === 'Payé' && (
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => openCreditNoteDialog(payment)}
+                               className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                             >
+                               <RefreshCcw className="h-4 w-4 mr-1" />
+                               Rembourser
+                             </Button>
+                           )}
+                           
                            {payment.status === 'En attente' && (
                              <Button
                                variant="default"
@@ -1415,7 +1747,56 @@ const PaymentManagement = () => {
                   </Button>
                 </DialogFooter>
               </DialogContent>
-            </Dialog>
+             </Dialog>
+
+             {/* Dialog pour note de crédit */}
+             <Dialog open={creditNoteDialog.isOpen} onOpenChange={(open) => setCreditNoteDialog(prev => ({ ...prev, isOpen: open }))}>
+               <DialogContent className="max-w-md">
+                 <DialogHeader>
+                   <DialogTitle>Générer une note de crédit</DialogTitle>
+                   <DialogDescription>
+                     Créer une note de crédit pour rembourser tout ou partie de cette facture
+                   </DialogDescription>
+                 </DialogHeader>
+                 <div className="space-y-4">
+                   <div>
+                     <Label htmlFor="creditAmount">Montant à rembourser (€)</Label>
+                     <Input
+                       id="creditAmount"
+                       type="number"
+                       step="0.01"
+                       value={creditNoteDialog.amount}
+                       onChange={(e) => setCreditNoteDialog(prev => ({ ...prev, amount: e.target.value }))}
+                       placeholder="0.00"
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="creditReason">Motif du remboursement</Label>
+                     <Textarea
+                       id="creditReason"
+                       value={creditNoteDialog.reason}
+                       onChange={(e) => setCreditNoteDialog(prev => ({ ...prev, reason: e.target.value }))}
+                       placeholder="Indiquez le motif du remboursement..."
+                       rows={3}
+                     />
+                   </div>
+                 </div>
+                 <DialogFooter>
+                   <Button 
+                     variant="outline" 
+                     onClick={() => setCreditNoteDialog(prev => ({ ...prev, isOpen: false }))}
+                   >
+                     Annuler
+                   </Button>
+                   <Button 
+                     onClick={generateCreditNote}
+                     disabled={!creditNoteDialog.amount || !creditNoteDialog.reason}
+                   >
+                     Générer la note de crédit
+                   </Button>
+                 </DialogFooter>
+               </DialogContent>
+             </Dialog>
           </CardContent>
         </Card>
       </div>
