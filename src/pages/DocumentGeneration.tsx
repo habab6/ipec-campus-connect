@@ -1118,10 +1118,12 @@ const DocumentGeneration = () => {
               <CardContent>
                 <div className="space-y-4">
                   {/* Affichage des notes de crédit existantes */}
-                  {creditNotes.length > 0 && (
-                    <div className="space-y-3 mb-6">
-                      <h4 className="font-medium text-sm text-muted-foreground">Notes de crédit existantes</h4>
-                      {creditNotes.map((creditNote) => (
+                  {(() => {
+                    console.log('creditNotes dans le render:', creditNotes, 'length:', creditNotes.length);
+                    return creditNotes.length > 0 ? (
+                      <div className="space-y-3 mb-6">
+                        <h4 className="font-medium text-sm text-muted-foreground">Notes de crédit existantes ({creditNotes.length})</h4>
+                        {creditNotes.map((creditNote) => (
                         <div key={creditNote.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                           {/* Header avec numéro de la note de crédit */}
                           <div className="px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 border-b border-red-300">
@@ -1241,8 +1243,15 @@ const DocumentGeneration = () => {
                           </div>
                         </div>
                       ))}
-                    </div>
-                  )}
+                        </div>
+                      ) : (
+                        <div className="mb-6 p-4 bg-muted/30 rounded-lg text-center">
+                          <p className="text-muted-foreground text-sm">
+                            Aucune note de crédit trouvée. (Total dans state: {creditNotes.length})
+                          </p>
+                        </div>
+                      );
+                  })()}
 
                   {/* Formulaire de création de nouvelle note de crédit */}
                   {!showCreditNoteForm ? (
