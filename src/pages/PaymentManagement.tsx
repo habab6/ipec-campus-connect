@@ -625,17 +625,20 @@ const PaymentManagement = () => {
     // Filtre par statut de paiement
     let matchesStatus = selectedPaymentStatus === "all";
     if (!matchesStatus) {
+      const existingInvoice = getExistingInvoice(payment);
+      
       if (selectedPaymentStatus === "paye") {
         matchesStatus = payment.status === "Payé";
       } else if (selectedPaymentStatus === "en_attente") {
-        matchesStatus = payment.status === "En attente";
+        // En attente = statut "En attente" ET facture générée
+        matchesStatus = payment.status === "En attente" && !!existingInvoice;
       } else if (selectedPaymentStatus === "en_retard") {
-        matchesStatus = isPaymentOverdue(payment);
+        // En retard = facture en retard ET facture générée
+        matchesStatus = isPaymentOverdue(payment) && !!existingInvoice;
       } else if (selectedPaymentStatus === "rembourse") {
         matchesStatus = payment.status === "Remboursé";
       } else if (selectedPaymentStatus === "non_genere") {
         // Factures non générées = paiements sans facture associée
-        const existingInvoice = getExistingInvoice(payment);
         matchesStatus = !existingInvoice;
       }
     }
