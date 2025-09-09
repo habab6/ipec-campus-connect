@@ -4,14 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Search, Users, Mail, Phone, Calendar, Filter, Download, SortAsc } from "lucide-react";
+import { ArrowLeft, Search, Users, Mail, Phone, Calendar, Filter, Download, SortAsc, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useStudents } from "@/hooks/useStudents";
 import type { Student } from "@/types";
 import { BUSINESS_SPECIALTIES } from "@/utils/studentUtils";
+import { AcademicYearModal } from "@/components/AcademicYearModal";
 
 const StudentList = () => {
-  const { students, loading } = useStudents();
+  const { students, loading, fetchStudents } = useStudents();
   const [searchTerm, setSearchTerm] = useState("");
   
   // États pour les filtres
@@ -21,6 +22,12 @@ const StudentList = () => {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("active"); // Par défaut afficher seulement les étudiants actifs
   const [sortBy, setSortBy] = useState<string>("name");
+  
+  // État pour la modale de gestion scolaire
+  const [academicYearModal, setAcademicYearModal] = useState<{
+    isOpen: boolean;
+    student: Student | null;
+  }>({ isOpen: false, student: null });
   
   // Obtenir les valeurs uniques pour les filtres
   const uniquePrograms = [...new Set(students.map(s => s.program))];
@@ -456,6 +463,14 @@ const StudentList = () => {
                               Modifier
                             </Button>
                           </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setAcademicYearModal({ isOpen: true, student })}
+                          >
+                            <GraduationCap className="mr-1 h-3 w-3" />
+                            Gestion scolaire
+                          </Button>
                           <Link to={`/documents/${student.id}`}>
                             <Button variant="outline" size="sm">
                               Documents
@@ -470,6 +485,16 @@ const StudentList = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Modale de gestion de l'année scolaire */}
+        {academicYearModal.student && (
+          <AcademicYearModal
+            student={academicYearModal.student}
+            isOpen={academicYearModal.isOpen}
+            onClose={() => setAcademicYearModal({ isOpen: false, student: null })}
+            onUpdate={fetchStudents}
+          />
+        )}
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserCog, ArrowLeft, Save, Trash2 } from "lucide-react";
 import { Student } from "@/types";
 import { useStudents } from "@/hooks/useStudents";
-import { AcademicYearActions } from "@/components/AcademicYearActions";
+
 import { getStudyYearOptions } from "@/utils/studentUtils";
 import { COUNTRIES } from "@/utils/countries";
 import { NATIONALITIES } from "@/utils/nationalities";
@@ -514,13 +514,6 @@ const StudentEdit = () => {
           </CardContent>
         </Card>
 
-        {/* Academic Year Management Section */}
-        <div className="mt-6">
-          <AcademicYearActions 
-            student={student} 
-            onUpdate={loadStudent}
-          />
-        </div>
       </div>
     </div>
   );
