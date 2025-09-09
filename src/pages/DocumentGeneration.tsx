@@ -1121,7 +1121,7 @@ const DocumentGeneration = () => {
                                       className="flex items-center gap-2"
                                     >
                                       <Receipt className="h-4 w-4" />
-                                      Facture manuelle
+                                      Générer la facture
                                     </Button>
                                   )}
                                  
@@ -1172,7 +1172,7 @@ const DocumentGeneration = () => {
                                           className="flex items-center gap-2"
                                         >
                                           <Euro className="h-4 w-4" />
-                                          + Paiement
+                                          Paiement
                                         </Button>
                                       )}
 
