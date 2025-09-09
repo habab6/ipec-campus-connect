@@ -622,17 +622,23 @@ const PaymentManagement = () => {
       matchesFiscalYear = fiscalYear === selectedFiscalYear;
     }
     
-     // Filtre par statut de paiement
-     let matchesStatus = selectedPaymentStatus === "all";
-     if (!matchesStatus) {
-       if (selectedPaymentStatus === "paid") {
-         matchesStatus = payment.status === "Payé";
-       } else if (selectedPaymentStatus === "unpaid") {
-         matchesStatus = payment.status !== "Payé";
-       } else if (selectedPaymentStatus === "overdue") {
-         matchesStatus = isPaymentOverdue(payment);
-       }
-     }
+    // Filtre par statut de paiement
+    let matchesStatus = selectedPaymentStatus === "all";
+    if (!matchesStatus) {
+      if (selectedPaymentStatus === "paye") {
+        matchesStatus = payment.status === "Payé";
+      } else if (selectedPaymentStatus === "en_attente") {
+        matchesStatus = payment.status === "En attente";
+      } else if (selectedPaymentStatus === "en_retard") {
+        matchesStatus = isPaymentOverdue(payment);
+      } else if (selectedPaymentStatus === "rembourse") {
+        matchesStatus = payment.status === "Remboursé";
+      } else if (selectedPaymentStatus === "non_genere") {
+        // Factures non générées = paiements sans facture associée
+        const existingInvoice = getExistingInvoice(payment);
+        matchesStatus = !existingInvoice;
+      }
+    }
     
     return matchesAcademicYear && matchesFiscalYear && matchesStatus;
   });
@@ -696,7 +702,22 @@ const PaymentManagement = () => {
       
       let addedCount = 0;
       
-      for (const payment of filteredPayments) {
+      // Filtrer uniquement les paiements qui ont des factures générées
+      const paymentsWithInvoices = filteredPayments.filter(payment => {
+        const existingInvoice = getExistingInvoice(payment);
+        return !!existingInvoice; // Retourner seulement ceux qui ont une facture
+      });
+      
+      if (paymentsWithInvoices.length === 0) {
+        toast({
+          title: "Aucune facture générée",
+          description: "Aucune facture générée n'est disponible pour les filtres sélectionnés.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      for (const payment of paymentsWithInvoices) {
         const student = getStudent(payment.studentId);
         if (!student) continue;
         
@@ -739,7 +760,8 @@ const PaymentManagement = () => {
       // Nom du fichier avec les filtres appliqués
       const academicFilter = selectedAcademicYear !== "all" ? `-${selectedAcademicYear}` : "";
       const fiscalFilter = selectedFiscalYear !== "all" ? `-${selectedFiscalYear}` : "";
-      link.download = `factures${academicFilter}${fiscalFilter}-${new Date().toISOString().split('T')[0]}.zip`;
+      const statusFilter = selectedPaymentStatus !== "all" ? `-${selectedPaymentStatus}` : "";
+      link.download = `factures${academicFilter}${fiscalFilter}${statusFilter}-${new Date().toISOString().split('T')[0]}.zip`;
       
       document.body.appendChild(link);
       link.click();
@@ -977,12 +999,14 @@ const PaymentManagement = () => {
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Sélectionner le statut" />
                     </SelectTrigger>
-                    <SelectContent>
-                       <SelectItem value="all">Tous les statuts</SelectItem>
-                       <SelectItem value="paid">Factures payées</SelectItem>
-                       <SelectItem value="unpaid">Factures non payées</SelectItem>
-                       <SelectItem value="overdue">Factures en retard</SelectItem>
-                    </SelectContent>
+                     <SelectContent>
+                        <SelectItem value="all">Tous les statuts</SelectItem>
+                        <SelectItem value="paye">Payé</SelectItem>
+                        <SelectItem value="en_attente">En attente</SelectItem>
+                        <SelectItem value="en_retard">En retard</SelectItem>
+                        <SelectItem value="rembourse">Remboursé</SelectItem>
+                        <SelectItem value="non_genere">Non généré</SelectItem>
+                     </SelectContent>
                   </Select>
                 </div>
               </div>
@@ -1009,25 +1033,35 @@ const PaymentManagement = () => {
                     </Button>
                   )}
                   
-                  <Button 
-                    variant="secondary"
-                    size="sm"
-                    onClick={downloadFilteredInvoicesZip}
-                    disabled={isGeneratingZip || filteredPayments.length === 0}
-                    className="flex items-center gap-2 shrink-0"
-                  >
-                    {isGeneratingZip ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        Génération...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="h-4 w-4" />
-                        ZIP ({filteredPayments.length})
-                      </>
-                    )}
-                  </Button>
+                   {(() => {
+                     // Calculer le nombre de factures générées disponibles pour le téléchargement
+                     const availableInvoicesCount = filteredPayments.filter(payment => {
+                       const existingInvoice = getExistingInvoice(payment);
+                       return !!existingInvoice;
+                     }).length;
+                     
+                     return (
+                       <Button 
+                         variant="secondary"
+                         size="sm"
+                         onClick={downloadFilteredInvoicesZip}
+                         disabled={isGeneratingZip || availableInvoicesCount === 0}
+                         className="flex items-center gap-2 shrink-0"
+                       >
+                         {isGeneratingZip ? (
+                           <>
+                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                             Génération...
+                           </>
+                         ) : (
+                           <>
+                             <FileText className="h-4 w-4" />
+                             ZIP ({availableInvoicesCount})
+                           </>
+                         )}
+                       </Button>
+                     );
+                   })()}
                 </div>
               </div>
             </div>
