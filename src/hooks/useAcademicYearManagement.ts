@@ -126,7 +126,7 @@ export function useAcademicYearManagement() {
     }
   };
 
-  const archiveStudent = async (studentId: string, reason: string = 'Abandon d\'études') => {
+  const archiveStudent = async (studentId: string, reason: string = 'Abandonné') => {
     try {
       console.log('Début archivage étudiant:', studentId);
       setLoading(true);
