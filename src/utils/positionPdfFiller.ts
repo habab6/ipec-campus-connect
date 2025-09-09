@@ -2,8 +2,29 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Student, Payment, RegistrationAttestation, Invoice } from '@/types';
 
-// Configuration des positions pour les ATTESTATIONS
-const ATTESTATION_POSITIONS = {
+// Configuration des positions pour les ATTESTATIONS D'INSCRIPTION
+const ATTESTATION_INSCRIPTION_POSITIONS = {
+  numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
+  dateDocument: { x: 160, y: 547.5 },          // Position de la date
+  civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
+  nomComplet: { x: 210, y: 274.9 },            // Position nom complet
+  dateNaissance: { x: 210, y: 291.2 },         // Position date de naissance
+  villeNaissance: { x: 210, y: 650 },        // Position ville de naissance
+  paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
+  nationalite: { x: 210, y: 308.4 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  telephone: { x: 210, y: 600 },             // Position téléphone
+  email: { x: 210, y: 550 },                 // Position email
+  adresse: { x: 210, y: 500 },               // Position adresse complète
+  programme: { x: 290, y: 450 },             // Position programme d'études
+  niveau: { x: 210, y: 450 },                // Position niveau (1ère, 2ème...)
+  specialite: { x: 210, y: 400 },            // Position spécialité
+  anneeAcademique: { x: 210, y: 400 },       // Position année académique
+  dateInscription: { x: 210, y: 350 },       // Position date d'inscription
+};
+
+// Configuration des positions pour les ATTESTATIONS DE PRÉADMISSION
+const ATTESTATION_PREADMISSION_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
   dateDocument: { x: 160, y: 547.5 },          // Position de la date
   civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
@@ -163,9 +184,13 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       dateInscription: new Date(student.registrationDate).toLocaleDateString('fr-FR') || '',
     };
 
+    // Déterminer le type d'attestation selon le template
+    const isPreadmissionAttestation = templatePath.includes('preadm');
+    const positions = isPreadmissionAttestation ? ATTESTATION_PREADMISSION_POSITIONS : ATTESTATION_INSCRIPTION_POSITIONS;
+    
     // Ajouter le texte à chaque position
     Object.entries(fieldData).forEach(([fieldName, value]) => {
-      const position = ATTESTATION_POSITIONS[fieldName as keyof typeof ATTESTATION_POSITIONS];
+      const position = positions[fieldName as keyof typeof positions];
       if (position && value) {
         console.log(`✏️  ${fieldName}: "${value}" à (${position.x}, ${position.y})`);
         
@@ -180,8 +205,8 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
     });
 
     console.log('💡 Positions actuelles des attestations:');
-    console.table(ATTESTATION_POSITIONS);
-    console.log('🔧 Pour ajuster, modifiez ATTESTATION_POSITIONS dans le fichier');
+    console.table(isPreadmissionAttestation ? ATTESTATION_PREADMISSION_POSITIONS : ATTESTATION_INSCRIPTION_POSITIONS);
+    console.log('🔧 Pour ajuster, modifiez ATTESTATION_INSCRIPTION_POSITIONS ou ATTESTATION_PREADMISSION_POSITIONS dans le fichier');
 
     return await pdfDoc.save();
   } catch (error) {
