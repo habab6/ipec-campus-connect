@@ -306,8 +306,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
   try {
     console.log('Génération du PDF de note de crédit pour:', student.firstName, student.lastName);
     
-    // Charger le template PDF
-    const templateBytes = await loadPdfTemplate('/templates/facture-template.pdf');
+    // Charger le template PDF spécifique aux notes de crédit
+    const templateBytes = await loadPdfTemplate('/templates/creditnote-template.pdf');
     
     // Créer le document PDF
     const pdfDoc = await PDFDocument.load(templateBytes);
