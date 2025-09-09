@@ -128,6 +128,7 @@ export function useAcademicYearManagement() {
 
   const archiveStudent = async (studentId: string, reason: string = 'Abandon d\'études') => {
     try {
+      console.log('Début archivage étudiant:', studentId);
       setLoading(true);
       
       // Get current student data
@@ -137,10 +138,16 @@ export function useAcademicYearManagement() {
         .eq('id', studentId)
         .single();
 
-      if (studentError) throw studentError;
+      if (studentError) {
+        console.error('Erreur récupération étudiant:', studentError);
+        throw studentError;
+      }
+
+      console.log('Données étudiant récupérées:', student);
 
       // Update student academic history - mark current year as archived
-      await supabase
+      console.log('Insertion historique académique...');
+      const { error: historyError } = await supabase
         .from('student_academic_history')
         .insert({
           student_id: studentId,
@@ -152,7 +159,13 @@ export function useAcademicYearManagement() {
           passed_to_next_year: false
         });
 
+      if (historyError) {
+        console.error('Erreur insertion historique:', historyError);
+        throw historyError;
+      }
+
       // Update student status to archived
+      console.log('Mise à jour statut étudiant...');
       const { error: updateError } = await supabase
         .from('students')
         .update({
@@ -160,7 +173,12 @@ export function useAcademicYearManagement() {
         })
         .eq('id', studentId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Erreur mise à jour statut:', updateError);
+        throw updateError;
+      }
+
+      console.log('Archivage réussi');
 
       return { success: true };
     } catch (error) {
