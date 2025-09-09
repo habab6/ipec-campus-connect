@@ -51,8 +51,8 @@ export function useAcademicYearManagement() {
 
       if (studentError) throw studentError;
 
-      const currentAcademicYear = await getCurrentAcademicYear();
-      const nextAcademicYear = getNextAcademicYear(currentAcademicYear);
+      // Utiliser l'année académique actuelle de l'étudiant comme base
+      const nextAcademicYear = getNextAcademicYear(student.academic_year);
       
       let nextStudyYear = student.study_year + 1;
       let nextProgram = student.program;
