@@ -2,9 +2,8 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Student, Payment, RegistrationAttestation, Invoice } from '@/types';
 
-// Configuration des positions pour chaque champ
-// Ajustez ces coordonnées selon votre template PDF
-const FIELD_POSITIONS = {
+// Configuration des positions pour les ATTESTATIONS
+const ATTESTATION_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
   dateDocument: { x: 160, y: 547.5 },          // Position de la date
   civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
@@ -22,6 +21,52 @@ const FIELD_POSITIONS = {
   specialite: { x: 210, y: 400 },            // Position spécialité
   anneeAcademique: { x: 210, y: 400 },       // Position année académique
   dateInscription: { x: 210, y: 350 },       // Position date d'inscription
+};
+
+// Configuration des positions pour les FACTURES
+const INVOICE_POSITIONS = {
+  numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
+  dateDocument: { x: 160, y: 547.5 },          // Position de la date
+  civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
+  nomComplet: { x: 210, y: 274.9 },            // Position nom complet
+  dateNaissance: { x: 210, y: 291.2 },         // Position date de naissance
+  villeNaissance: { x: 210, y: 650 },        // Position ville de naissance
+  paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
+  nationalite: { x: 210, y: 308.4 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  telephone: { x: 210, y: 600 },             // Position téléphone
+  email: { x: 210, y: 550 },                 // Position email
+  adresse: { x: 210, y: 500 },               // Position adresse complète
+  programme: { x: 290, y: 450 },             // Position programme d'études
+  niveau: { x: 210, y: 450 },                // Position niveau (1ère, 2ème...)
+  specialite: { x: 210, y: 400 },            // Position spécialité
+  anneeAcademique: { x: 210, y: 400 },       // Position année académique
+  dateInscription: { x: 210, y: 350 },       // Position date d'inscription
+  montant: { x: 400, y: 300 },              // Position montant facture
+  typeFacture: { x: 120, y: 320 },          // Position type de facture
+};
+
+// Configuration des positions pour les NOTES DE CRÉDIT
+const CREDIT_NOTE_POSITIONS = {
+  numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
+  dateDocument: { x: 160, y: 547.5 },          // Position de la date
+  civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
+  nomComplet: { x: 210, y: 274.9 },            // Position nom complet
+  dateNaissance: { x: 210, y: 291.2 },         // Position date de naissance
+  villeNaissance: { x: 210, y: 650 },        // Position ville de naissance
+  paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
+  nationalite: { x: 210, y: 308.4 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  telephone: { x: 210, y: 600 },             // Position téléphone
+  email: { x: 210, y: 550 },                 // Position email
+  adresse: { x: 210, y: 500 },               // Position adresse complète
+  programme: { x: 290, y: 450 },             // Position programme d'études
+  niveau: { x: 210, y: 450 },                // Position niveau (1ère, 2ème...)
+  specialite: { x: 210, y: 400 },            // Position spécialité
+  anneeAcademique: { x: 210, y: 400 },       // Position année académique
+  dateInscription: { x: 210, y: 350 },       // Position date d'inscription
+  montant: { x: 400, y: 300 },              // Position montant remboursé
+  typeFacture: { x: 120, y: 320 },          // Position type de paiement
 };
 
 // Charger le PDF template
@@ -120,7 +165,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
 
     // Ajouter le texte à chaque position
     Object.entries(fieldData).forEach(([fieldName, value]) => {
-      const position = FIELD_POSITIONS[fieldName as keyof typeof FIELD_POSITIONS];
+      const position = ATTESTATION_POSITIONS[fieldName as keyof typeof ATTESTATION_POSITIONS];
       if (position && value) {
         console.log(`✏️  ${fieldName}: "${value}" à (${position.x}, ${position.y})`);
         
@@ -134,9 +179,9 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       }
     });
 
-    console.log('💡 Positions actuelles:');
-    console.table(FIELD_POSITIONS);
-    console.log('🔧 Pour ajuster, modifiez FIELD_POSITIONS dans le fichier');
+    console.log('💡 Positions actuelles des attestations:');
+    console.table(ATTESTATION_POSITIONS);
+    console.log('🔧 Pour ajuster, modifiez ATTESTATION_POSITIONS dans le fichier');
 
     return await pdfDoc.save();
   } catch (error) {
@@ -178,28 +223,8 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
     const currentDate = new Date().toLocaleDateString('fr-FR');
     const invoiceNumberToUse = invoiceNumber || generateInvoiceNumber(student, payment);
 
-    // Positions pour la facture - utilise les mêmes positions que les attestations
-    const invoicePositions = {
-      numeroDocument: FIELD_POSITIONS.numeroDocument,
-      dateDocument: FIELD_POSITIONS.dateDocument,
-      civilite: FIELD_POSITIONS.civilite,
-      nomComplet: FIELD_POSITIONS.nomComplet,
-      dateNaissance: FIELD_POSITIONS.dateNaissance,
-      villeNaissance: FIELD_POSITIONS.villeNaissance,
-      paysNaissance: FIELD_POSITIONS.paysNaissance,
-      nationalite: FIELD_POSITIONS.nationalite,
-      numeroIdentite: FIELD_POSITIONS.numeroIdentite,
-      telephone: FIELD_POSITIONS.telephone,
-      email: FIELD_POSITIONS.email,
-      adresse: FIELD_POSITIONS.adresse,
-      programme: FIELD_POSITIONS.programme,
-      niveau: FIELD_POSITIONS.niveau,
-      specialite: FIELD_POSITIONS.specialite,
-      anneeAcademique: FIELD_POSITIONS.anneeAcademique,
-      dateInscription: FIELD_POSITIONS.dateInscription,
-      montant: { x: 400, y: 300 },
-      typeFacture: { x: 120, y: 320 },
-    };
+    // Utiliser les positions spécifiques aux factures
+    const invoicePositions = INVOICE_POSITIONS;
 
     // Utiliser l'année académique du paiement, pas celle actuelle de l'étudiant
     const academicYear = payment.academicYear || student.academicYear;
@@ -292,8 +317,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     
     // Numéro de la note de crédit
     firstPage.drawText(`N° ${creditNoteNumber}`, {
-      x: FIELD_POSITIONS.numeroDocument.x,
-      y: FIELD_POSITIONS.numeroDocument.y,
+      x: CREDIT_NOTE_POSITIONS.numeroDocument.x,
+      y: CREDIT_NOTE_POSITIONS.numeroDocument.y,
       size: 12,
       font: customFont,
       color: rgb(0, 0, 0),
@@ -302,8 +327,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     // Date d'émission
     const currentDate = new Date().toLocaleDateString('fr-FR');
     firstPage.drawText(`Date: ${currentDate}`, {
-      x: FIELD_POSITIONS.dateDocument.x,
-      y: FIELD_POSITIONS.dateDocument.y,
+      x: CREDIT_NOTE_POSITIONS.dateDocument.x,
+      y: CREDIT_NOTE_POSITIONS.dateDocument.y,
       size: 10,
       font: customFont,
       color: rgb(0, 0, 0),
@@ -311,16 +336,16 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     
     // Informations de l'étudiant
     firstPage.drawText(`${student.firstName} ${student.lastName}`, {
-      x: FIELD_POSITIONS.nomComplet.x,
-      y: FIELD_POSITIONS.nomComplet.y,
+      x: CREDIT_NOTE_POSITIONS.nomComplet.x,
+      y: CREDIT_NOTE_POSITIONS.nomComplet.y,
       size: 12,
       font: customFont,
       color: rgb(0, 0, 0),
     });
     
     firstPage.drawText(`Réf: ${student.reference}`, {
-      x: FIELD_POSITIONS.nomComplet.x,
-      y: FIELD_POSITIONS.nomComplet.y - 20,
+      x: CREDIT_NOTE_POSITIONS.nomComplet.x,
+      y: CREDIT_NOTE_POSITIONS.nomComplet.y - 20,
       size: 10,
       font: customFont,
       color: rgb(0, 0, 0),
@@ -328,8 +353,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     
     // Facture d'origine (très important !)
     firstPage.drawText(`Facture d'origine: ${invoiceNumber}`, {
-      x: FIELD_POSITIONS.nomComplet.x,
-      y: FIELD_POSITIONS.nomComplet.y - 40,
+      x: CREDIT_NOTE_POSITIONS.nomComplet.x,
+      y: CREDIT_NOTE_POSITIONS.nomComplet.y - 40,
       size: 11,
       font: customFont,
       color: rgb(0, 0, 0),
@@ -337,8 +362,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     
     // Type de paiement remboursé
     firstPage.drawText(`Type: ${payment.type}`, {
-      x: FIELD_POSITIONS.nomComplet.x,
-      y: FIELD_POSITIONS.nomComplet.y - 60,
+      x: CREDIT_NOTE_POSITIONS.nomComplet.x,
+      y: CREDIT_NOTE_POSITIONS.nomComplet.y - 60,
       size: 11,
       font: customFont,
       color: rgb(0, 0, 0),
@@ -346,8 +371,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     
     // Montant remboursé (en rouge et plus visible)
     firstPage.drawText(`MONTANT REMBOURSÉ: ${payment.amount}€`, {
-      x: FIELD_POSITIONS.nomComplet.x,
-      y: FIELD_POSITIONS.nomComplet.y - 90,
+      x: CREDIT_NOTE_POSITIONS.nomComplet.x,
+      y: CREDIT_NOTE_POSITIONS.nomComplet.y - 90,
       size: 14,
       font: customFont,
       color: rgb(0.8, 0.1, 0.1),
@@ -355,8 +380,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     
     // Motif du remboursement
     firstPage.drawText('MOTIF DU REMBOURSEMENT:', {
-      x: FIELD_POSITIONS.nomComplet.x,
-      y: FIELD_POSITIONS.nomComplet.y - 120,
+      x: CREDIT_NOTE_POSITIONS.nomComplet.x,
+      y: CREDIT_NOTE_POSITIONS.nomComplet.y - 120,
       size: 11,
       font: customFont,
       color: rgb(0, 0, 0),
@@ -381,8 +406,8 @@ export const fillCreditNotePdf = async (student: Student, payment: Payment, reas
     // Afficher chaque ligne du motif
     reasonLines.forEach((line, index) => {
       firstPage.drawText(line, {
-        x: FIELD_POSITIONS.nomComplet.x,
-        y: FIELD_POSITIONS.nomComplet.y - 140 - (index * 15),
+        x: CREDIT_NOTE_POSITIONS.nomComplet.x,
+        y: CREDIT_NOTE_POSITIONS.nomComplet.y - 140 - (index * 15),
         size: 10,
         font: customFont,
         color: rgb(0, 0, 0),
