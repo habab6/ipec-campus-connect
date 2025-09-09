@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Student, DbStudent } from '@/types';
 import { dbStudentToStudent, studentToDbStudent } from '@/utils/dataTransforms';
+import { createStudentAttestations } from '@/utils/attestationGenerator';
 
 export function useStudents() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -44,8 +45,19 @@ export function useStudents() {
       }
       
       console.log('Étudiant créé dans Supabase:', data);
+      const createdStudent = dbStudentToStudent(data as DbStudent);
+      
+      // Créer automatiquement les deux attestations
+      try {
+        await createStudentAttestations(createdStudent);
+        console.log('✅ Attestations automatiques créées');
+      } catch (attestationError) {
+        console.error('⚠️ Erreur création attestations (étudiant créé):', attestationError);
+        // Ne pas faire échouer la création de l'étudiant si les attestations échouent
+      }
+      
       await fetchStudents(); // Refresh list
-      return dbStudentToStudent(data as DbStudent);
+      return createdStudent;
     } catch (err) {
       console.error('Erreur complète:', err);
       throw new Error(err instanceof Error ? err.message : 'Erreur lors de la création de l\'étudiant');

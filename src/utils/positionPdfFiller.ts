@@ -48,18 +48,14 @@ const loadQuestrialFont = async (): Promise<Uint8Array> => {
 };
 
 // Générer un numéro d'attestation unique
-const generateAttestationNumber = (student: Student): string => {
-  // Déterminer le suffixe selon le programme
-  let programSuffix = '';
-  if (student.program === 'BBA') {
-    programSuffix = 'B';
-  } else if (student.program === 'MBA') {
-    programSuffix = 'M';
-  } else if (student.program === 'MBA Complémentaire') {
-    programSuffix = 'MC';
+const generateAttestationNumber = (student: Student, type: 'inscription' | 'preadmission' = 'inscription'): string => {
+  const timestamp = Date.now();
+  
+  if (type === 'preadmission') {
+    return `PRE-${timestamp}`;
   }
   
-  return `ATT-${student.reference}-${student.studyYear}-${programSuffix}`;
+  return `INSC-${timestamp}`;
 };
 
 // Remplir le PDF avec positionnement x,y
@@ -92,7 +88,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
     
     // Préparer les données avec tous les nouveaux champs
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    const documentNumber = attestationNumber || generateAttestationNumber(student);
+    const documentNumber = attestationNumber || generateAttestationNumber(student, 'inscription');
     
     // Formatage du niveau d'études
     const formatNiveau = (studyYear: number) => {
@@ -104,6 +100,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
     const fieldData = {
       numeroDocument: documentNumber,
       dateDocument: currentDate,
+      dateGeneration: currentDate, // Date de génération du document
       civilite: student.civilite || '',
       nomComplet: `${student.firstName} ${student.lastName}`,
       dateNaissance: new Date(student.dateOfBirth).toLocaleDateString('fr-FR') || '',
