@@ -307,12 +307,8 @@ export function useAcademicYearManagement() {
       return existingAttestation;
     }
 
-    // Generate unique attestation number
-    const { count } = await supabase
-      .from('registration_attestations')
-      .select('*', { count: 'exact', head: true });
-
-    const number = `ATT-${String((count || 0) + 1).padStart(4, '0')}`;
+    // Generate unique attestation number with INSC-timestamp format
+    const number = `INSC-${Date.now()}`;
 
     const { data: newAttestation, error } = await supabase
       .from('registration_attestations')
