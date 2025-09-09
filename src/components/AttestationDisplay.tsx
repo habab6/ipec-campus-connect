@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { fillRegistrationPdfWithPositions, downloadPdf } from "@/utils/positionPdfFiller";
+import { generatePreadmissionPdf } from "@/utils/attestationGenerator";
 import { Student } from "@/types";
 
 interface AttestationDisplayProps {
@@ -45,10 +46,20 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
         registrationDate: attestation.registration_date || student.registrationDate
       };
 
-      const pdfBytes = await fillRegistrationPdfWithPositions(
-        historicalStudent, 
-        attestation.number
-      );
+      // Vérifier si c'est une attestation de préadmission
+      const isPreadmission = attestation.number.startsWith('PRE-');
+      
+      let pdfBytes;
+      if (isPreadmission) {
+        // Utiliser le template de préadmission
+        pdfBytes = await generatePreadmissionPdf(historicalStudent, attestation.number);
+      } else {
+        // Utiliser le template d'inscription
+        pdfBytes = await fillRegistrationPdfWithPositions(
+          historicalStudent, 
+          attestation.number
+        );
+      }
       
       const filename = `duplicata-attestation-${formatStudentName(attestation, student).replace(' ', '-')}-${attestation.number}.pdf`;
       downloadPdf(pdfBytes, filename);
@@ -66,7 +77,7 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
       <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-300">
         <div className="flex items-center justify-between">
           <div className="text-lg font-semibold text-white">
-            Attestation {attestation.number}
+            {attestation.number.startsWith('PRE-') ? 'Préadmission' : 'Attestation'} {attestation.number}
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
