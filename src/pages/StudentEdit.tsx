@@ -358,6 +358,11 @@ const StudentEdit = () => {
                         <SelectItem value="2025-2026">2025-2026</SelectItem>
                         <SelectItem value="2026-2027">2026-2027</SelectItem>
                         <SelectItem value="2027-2028">2027-2028</SelectItem>
+                        <SelectItem value="2028-2029">2028-2029</SelectItem>
+                        <SelectItem value="2029-2030">2029-2030</SelectItem>
+                        <SelectItem value="2030-2031">2030-2031</SelectItem>
+                        <SelectItem value="2031-2032">2031-2032</SelectItem>
+                        <SelectItem value="2032-2033">2032-2033</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

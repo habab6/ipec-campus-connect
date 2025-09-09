@@ -503,6 +503,11 @@ const StudentRegistration = () => {
                         <SelectItem value={`${currentYear}-${currentYear+1}`}>{currentYear}-{currentYear+1}</SelectItem>
                         <SelectItem value={`${currentYear+1}-${currentYear+2}`}>{currentYear+1}-{currentYear+2}</SelectItem>
                         <SelectItem value={`${currentYear+2}-${currentYear+3}`}>{currentYear+2}-{currentYear+3}</SelectItem>
+                        <SelectItem value={`${currentYear+3}-${currentYear+4}`}>{currentYear+3}-{currentYear+4}</SelectItem>
+                        <SelectItem value={`${currentYear+4}-${currentYear+5}`}>{currentYear+4}-{currentYear+5}</SelectItem>
+                        <SelectItem value={`${currentYear+5}-${currentYear+6}`}>{currentYear+5}-{currentYear+6}</SelectItem>
+                        <SelectItem value={`${currentYear+6}-${currentYear+7}`}>{currentYear+6}-{currentYear+7}</SelectItem>
+                        <SelectItem value={`${currentYear+7}-${currentYear+8}`}>{currentYear+7}-{currentYear+8}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
