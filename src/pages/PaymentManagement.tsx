@@ -609,6 +609,12 @@ const PaymentManagement = () => {
 
   // Filtrer les paiements par année académique, fiscale et statut
   const filteredPayments = payments.filter(payment => {
+    // Filtrer les étudiants archivés par défaut
+    const student = students.find(s => s.id === payment.studentId);
+    if (student && student.status === "Archivé") {
+      return false; // Masquer les paiements des étudiants archivés
+    }
+    
     const matchesAcademicYear = selectedAcademicYear === "all" || payment.academicYear === selectedAcademicYear;
     
     // Pour l'année fiscale, vérifier la date de génération de la facture associée

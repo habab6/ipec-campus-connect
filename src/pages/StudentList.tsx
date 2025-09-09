@@ -19,7 +19,7 @@ const StudentList = () => {
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("all");
   const [selectedStudyYear, setSelectedStudyYear] = useState<string>("all");
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("active"); // Par défaut afficher seulement les étudiants actifs
   const [sortBy, setSortBy] = useState<string>("name");
   
   // Obtenir les valeurs uniques pour les filtres
@@ -119,7 +119,18 @@ const StudentList = () => {
       const matchesSpecialty = selectedSpecialty === "all" || student.specialty === selectedSpecialty;
       const matchesStudyYear = selectedStudyYear === "all" || student.studyYear.toString() === selectedStudyYear;
       const matchesAcademicYear = selectedAcademicYear === "all" || student.academicYear === selectedAcademicYear;
-      const matchesStatus = selectedStatus === "all" || student.status === selectedStatus;
+      
+      // Logique de filtrage du statut
+      let matchesStatus = false;
+      if (selectedStatus === "all") {
+        matchesStatus = true;
+      } else if (selectedStatus === "active") {
+        matchesStatus = student.status !== "Archivé"; // Masquer les archivés par défaut
+      } else if (selectedStatus === "archived") {
+        matchesStatus = student.status === "Archivé"; // Afficher seulement les archivés
+      } else {
+        matchesStatus = student.status === selectedStatus;
+      }
       
       return matchesSearch && matchesProgram && matchesSpecialty && matchesStudyYear && matchesAcademicYear && matchesStatus;
     })
@@ -288,6 +299,8 @@ const StudentList = () => {
                       <SelectValue placeholder="Tous" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="active">Actifs</SelectItem>
+                      <SelectItem value="archived">Archivés</SelectItem>
                       <SelectItem value="all">Tous</SelectItem>
                       {uniqueStatuses.map((status) => (
                         <SelectItem key={status} value={status}>
