@@ -51,13 +51,14 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
       
       let pdfBytes;
       if (isPreadmission) {
-        // Utiliser le template de préadmission
+        // Utiliser le template de préadmission avec le bon chemin
         pdfBytes = await generatePreadmissionPdf(historicalStudent, attestation.number);
       } else {
-        // Utiliser le template d'inscription
+        // Utiliser le template d'inscription par défaut
         pdfBytes = await fillRegistrationPdfWithPositions(
           historicalStudent, 
-          attestation.number
+          attestation.number,
+          '/templates/attestation-template.pdf'  // Template d'inscription explicite
         );
       }
       

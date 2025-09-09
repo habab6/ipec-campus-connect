@@ -798,90 +798,27 @@ const DocumentGeneration = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {/* Attestation année courante */}
-                  {(() => {
-                    const attestation = getCurrentAttestation();
-                    const hasAttestation = !!attestation;
-                    
-                    return (
-                      <div className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                        {/* Header avec nom de l'attestation */}
-                        <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
-                          <div className="flex items-center justify-between">
-                            <div className="text-lg font-semibold text-white">
-                              {hasAttestation ? `Attestation ${attestation.number}` : 'Nouvelle Attestation'}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                                {student?.program}
-                              </span>
-                              {student?.specialty && (
-                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
-                                  {student?.specialty}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Content Section */}
-                        <div className="p-4">
-                          {/* Informations dans une grille avec boutons d'action */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Programme</label>
-                              <p className="text-lg font-semibold text-foreground">{student?.program}</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {student?.studyYear === 1 ? '1ère année' : `${student?.studyYear}ème année`}
-                              </p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année académique</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {student?.academicYear}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Boutons d'action */}
-                          <div className="flex items-center gap-2 justify-end mb-4">
-                            {hasAttestation ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => generateRegistrationDoc(true)}
-                                className="flex items-center gap-2"
-                              >
-                                <Download className="h-4 w-4" />
-                                Télécharger PDF
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                onClick={() => generateRegistrationDoc(false)}
-                                className="flex items-center gap-2"
-                              >
-                                <Download className="h-4 w-4" />
-                                Générer l'attestation
-                              </Button>
-                            )}
-                          </div>
-
-                          {/* Informations de génération */}
-                          {attestation && (
-                            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                              <div className="text-xs text-muted-foreground">
-                                <strong>Date de génération:</strong> {new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {/* Afficher toutes les attestations pour l'étudiant */}
+                  {attestations.length > 0 ? (
+                    attestations
+                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                      .map((attestation) => (
+                        <AttestationDisplay 
+                          key={attestation.id}
+                          attestation={attestation}
+                          student={student}
+                          onGenerate={() => {
+                            // Action de génération si nécessaire
+                          }}
+                        />
+                      ))
+                  ) : (
+                    <div className="text-center p-6 bg-muted/30 rounded-lg">
+                      <p className="text-muted-foreground">
+                        Aucune attestation trouvée. Les attestations sont créées automatiquement lors de l'inscription.
+                      </p>
+                    </div>
+                  )}
                   
                   {/* Attestations des années précédentes */}
                   {attestations
