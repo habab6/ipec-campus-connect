@@ -9,12 +9,10 @@ import { Link } from "react-router-dom";
 import { useStudents } from "@/hooks/useStudents";
 import type { Student } from "@/types";
 import { BUSINESS_SPECIALTIES } from "@/utils/studentUtils";
-import { supabase } from "@/integrations/supabase/client";
 
 const StudentList = () => {
   const { students, loading } = useStudents();
   const [searchTerm, setSearchTerm] = useState("");
-  const [academicHistory, setAcademicHistory] = useState<any[]>([]);
   
   // États pour les filtres
   const [selectedProgram, setSelectedProgram] = useState<string>("all");
@@ -23,30 +21,12 @@ const StudentList = () => {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
-
-  // Charger l'historique académique
-  useEffect(() => {
-    const fetchAcademicHistory = async () => {
-      const { data } = await supabase
-        .from('student_academic_history')
-        .select('*');
-      setAcademicHistory(data || []);
-    };
-    
-    if (students.length > 0) {
-      fetchAcademicHistory();
-    }
-  }, [students]);
   
-  // Obtenir les valeurs uniques pour les filtres (incluant l'historique)
-  const allAcademicYears = new Set<string>();
-  students.forEach(s => allAcademicYears.add(s.academicYear));
-  academicHistory.forEach(h => allAcademicYears.add(h.academic_year));
-  
+  // Obtenir les valeurs uniques pour les filtres
   const uniquePrograms = [...new Set(students.map(s => s.program))];
   const uniqueSpecialties = [...new Set(students.map(s => s.specialty))];
   const uniqueStudyYears = [...new Set(students.map(s => s.studyYear))].sort((a, b) => a - b);
-  const uniqueAcademicYears = [...allAcademicYears].sort();
+  const uniqueAcademicYears = [...new Set(students.map(s => s.academicYear))].sort();
   const uniqueStatuses = [...new Set(students.map(s => s.status))];
 
   // Fonction d'export CSV
@@ -138,16 +118,8 @@ const StudentList = () => {
       const matchesProgram = selectedProgram === "all" || student.program === selectedProgram;
       const matchesSpecialty = selectedSpecialty === "all" || student.specialty === selectedSpecialty;
       const matchesStudyYear = selectedStudyYear === "all" || student.studyYear.toString() === selectedStudyYear;
+      const matchesAcademicYear = selectedAcademicYear === "all" || student.academicYear === selectedAcademicYear;
       const matchesStatus = selectedStatus === "all" || student.status === selectedStatus;
-      
-      // Filtre par année académique (inclut l'historique)
-      let matchesAcademicYear = selectedAcademicYear === "all" || student.academicYear === selectedAcademicYear;
-      if (!matchesAcademicYear && selectedAcademicYear !== "all") {
-        // Vérifier dans l'historique académique de l'étudiant
-        matchesAcademicYear = academicHistory.some(history => 
-          history.student_id === student.id && history.academic_year === selectedAcademicYear
-        );
-      }
       
       return matchesSearch && matchesProgram && matchesSpecialty && matchesStudyYear && matchesAcademicYear && matchesStatus;
     })
@@ -167,19 +139,6 @@ const StudentList = () => {
           return 0;
       }
     });
-
-  // Fonction pour obtenir l'année académique affichée pour un étudiant (actuelle ou historique)
-  const getDisplayedAcademicYear = (student: Student) => {
-    if (selectedAcademicYear === "all" || student.academicYear === selectedAcademicYear) {
-      return student.academicYear;
-    }
-    
-    // Si l'étudiant correspond via son historique, retourner cette année
-    const historyMatch = academicHistory.find(history => 
-      history.student_id === student.id && history.academic_year === selectedAcademicYear
-    );
-    return historyMatch ? historyMatch.academic_year : student.academicYear;
-  };
 
   const getProgramBadgeColor = (program: string) => {
     const colors = {
@@ -438,10 +397,7 @@ const StudentList = () => {
                               <Badge variant="secondary">{student.specialty}</Badge>
                             )}
                             <Badge variant="outline" className="text-xs">
-                              {getDisplayedAcademicYear(student)}
-                              {selectedAcademicYear !== "all" && getDisplayedAcademicYear(student) !== student.academicYear && (
-                                <span className="ml-1 text-orange-600">⚡</span>
-                              )}
+                              {student.academicYear}
                             </Badge>
                             <Badge 
                               variant={student.status === 'Actif' ? 'default' : 'secondary'}
