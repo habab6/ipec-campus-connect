@@ -274,14 +274,14 @@ const DocumentGeneration = () => {
     );
   };
 
-  const generateRegistrationDoc = async (isDuplicate = false) => {
+  const generateRegistrationDoc = async () => {
     if (!student) return;
     
     try {
       let attestation = getCurrentAttestation();
       
       // Si c'est une première génération, créer l'attestation dans Supabase
-      if (!attestation && !isDuplicate) {
+      if (!attestation) {
         const attestationNumber = await generateAttestationNumber();
         const newAttestationData = {
           student_id: student.id,
@@ -301,16 +301,12 @@ const DocumentGeneration = () => {
       if (!attestation) return;
       
       const pdfBytes = await fillRegistrationPdfWithPositions(student, attestation.number);
-      const filename = isDuplicate 
-        ? `duplicata-attestation-${student.firstName}-${student.lastName}-${attestation.number}.pdf`
-        : `attestation-inscription-${student.firstName}-${student.lastName}-${attestation.number}.pdf`;
+      const filename = `attestation-inscription-${student.firstName}-${student.lastName}-${attestation.number}.pdf`;
       downloadPdf(pdfBytes, filename);
       
       toast({
-        title: isDuplicate ? "Duplicata téléchargé" : "Attestation générée",
-        description: isDuplicate 
-          ? `Duplicata de l'attestation ${attestation.number} téléchargé.`
-          : `Attestation ${attestation.number} générée avec succès.`,
+        title: "Attestation téléchargée",
+        description: `Attestation ${attestation.number} téléchargée avec succès.`,
       });
     } catch (error) {
       toast({
@@ -326,7 +322,7 @@ const DocumentGeneration = () => {
     const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
                      payment.type === 'Minerval' ? 'MIN' : 
                      payment.type === 'Frais d\'envoi' ? 'ENV' :
-                     payment.type === 'Duplicata' ? 'DC' : 'MIN';
+                     payment.type === 'Duplicata' ? 'TEL' : 'MIN';
     
     // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
     const now = new Date();
@@ -368,14 +364,14 @@ const DocumentGeneration = () => {
     );
   };
 
-  const generateInvoiceDoc = async (payment: Payment, isDuplicate = false) => {
+  const generateInvoiceDoc = async (payment: Payment) => {
     if (!student) return;
     
     try {
       let invoice = getExistingInvoice(payment);
       
       // Si c'est une première génération, créer la facture dans Supabase
-      if (!invoice && !isDuplicate) {
+      if (!invoice) {
         const invoiceNumber = await generateInvoiceNumber(student, payment);
         const newInvoiceData = {
           student_id: student.id,
@@ -397,16 +393,12 @@ const DocumentGeneration = () => {
       
       const invoiceNumber = invoice.number || 'SANS-NUMERO';
       const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
-      const filename = isDuplicate 
-        ? `duplicata-facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`
-        : `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
+      const filename = `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
       downloadPdf(pdfBytes, filename);
       
       toast({
-        title: isDuplicate ? "Duplicata téléchargé" : "Facture générée",
-        description: isDuplicate 
-          ? `Duplicata de la facture ${invoiceNumber} téléchargé.`
-          : `Facture ${invoiceNumber} générée pour ${payment.amount}€.`,
+        title: "Facture téléchargée",
+        description: `Facture ${invoiceNumber} téléchargée pour ${payment.amount}€.`,
       });
     } catch (error) {
       toast({
@@ -1045,7 +1037,7 @@ const DocumentGeneration = () => {
                                         if (payment.status === 'Remboursé') {
                                           generateCombinedInvoiceAndCreditNote(payment);
                                         } else {
-                                          generateInvoiceDoc(payment, true);
+                                          generateInvoiceDoc(payment);
                                         }
                                       }}
                                       className="flex items-center gap-2"
@@ -1056,7 +1048,7 @@ const DocumentGeneration = () => {
                                   ) : (
                                     <Button
                                       size="sm"
-                                      onClick={() => generateInvoiceDoc(payment, false)}
+                                      onClick={() => generateInvoiceDoc(payment)}
                                       className="flex items-center gap-2"
                                     >
                                       <Receipt className="h-4 w-4" />

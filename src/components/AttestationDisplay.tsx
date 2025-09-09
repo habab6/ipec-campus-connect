@@ -27,7 +27,7 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
     return attestation.student_reference || student.reference;
   };
 
-  const handleGenerateDuplicate = async () => {
+  const handleDownload = async () => {
     try {
       // Utiliser les données historiques stockées dans l'attestation
       const historicalStudent = {
@@ -62,13 +62,13 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
         );
       }
       
-      const filename = `duplicata-attestation-${formatStudentName(attestation, student).replace(' ', '-')}-${attestation.number}.pdf`;
+      const filename = `attestation-${formatStudentName(attestation, student).replace(' ', '-')}-${attestation.number}.pdf`;
       downloadPdf(pdfBytes, filename);
       
-      toast.success(`Duplicata de l'attestation ${attestation.number} téléchargé.`);
+      toast.success(`Attestation ${attestation.number} téléchargée.`);
     } catch (error) {
-      console.error('Erreur lors de la génération du duplicata:', error);
-      toast.error("Erreur lors de la génération du duplicata");
+      console.error('Erreur lors du téléchargement:', error);
+      toast.error("Erreur lors du téléchargement");
     }
   };
 
@@ -120,11 +120,11 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
           <Button
             variant="outline"
             size="sm"
-            onClick={handleGenerateDuplicate}
+            onClick={handleDownload}
             className="ml-4 hover:bg-blue-50 hover:border-blue-200"
           >
             <Download className="w-4 h-4 mr-2" />
-            Duplicata
+            Télécharger
           </Button>
         </div>
       </div>
