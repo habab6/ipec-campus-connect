@@ -3,21 +3,68 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search, Users, Mail, Phone, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Search, Users, Mail, Phone, Calendar, Filter, Download, SortAsc } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useStudents } from "@/hooks/useStudents";
 import type { Student } from "@/types";
+import { BUSINESS_SPECIALTIES } from "@/utils/studentUtils";
 
 const StudentList = () => {
   const { students, loading } = useStudents();
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // États pour les filtres
+  const [selectedProgram, setSelectedProgram] = useState<string>("all");
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("all");
+  const [selectedStudyYear, setSelectedStudyYear] = useState<string>("all");
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
+  
+  // Obtenir les valeurs uniques pour les filtres
+  const uniquePrograms = [...new Set(students.map(s => s.program))];
+  const uniqueSpecialties = [...new Set(students.map(s => s.specialty))];
+  const uniqueStudyYears = [...new Set(students.map(s => s.studyYear))].sort((a, b) => a - b);
+  const uniqueAcademicYears = [...new Set(students.map(s => s.academicYear))].sort();
+  const uniqueStatuses = [...new Set(students.map(s => s.status))];
 
-  const filteredStudents = students.filter(student =>
-    student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.program.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Logique de filtrage avancée
+  const filteredStudents = students
+    .filter(student => {
+      // Filtre par recherche textuelle
+      const matchesSearch = searchTerm === "" || 
+        student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.program.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filtres par catégorie
+      const matchesProgram = selectedProgram === "all" || student.program === selectedProgram;
+      const matchesSpecialty = selectedSpecialty === "all" || student.specialty === selectedSpecialty;
+      const matchesStudyYear = selectedStudyYear === "all" || student.studyYear.toString() === selectedStudyYear;
+      const matchesAcademicYear = selectedAcademicYear === "all" || student.academicYear === selectedAcademicYear;
+      const matchesStatus = selectedStatus === "all" || student.status === selectedStatus;
+      
+      return matchesSearch && matchesProgram && matchesSpecialty && matchesStudyYear && matchesAcademicYear && matchesStatus;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+        case "program":
+          return a.program.localeCompare(b.program);
+        case "studyYear":
+          return a.studyYear - b.studyYear;
+        case "academicYear":
+          return a.academicYear.localeCompare(b.academicYear);
+        case "registrationDate":
+          return new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime();
+        default:
+          return 0;
+      }
+    });
 
   const getProgramBadgeColor = (program: string) => {
     const colors = {
@@ -68,6 +115,7 @@ const StudentList = () => {
           </CardHeader>
 
           <CardContent className="p-6">
+            {/* Barre de recherche */}
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -76,6 +124,164 @@ const StudentList = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+
+            {/* Filtres avancés */}
+            <div className="space-y-4 mb-6 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Filtres et tri</span>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {/* Filtre par programme */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Programme</span>
+                  <Select value={selectedProgram} onValueChange={setSelectedProgram}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Tous" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous</SelectItem>
+                      {uniquePrograms.map((program) => (
+                        <SelectItem key={program} value={program}>
+                          {program}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtre par spécialité */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Spécialité</span>
+                  <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Toutes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes</SelectItem>
+                      {uniqueSpecialties.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtre par niveau */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Niveau</span>
+                  <Select value={selectedStudyYear} onValueChange={setSelectedStudyYear}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Tous" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous</SelectItem>
+                      {uniqueStudyYears.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          Année {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtre par année académique */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Année académique</span>
+                  <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Toutes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes</SelectItem>
+                      {uniqueAcademicYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtre par statut */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Statut</span>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Tous" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous</SelectItem>
+                      {uniqueStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Tri */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Trier par</span>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Nom</SelectItem>
+                      <SelectItem value="program">Programme</SelectItem>
+                      <SelectItem value="studyYear">Niveau</SelectItem>
+                      <SelectItem value="academicYear">Année académique</SelectItem>
+                      <SelectItem value="registrationDate">Date d'inscription</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {/* Actions et compteur */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between pt-3 border-t border-border">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span>{filteredStudents.length} étudiant{filteredStudents.length > 1 ? 's' : ''} affiché{filteredStudents.length > 1 ? 's' : ''}</span>
+                  {(selectedProgram !== "all" || selectedSpecialty !== "all" || selectedStudyYear !== "all" || selectedAcademicYear !== "all" || selectedStatus !== "all") && (
+                    <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded">Filtré</span>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  {(selectedProgram !== "all" || selectedSpecialty !== "all" || selectedStudyYear !== "all" || selectedAcademicYear !== "all" || selectedStatus !== "all") && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProgram("all");
+                        setSelectedSpecialty("all");
+                        setSelectedStudyYear("all");
+                        setSelectedAcademicYear("all");
+                        setSelectedStatus("all");
+                      }}
+                    >
+                      Réinitialiser filtres
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // TODO: Implémenter l'export CSV/Excel
+                      console.log("Export des étudiants filtrés");
+                    }}
+                    disabled={filteredStudents.length === 0}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Exporter ({filteredStudents.length})
+                  </Button>
+                </div>
+              </div>
             </div>
 
             {loading ? (
@@ -108,7 +314,7 @@ const StudentList = () => {
                     <CardContent className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
                             <h3 className="text-lg font-semibold">
                               {student.firstName} {student.lastName}
                             </h3>
@@ -116,6 +322,18 @@ const StudentList = () => {
                               {student.program}
                             </Badge>
                             <Badge variant="outline">Année {student.studyYear}</Badge>
+                            {student.specialty && (
+                              <Badge variant="secondary">{student.specialty}</Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              {student.academicYear}
+                            </Badge>
+                            <Badge 
+                              variant={student.status === 'Actif' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {student.status}
+                            </Badge>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
