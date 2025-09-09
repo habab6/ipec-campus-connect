@@ -254,8 +254,10 @@ export type Database = {
           academic_year: string
           created_at: string
           generate_date: string
+          generated_at: string | null
           id: string
           is_duplicate: boolean | null
+          is_generated: boolean | null
           notes: string | null
           number: string
           original_attestation_id: string | null
@@ -275,8 +277,10 @@ export type Database = {
           academic_year: string
           created_at?: string
           generate_date?: string
+          generated_at?: string | null
           id?: string
           is_duplicate?: boolean | null
+          is_generated?: boolean | null
           notes?: string | null
           number: string
           original_attestation_id?: string | null
@@ -296,8 +300,10 @@ export type Database = {
           academic_year?: string
           created_at?: string
           generate_date?: string
+          generated_at?: string | null
           id?: string
           is_duplicate?: boolean | null
+          is_generated?: boolean | null
           notes?: string | null
           number?: string
           original_attestation_id?: string | null

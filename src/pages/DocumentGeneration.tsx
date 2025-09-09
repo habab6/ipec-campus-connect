@@ -274,39 +274,35 @@ const DocumentGeneration = () => {
     );
   };
 
-  const generateRegistrationDoc = async () => {
+  const generateRegistrationDoc = async (attestationId: string) => {
     if (!student) return;
     
     try {
-      let attestation = getCurrentAttestation();
-      
-      // Si c'est une première génération, créer l'attestation dans Supabase
-      if (!attestation) {
-        const attestationNumber = await generateAttestationNumber();
-        const newAttestationData = {
-          student_id: student.id,
-          number: attestationNumber,
-          academic_year: student.academicYear,
-          study_year: student.studyYear,
-          program: student.program,
-          specialty: student.specialty,
-          generate_date: student.registrationDate
-        };
-        
-        const createdAttestation = await createAttestation(newAttestationData);
-        setAttestations(prev => [...prev, createdAttestation]);
-        attestation = createdAttestation;
-      }
-      
+      const attestation = attestations.find(a => a.id === attestationId);
       if (!attestation) return;
+      
+      // Marquer l'attestation comme générée avec la date actuelle
+      const { supabase } = await import('@/integrations/supabase/client');
+      await supabase
+        .from('registration_attestations')
+        .update({ 
+          is_generated: true, 
+          generated_at: new Date().toISOString(),
+          generate_date: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', attestationId);
+      
+      // Recharger les attestations
+      const updatedAttestations = await getAttestationsByStudentId(student.id);
+      setAttestations(updatedAttestations);
       
       const pdfBytes = await fillRegistrationPdfWithPositions(student, attestation.number);
       const filename = `attestation-inscription-${student.firstName}-${student.lastName}-${attestation.number}.pdf`;
       downloadPdf(pdfBytes, filename);
       
       toast({
-        title: "Attestation téléchargée",
-        description: `Attestation ${attestation.number} téléchargée avec succès.`,
+        title: "Attestation générée et téléchargée",
+        description: `Attestation ${attestation.number} générée avec succès.`,
       });
     } catch (error) {
       toast({
@@ -793,16 +789,89 @@ const DocumentGeneration = () => {
                   {/* Afficher toutes les attestations pour l'étudiant */}
                   {attestations.length > 0 ? (
                     attestations
+                      .filter(a => a.academic_year === student?.academicYear && a.study_year === student?.studyYear)
                       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                       .map((attestation) => (
-                        <AttestationDisplay 
-                          key={attestation.id}
-                          attestation={attestation}
-                          student={student}
-                          onGenerate={() => {
-                            // Action de génération si nécessaire
-                          }}
-                        />
+                        <div key={attestation.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                          {/* Header avec nom de l'attestation */}
+                          <div className="px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-700 border-b border-slate-300">
+                            <div className="flex items-center justify-between">
+                              <div className="text-lg font-semibold text-white">
+                                Attestation {attestation.number}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                  {attestation.program}
+                                </span>
+                                {!attestation.is_generated ? (
+                                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
+                                    Non généré
+                                  </span>
+                                ) : (
+                                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                    Généré
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Content Section */}
+                          <div className="p-4">
+                            {/* Informations dans une grille */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Programme</label>
+                                <p className="text-lg font-semibold text-foreground">{attestation.program}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
+                                <p className="text-sm font-medium text-foreground">
+                                  {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
+                                </p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Année académique</label>
+                                <p className="text-sm font-medium text-foreground">
+                                  {attestation.academic_year}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Boutons d'action */}
+                            <div className="flex items-center gap-2 justify-end mb-4">
+                              {attestation.is_generated ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRegistrationDoc(attestation.id)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Download className="h-4 w-4" />
+                                  Télécharger PDF
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => generateRegistrationDoc(attestation.id)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  Générer l'attestation
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* Informations de génération */}
+                            {attestation.is_generated && (
+                              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                                <div className="text-xs text-muted-foreground">
+                                  <strong>Date de génération:</strong> {attestation.generated_at ? new Date(attestation.generated_at).toLocaleDateString('fr-FR') : new Date(attestation.generate_date).toLocaleDateString('fr-FR')}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       ))
                   ) : (
                     <div className="text-center p-6 bg-muted/30 rounded-lg">
