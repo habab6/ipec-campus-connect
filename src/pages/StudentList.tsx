@@ -29,6 +29,80 @@ const StudentList = () => {
   const uniqueAcademicYears = [...new Set(students.map(s => s.academicYear))].sort();
   const uniqueStatuses = [...new Set(students.map(s => s.status))];
 
+  // Fonction d'export CSV
+  const exportToCSV = () => {
+    if (filteredStudents.length === 0) return;
+    
+    const headers = [
+      'Référence',
+      'Civilité', 
+      'Prénom',
+      'Nom',
+      'Date de naissance',
+      'Ville de naissance',
+      'Pays de naissance',
+      'Nationalité',
+      'N° d\'identité',
+      'Téléphone',
+      'Email',
+      'Adresse',
+      'Programme',
+      'Année d\'étude',
+      'Spécialité',
+      'Année académique',
+      'Date d\'inscription',
+      'Statut',
+      'Notes'
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      ...filteredStudents.map(student => [
+        student.reference || '',
+        student.civilite || '',
+        student.firstName || '',
+        student.lastName || '',
+        student.dateOfBirth || '',
+        student.cityOfBirth || '',
+        student.countryOfBirth || '',
+        student.nationality || '',
+        student.identityNumber || '',
+        student.phone || '',
+        student.email || '',
+        student.address || '',
+        student.program || '',
+        student.studyYear || '',
+        student.specialty || '',
+        student.academicYear || '',
+        student.registrationDate || '',
+        student.status || '',
+        student.notes || ''
+      ].map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    
+    // Nom du fichier avec filtres appliqués
+    const currentDate = new Date().toISOString().split('T')[0];
+    const activeFilters = [];
+    if (selectedProgram !== "all") activeFilters.push(selectedProgram);
+    if (selectedSpecialty !== "all") activeFilters.push(selectedSpecialty);
+    if (selectedStudyYear !== "all") activeFilters.push(`Année${selectedStudyYear}`);
+    if (selectedAcademicYear !== "all") activeFilters.push(selectedAcademicYear);
+    if (selectedStatus !== "all") activeFilters.push(selectedStatus);
+    
+    const filterSuffix = activeFilters.length > 0 ? `-${activeFilters.join('-')}` : '';
+    link.setAttribute('download', `etudiants${filterSuffix}-${currentDate}.csv`);
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Logique de filtrage avancée
   const filteredStudents = students
     .filter(student => {
@@ -271,10 +345,7 @@ const StudentList = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => {
-                      // TODO: Implémenter l'export CSV/Excel
-                      console.log("Export des étudiants filtrés");
-                    }}
+                    onClick={exportToCSV}
                     disabled={filteredStudents.length === 0}
                   >
                     <Download className="h-4 w-4 mr-1" />
