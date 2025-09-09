@@ -5,7 +5,8 @@ import { fillRegistrationPdfWithPositions } from './positionPdfFiller';
 // Générer les deux attestations lors de la création d'un étudiant
 export const createStudentAttestations = async (student: Student): Promise<void> => {
   try {
-    console.log('🎓 Création des attestations pour:', student.firstName, student.lastName);
+    console.log('🎓 DEBUT - Création des attestations pour:', student.firstName, student.lastName);
+    console.log('🎓 Student ID:', student.id);
 
     // 1. Créer l'attestation d'inscription
     const inscriptionNumber = `INSC-${Date.now()}`;
@@ -50,23 +51,27 @@ export const createStudentAttestations = async (student: Student): Promise<void>
     };
 
     // Insérer les deux attestations en base
+    console.log('📝 Insertion attestation inscription:', inscriptionAttestation);
     const { error: inscriptionError } = await supabase
       .from('registration_attestations')
       .insert([inscriptionAttestation]);
 
     if (inscriptionError) {
-      console.error('Erreur création attestation inscription:', inscriptionError);
+      console.error('❌ Erreur création attestation inscription:', inscriptionError);
       throw inscriptionError;
     }
+    console.log('✅ Attestation inscription créée');
 
+    console.log('📝 Insertion attestation préadmission:', preadmissionAttestation);
     const { error: preadmissionError } = await supabase
       .from('registration_attestations')
       .insert([preadmissionAttestation]);
 
     if (preadmissionError) {
-      console.error('Erreur création attestation préadmission:', preadmissionError);
+      console.error('❌ Erreur création attestation préadmission:', preadmissionError);
       throw preadmissionError;
     }
+    console.log('✅ Attestation préadmission créée');
 
     console.log('✅ Attestations créées avec succès');
     console.log('📋 Inscription:', inscriptionNumber);
