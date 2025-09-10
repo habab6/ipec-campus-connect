@@ -243,7 +243,7 @@ const StudentRegistration = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-4 md:py-8 px-2 md:px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <div className="container mx-auto max-w-2xl">
         <div className="mb-6">
           <Link to="/">
@@ -263,7 +263,7 @@ const StudentRegistration = () => {
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="p-3 md:p-6">
+          <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Section 1: Informations personnelles */}
               <div className="space-y-4">
