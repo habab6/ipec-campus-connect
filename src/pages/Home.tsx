@@ -12,7 +12,7 @@ const Home = () => {
           <div className="flex items-center justify-center gap-3 md:gap-4 mb-4 md:mb-6">
             <img src="/logo.svg" alt="IPEC Logo" className="h-10 w-10 md:h-16 md:w-16" />
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#04a7d7] leading-none">
-              IPEC Administration
+              IPEC ADMINISTRATION
             </h1>
           </div>
           <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 md:mb-12 max-w-3xl mx-auto px-2">
