@@ -210,23 +210,23 @@ const GlobalSearch = ({
               <div
                 key={`${result.type}-${result.id}`}
                 onClick={() => handleResultClick(result)}
-                className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors"
+                className="flex items-center gap-2 md:gap-3 p-2 md:p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors"
               >
                 <div className="flex-shrink-0">
                   {getResultIcon(result.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">
+                  <div className="font-medium text-xs md:text-sm truncate">
                     {result.title}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
                     {result.subtitle}
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">
+                  <div className="text-xs text-muted-foreground truncate hidden sm:block">
                     {result.description}
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <ArrowRight className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
               </div>
             ))}
           </CardContent>

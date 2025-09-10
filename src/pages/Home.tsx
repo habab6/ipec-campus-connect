@@ -7,17 +7,17 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section with Full Page Search */}
-      <section className="py-16 px-4 bg-background min-h-screen flex items-center">
-        <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-[#04a7d7]">
+      <section className="py-8 md:py-16 px-2 md:px-4 bg-background min-h-screen flex items-center">
+        <div className="container mx-auto text-center px-2">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 md:mb-6 text-[#04a7d7]">
             IPEC Administration
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 md:mb-12 max-w-3xl mx-auto px-2">
             Système de gestion des étudiants et documents académiques
           </p>
           
           {/* Grande barre de recherche en pleine page */}
-          <div className="max-w-4xl mx-auto mb-12">
+          <div className="max-w-4xl mx-auto mb-8 md:mb-12 px-2">
             <GlobalSearch 
               variant="full"
               placeholder="Rechercher un étudiant, une attestation, une facture..."
@@ -25,8 +25,8 @@ const Home = () => {
             />
           </div>
           
-          <div className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
-            <span>Recherchez par nom, référence, numéro d'attestation ou de facture</span>
+          <div className="flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg text-muted-foreground px-4">
+            <span className="text-center">Recherchez par nom, référence, numéro d'attestation ou de facture</span>
           </div>
         </div>
       </section>

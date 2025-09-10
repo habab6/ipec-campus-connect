@@ -175,7 +175,7 @@ const StudentList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen bg-background py-4 md:py-8 px-2 md:px-4">
       <div className="container mx-auto">
         <div className="mb-6">
           <Link to="/">
@@ -225,7 +225,7 @@ const StudentList = () => {
                 <span className="text-sm font-medium">Filtres et tri</span>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 {/* Filtre par programme */}
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-medium text-muted-foreground">Programme</span>
@@ -337,7 +337,7 @@ const StudentList = () => {
               </div>
               
               {/* Actions et compteur */}
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between pt-3 border-t border-border">
+              <div className="flex flex-col sm:flex-row gap-2 md:gap-3 items-start sm:items-center justify-between pt-3 border-t border-border">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <span>{filteredStudents.length} étudiant{filteredStudents.length > 1 ? 's' : ''} affiché{filteredStudents.length > 1 ? 's' : ''}</span>
                   {(selectedProgram !== "all" || selectedSpecialty !== "all" || selectedStudyYear !== "all" || selectedAcademicYear !== "all" || selectedStatus !== "all") && (
