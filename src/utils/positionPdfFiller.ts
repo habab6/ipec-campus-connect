@@ -169,7 +169,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       dateGeneration: currentDate, // Date de génération du document
       nomComplet: `${student.civilite} ${student.firstName} ${student.lastName}`,
       dateNaissance: new Date(student.dateOfBirth).toLocaleDateString('fr-FR') || '',
-      villeNaissance: student.cityOfBirth || '',
+      villeNaissance: `à ${student.cityOfBirth} ${student.countryOfBirth}`,
       paysNaissance: student.countryOfBirth || '',
       nationalite: student.nationality || '',
       numeroIdentite: student.identityNumber || '',
