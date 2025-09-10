@@ -16,7 +16,6 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   niveau: { x: 210, y: 412 },                // Position niveau (1ère, 2ème...)
   specialite: { x: 210, y: 425 },            // Position spécialité
   anneeAcademique: { x: 210, y: 455 },       // Position année académique
-  dateInscription: { x: 210, y: 350 },       // Position date d'inscription
 };
 
 // Configuration des positions pour les ATTESTATIONS DE PRÉADMISSION
