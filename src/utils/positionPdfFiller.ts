@@ -10,7 +10,7 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   villeNaissance: { x: 276, y: 291.44 },        // Position ville de naissance
   nationalite: { x: 210, y: 307.95 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.46 },        // Position numéro d'identité/passeport
-  programme: { x: 210, y: 391.56 },             // Position programme d'études
+  programme: { x: 210, y: 391.64 },             // Position programme d'études
   niveau: { x: 210, y: 408 },                // Position niveau (1ère, 2ème...)
   specialite: { x: 210, y: 425 },            // Position spécialité
   referenceEtudiant: { x: 210, y: 442 },     // Position référence étudiant
