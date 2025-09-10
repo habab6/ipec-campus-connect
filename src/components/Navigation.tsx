@@ -19,7 +19,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
             <img src="/logo.svg" alt="IPEC Logo" className="h-8 w-8" />
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-[#04a7d7]">
               IPEC Bruxelles
             </span>
           </div>
