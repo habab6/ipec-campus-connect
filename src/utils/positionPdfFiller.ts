@@ -17,7 +17,7 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   adresse: { x: 210, y: 500 },               // Position adresse complète
   programme: { x: 210, y: 450 },             // Position programme d'études
   niveau: { x: 210, y: 450 },                // Position niveau (1ère, 2ème...)
-  specialite: { x: 210, y: 320 },            // Position spécialité
+  specialite: { x: 210, y: 480 },            // Position spécialité
   anneeAcademique: { x: 210, y: 400 },       // Position année académique
   dateInscription: { x: 210, y: 350 },       // Position date d'inscription
 };
