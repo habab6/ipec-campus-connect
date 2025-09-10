@@ -6,8 +6,7 @@ import { Student, Payment, RegistrationAttestation, Invoice } from '@/types';
 const ATTESTATION_INSCRIPTION_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
   nomComplet: { x: 210, y: 274.93 },            // Position nom complet
-  dateNaissance: { x: 210, y: 291.44 },         // Position date de naissance
-  villeNaissance: { x: 276, y: 291.44 },        // Position ville de naissance
+  villeNaissance: { x: 210, y: 291.44 },        // Position ville de naissance
   nationalite: { x: 210, y: 307.95 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.46 },        // Position numéro d'identité/passeport
   programme: { x: 210, y: 391.68 },             // Position programme d'études
@@ -167,7 +166,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       dateGeneration: currentDate, // Date de génération du document
       nomComplet: `${student.civilite} ${student.firstName} ${student.lastName}`,
       dateNaissance: new Date(student.dateOfBirth).toLocaleDateString('fr-FR') || '',
-      villeNaissance: `à ${student.cityOfBirth} - ${student.countryOfBirth}`,
+      villeNaissance: `${new Date(student.dateOfBirth).toLocaleDateString('fr-FR') || ''} à ${student.cityOfBirth} - ${student.countryOfBirth}`,
       paysNaissance: student.countryOfBirth || '',
       nationalite: student.nationality || '',
       numeroIdentite: student.identityNumber || '',
