@@ -12,6 +12,7 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
   nationalite: { x: 210, y: 308.4 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  referenceEtudiant: { x: 210, y: 340 },     // Position référence étudiant
   programme: { x: 210, y: 392 },             // Position programme d'études
   niveau: { x: 210, y: 412 },                // Position niveau (1ère, 2ème...)
   specialite: { x: 210, y: 425 },            // Position spécialité
@@ -30,6 +31,7 @@ const ATTESTATION_PREADMISSION_POSITIONS = {
   paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
   nationalite: { x: 210, y: 308.4 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  referenceEtudiant: { x: 210, y: 340 },     // Position référence étudiant
   telephone: { x: 210, y: 600 },             // Position téléphone
   email: { x: 210, y: 550 },                 // Position email
   adresse: { x: 210, y: 500 },               // Position adresse complète
@@ -51,6 +53,7 @@ const INVOICE_POSITIONS = {
   paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
   nationalite: { x: 210, y: 308.4 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  referenceEtudiant: { x: 210, y: 340 },     // Position référence étudiant
   telephone: { x: 210, y: 600 },             // Position téléphone
   email: { x: 210, y: 550 },                 // Position email
   adresse: { x: 210, y: 500 },               // Position adresse complète
@@ -74,6 +77,7 @@ const CREDIT_NOTE_POSITIONS = {
   paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
   nationalite: { x: 210, y: 308.4 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  referenceEtudiant: { x: 210, y: 340 },     // Position référence étudiant
   telephone: { x: 210, y: 600 },             // Position téléphone
   email: { x: 210, y: 550 },                 // Position email
   adresse: { x: 210, y: 500 },               // Position adresse complète
@@ -169,6 +173,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       paysNaissance: student.countryOfBirth || '',
       nationalite: student.nationality || '',
       numeroIdentite: student.identityNumber || '',
+      referenceEtudiant: student.reference || '',
       telephone: student.phone || '',
       email: student.email || '',
       adresse: student.address || '',
@@ -260,6 +265,7 @@ export const fillInvoicePdfWithPositions = async (student: Student, payment: Pay
       paysNaissance: student.countryOfBirth,
       nationalite: student.nationality,
       numeroIdentite: student.identityNumber,
+      referenceEtudiant: student.reference,
       telephone: student.phone,
       email: student.email,
       adresse: student.address,
