@@ -5,12 +5,12 @@ import { Student, Payment, RegistrationAttestation, Invoice } from '@/types';
 // Configuration des positions pour les ATTESTATIONS D'INSCRIPTION
 const ATTESTATION_INSCRIPTION_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
-  dateDocument: { x: 160, y: 547.5 },          // Position de la date
+  dateDocument: { x: 160, y: 547.1 },          // Position de la date
   nomComplet: { x: 210, y: 274.9 },            // Position nom complet
   dateNaissance: { x: 210, y: 291.2 },         // Position date de naissance
   villeNaissance: { x: 276, y: 291.2 },        // Position ville de naissance
-  nationalite: { x: 210, y: 308.4 },           // Position nationalité
-  numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  nationalite: { x: 210, y: 307.5 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 323.8 },        // Position numéro d'identité/passeport
   referenceEtudiant: { x: 210, y: 442 },     // Position référence étudiant
   programme: { x: 210, y: 392 },             // Position programme d'études
   niveau: { x: 210, y: 408 },                // Position niveau (1ère, 2ème...)
@@ -167,7 +167,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       dateGeneration: currentDate, // Date de génération du document
       nomComplet: `${student.civilite} ${student.firstName} ${student.lastName}`,
       dateNaissance: new Date(student.dateOfBirth).toLocaleDateString('fr-FR') || '',
-      villeNaissance: `à ${student.cityOfBirth} ${student.countryOfBirth}`,
+      villeNaissance: `à ${student.cityOfBirth} - ${student.countryOfBirth}`,
       paysNaissance: student.countryOfBirth || '',
       nationalite: student.nationality || '',
       numeroIdentite: student.identityNumber || '',
