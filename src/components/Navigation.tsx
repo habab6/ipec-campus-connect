@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus, Home, CreditCard } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import ipecLogo from "@/assets/ipec-logo.jpg";
+
 
 const Navigation = () => {
   const location = useLocation();
@@ -18,7 +18,7 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
-            <img src={ipecLogo} alt="IPEC Logo" className="h-8 w-8" />
+            <img src="/logo.svg" alt="IPEC Logo" className="h-8 w-8" />
             <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               IPEC Bruxelles
             </span>
