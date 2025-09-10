@@ -10,7 +10,7 @@ const Home = () => {
       <section className="py-16 px-4 bg-gradient-to-br from-primary/5 to-secondary/5 min-h-screen flex items-center">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-            IPEC Bruxelles
+            IPEC Administration
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto">
             Système de gestion des étudiants et documents académiques
