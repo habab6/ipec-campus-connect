@@ -5,17 +5,17 @@ import { Student, Payment, RegistrationAttestation, Invoice } from '@/types';
 // Configuration des positions pour les ATTESTATIONS D'INSCRIPTION
 const ATTESTATION_INSCRIPTION_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
-  dateDocument: { x: 160, y: 547.1 },          // Position de la date
   nomComplet: { x: 210, y: 274.93 },            // Position nom complet
   dateNaissance: { x: 210, y: 291.44 },         // Position date de naissance
-  villeNaissance: { x: 276, y: 291.3 },        // Position ville de naissance
-  nationalite: { x: 210, y: 307.5 },           // Position nationalité
-  numeroIdentite: { x: 210, y: 323.8 },        // Position numéro d'identité/passeport
-  referenceEtudiant: { x: 210, y: 442 },     // Position référence étudiant
+  villeNaissance: { x: 276, y: 291.44 },        // Position ville de naissance
+  nationalite: { x: 210, y: 307.95 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 324.46 },        // Position numéro d'identité/passeport
   programme: { x: 210, y: 392 },             // Position programme d'études
   niveau: { x: 210, y: 408 },                // Position niveau (1ère, 2ème...)
   specialite: { x: 210, y: 425 },            // Position spécialité
+  referenceEtudiant: { x: 210, y: 442 },     // Position référence étudiant
   anneeAcademique: { x: 210, y: 455 },       // Position année académique
+  dateDocument: { x: 160, y: 547.1 },          // Position de la date
 };
 
 // Configuration des positions pour les ATTESTATIONS DE PRÉADMISSION
