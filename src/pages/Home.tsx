@@ -7,7 +7,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section with Full Page Search */}
-      <section className="py-8 md:py-16 px-2 md:px-4 bg-background min-h-screen flex items-center">
+      <section className="py-8 md:py-16 px-2 md:px-4 bg-gradient-to-br from-primary/5 to-secondary/10 min-h-screen flex items-center">
         <div className="container mx-auto text-center px-2">
           <div className="flex items-center justify-center gap-3 md:gap-4 mb-4 md:mb-6">
             <img src="/logo.svg" alt="IPEC Logo" className="h-10 w-10 md:h-16 md:w-16" />
