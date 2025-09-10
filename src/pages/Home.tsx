@@ -9,9 +9,12 @@ const Home = () => {
       {/* Hero Section with Full Page Search */}
       <section className="py-8 md:py-16 px-2 md:px-4 bg-background min-h-screen flex items-center">
         <div className="container mx-auto text-center px-2">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 md:mb-6 text-[#04a7d7]">
-            IPEC Administration
-          </h1>
+          <div className="flex items-center justify-center gap-3 md:gap-4 mb-4 md:mb-6">
+            <img src="/logo.svg" alt="IPEC Logo" className="h-8 w-8 md:h-12 md:w-12" />
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#04a7d7]">
+              IPEC Administration
+            </h1>
+          </div>
           <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 md:mb-12 max-w-3xl mx-auto px-2">
             Système de gestion des étudiants et documents académiques
           </p>
