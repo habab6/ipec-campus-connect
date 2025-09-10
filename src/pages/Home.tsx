@@ -10,8 +10,8 @@ const Home = () => {
       <section className="py-8 md:py-16 px-2 md:px-4 bg-background min-h-screen flex items-center">
         <div className="container mx-auto text-center px-2">
           <div className="flex items-center justify-center gap-3 md:gap-4 mb-4 md:mb-6">
-            <img src="/logo.svg" alt="IPEC Logo" className="h-8 w-8 md:h-12 md:w-12" />
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#04a7d7]">
+            <img src="/logo.svg" alt="IPEC Logo" className="h-10 w-10 md:h-16 md:w-16" />
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#04a7d7] leading-none">
               IPEC Administration
             </h1>
           </div>
