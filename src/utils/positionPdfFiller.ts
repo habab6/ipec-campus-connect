@@ -6,16 +6,12 @@ import { Student, Payment, RegistrationAttestation, Invoice } from '@/types';
 const ATTESTATION_INSCRIPTION_POSITIONS = {
   numeroDocument: { x: 425, y: 38.5 },       // Position du numéro de document
   dateDocument: { x: 160, y: 547.5 },          // Position de la date
-  civilite: { x: 120, y: 700 },              // Position civilité (M./Mme/Mlle/Mx)
   nomComplet: { x: 210, y: 274.9 },            // Position nom complet
   dateNaissance: { x: 210, y: 291.2 },         // Position date de naissance
   villeNaissance: { x: 276, y: 291.2 },        // Position ville de naissance
   nationalite: { x: 210, y: 307.5 },           // Position nationalité
   numeroIdentite: { x: 210, y: 328.8 },        // Position numéro d'identité/passeport
-  telephone: { x: 210, y: 600 },             // Position téléphone
-  email: { x: 210, y: 550 },                 // Position email
-  adresse: { x: 210, y: 500 },               // Position adresse complète
-  programme: { x: 210, y: 370 },             // Position programme d'études
+  programme: { x: 210, y: 410 },             // Position programme d'études
   niveau: { x: 210, y: 386.3 },                // Position niveau (1ère, 2ème...)
   specialite: { x: 210, y: 402.6 },            // Position spécialité
   anneeAcademique: { x: 210, y: 418.9 },       // Position année académique
