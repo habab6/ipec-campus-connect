@@ -12,11 +12,11 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   paysNaissance: { x: 210, y: 650 },         // Position pays de naissance
   nationalite: { x: 210, y: 308.4 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
-  referenceEtudiant: { x: 210, y: 340 },     // Position référence étudiant
+  referenceEtudiant: { x: 210, y: 442 },     // Position référence étudiant
   programme: { x: 210, y: 392 },             // Position programme d'études
   niveau: { x: 210, y: 412 },                // Position niveau (1ère, 2ème...)
   specialite: { x: 210, y: 425 },            // Position spécialité
-  anneeAcademique: { x: 210, y: 440 },       // Position année académique
+  anneeAcademique: { x: 210, y: 455 },       // Position année académique
   dateInscription: { x: 210, y: 350 },       // Position date d'inscription
 };
 
