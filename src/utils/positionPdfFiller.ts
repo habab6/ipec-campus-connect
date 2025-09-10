@@ -8,7 +8,7 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   dateDocument: { x: 160, y: 547.5 },          // Position de la date
   nomComplet: { x: 210, y: 274.9 },            // Position nom complet
   dateNaissance: { x: 210, y: 291.2 },         // Position date de naissance
-  villeNaissance: { x: 240, y: 291.2 },        // Position ville de naissance
+  villeNaissance: { x: 265, y: 291.2 },        // Position ville de naissance
   nationalite: { x: 210, y: 308.4 },           // Position nationalité
   numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
   referenceEtudiant: { x: 210, y: 442 },     // Position référence étudiant
