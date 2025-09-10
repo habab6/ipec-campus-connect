@@ -15,7 +15,7 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   specialite: { x: 210, y: 424.69 },            // Position spécialité
   referenceEtudiant: { x: 210, y: 441.2 },     // Position référence étudiant
   anneeAcademique: { x: 210, y: 457.7 },       // Position année académique
-  dateGeneration: { x: 160, y: 543.1 },          // Position de la date
+  dateDocument: { x: 160, y: 543.1 },          // Position de la date
 };
 
 // Configuration des positions pour les ATTESTATIONS DE PRÉADMISSION
@@ -163,8 +163,8 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
 
     const fieldData = {
       numeroDocument: documentNumber,
-      dateDocument: currentDate,
-      dateGeneration: `Fait à Bruxelles le : ${currentdate}`, // Date de génération du document
+      dateDocument: `Fait à Bruxelles le : ${currentdate}`,,
+      dateGeneration: currentdate, // Date de génération du document
       nomComplet: `${student.civilite} ${student.firstName} ${student.lastName}`,
       dateNaissance: new Date(student.dateOfBirth).toLocaleDateString('fr-FR') || '',
       villeNaissance: `à ${student.cityOfBirth} - ${student.countryOfBirth}`,
