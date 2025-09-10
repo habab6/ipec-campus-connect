@@ -10,8 +10,8 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   nomComplet: { x: 210, y: 274.9 },            // Position nom complet
   dateNaissance: { x: 210, y: 291.2 },         // Position date de naissance
   villeNaissance: { x: 276, y: 291.2 },        // Position ville de naissance
-  nationalite: { x: 210, y: 308.4 },           // Position nationalité
-  numeroIdentite: { x: 210, y: 324.3 },        // Position numéro d'identité/passeport
+  nationalite: { x: 210, y: 307.5 },           // Position nationalité
+  numeroIdentite: { x: 210, y: 328.8 },        // Position numéro d'identité/passeport
   telephone: { x: 210, y: 600 },             // Position téléphone
   email: { x: 210, y: 550 },                 // Position email
   adresse: { x: 210, y: 500 },               // Position adresse complète
