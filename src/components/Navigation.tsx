@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus, Home, CreditCard } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import ipecLogo from "@/assets/ipec-logo.svg";
+import ipecLogo from "@/assets/ipec-logo.jpg";
 
 const Navigation = () => {
   const location = useLocation();
