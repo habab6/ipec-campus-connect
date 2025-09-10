@@ -15,7 +15,7 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   specialite: { x: 210, y: 424.69 },            // Position spécialité
   referenceEtudiant: { x: 210, y: 441.2 },     // Position référence étudiant
   anneeAcademique: { x: 210, y: 457.7 },       // Position année académique
-  dateDocument: { x: 160, y: 543.1 },          // Position de la date
+  dateDocument: { x: 160, y: 545.3 },          // Position de la date
 };
 
 // Configuration des positions pour les ATTESTATIONS DE PRÉADMISSION
