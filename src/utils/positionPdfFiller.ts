@@ -16,7 +16,7 @@ const ATTESTATION_INSCRIPTION_POSITIONS = {
   telephone: { x: 210, y: 600 },             // Position téléphone
   email: { x: 210, y: 550 },                 // Position email
   adresse: { x: 210, y: 500 },               // Position adresse complète
-  programme: { x: 210, y: 380 },             // Position programme d'études
+  programme: { x: 210, y: 395 },             // Position programme d'études
   niveau: { x: 210, y: 450 },                // Position niveau (1ère, 2ème...)
   specialite: { x: 210, y: 420 },            // Position spécialité
   anneeAcademique: { x: 210, y: 440 },       // Position année académique
