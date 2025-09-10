@@ -20,7 +20,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-2">
             <img src="/logo.svg" alt="IPEC Logo" className="h-6 w-6 md:h-8 md:w-8" />
             <span className="text-lg md:text-xl font-bold text-[#04a7d7] hidden xs:block">
-              IPEC Administration
+              IPEC
             </span>
             <span className="text-lg font-bold text-[#04a7d7] xs:hidden">
               IPEC
