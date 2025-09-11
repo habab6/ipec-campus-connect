@@ -47,6 +47,15 @@ export function useStudents() {
       console.log('Étudiant créé dans Supabase:', data);
       const createdStudent = dbStudentToStudent(data as DbStudent);
       
+      // Créer automatiquement un compte d'authentification pour l'étudiant
+      try {
+        await createStudentAuthAccount(data.id, createdStudent);
+        console.log('✅ Compte d\'authentification créé pour l\'étudiant');
+      } catch (authError) {
+        console.error('⚠️ Erreur création compte auth (étudiant créé):', authError);
+        // Ne pas faire échouer la création de l'étudiant si la création du compte échoue
+      }
+      
       // Créer automatiquement les deux attestations
       try {
         await createStudentAttestations(createdStudent);
@@ -61,6 +70,48 @@ export function useStudents() {
     } catch (err) {
       console.error('Erreur complète:', err);
       throw new Error(err instanceof Error ? err.message : 'Erreur lors de la création de l\'étudiant');
+    }
+  };
+
+  // Fonction pour créer un compte d'authentification pour l'étudiant
+  const createStudentAuthAccount = async (studentId: string, studentData: Student) => {
+    try {
+      // Créer le compte utilisateur avec l'email de l'étudiant et le mot de passe par défaut
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: studentData.email,
+        password: 'Student1',
+        email_confirm: true, // Confirmer automatiquement l'email
+        user_metadata: {
+          role: 'student',
+          student_reference: studentData.reference,
+          full_name: `${studentData.firstName} ${studentData.lastName}`
+        }
+      });
+
+      if (authError) {
+        console.error('Erreur lors de la création du compte étudiant:', authError);
+        throw authError;
+      }
+
+      if (authData.user) {
+        // Créer le profil étudiant
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            student_reference: studentData.reference,
+            student_id: studentId,
+            role: 'student'
+          });
+
+        if (profileError) {
+          console.error('Erreur lors de la création du profil étudiant:', profileError);
+          throw profileError;
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création du compte d\'authentification:', error);
+      throw error;
     }
   };
 
