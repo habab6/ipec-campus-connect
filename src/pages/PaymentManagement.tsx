@@ -752,12 +752,12 @@ const PaymentManagement = () => {
             // Générer le PDF combiné (facture + note de crédit)
             const { combineInvoiceAndCreditNotePdf } = await import('@/utils/positionPdfFiller');
             pdfBytes = await combineInvoiceAndCreditNotePdf(student, payment, existingInvoice.number || '', correspondingCreditNote);
-            filename = `facture-avec-note-credit-${student.firstName}-${student.lastName}-${existingInvoice.number || 'N/A'}.pdf`;
+            filename = `facture-${student.firstName}-${student.lastName}-${existingInvoice.number || "N/A"} + NC.pdf`;
           } else {
             // Générer uniquement la facture
             const { fillInvoicePdfWithPositions } = await import('@/utils/positionPdfFiller');
             pdfBytes = await fillInvoicePdfWithPositions(student, payment, existingInvoice.number || 'SANS-NUMERO');
-            filename = `facture-${student.firstName}-${student.lastName}-${existingInvoice.number || 'N/A'}.pdf`;
+            filename = `facture-${student.firstName}-${student.lastName}-${existingInvoice.number || "N/A"}.pdf`;
           }
           
           // Ajouter le PDF au ZIP
@@ -1819,7 +1819,7 @@ const PaymentManagement = () => {
                               if (student) {
                                 const { combineInvoiceAndCreditNotePdf } = await import('@/utils/positionPdfFiller');
                                 const pdfBytes = await combineInvoiceAndCreditNotePdf(student, downloadChoiceDialog.payment, existingInvoice.number, correspondingCreditNote);
-                                const filename = `facture-avec-note-credit-${student.firstName}-${student.lastName}-${existingInvoice.number}.pdf`;
+                                const filename = `facture-${student.firstName}-${student.lastName}-${existingInvoice.number} + NC.pdf`;
                                 downloadPdf(pdfBytes, filename);
                                 
                                 toast({
