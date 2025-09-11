@@ -160,6 +160,20 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       return `${studyYear}ème année`;
     };
 
+    // Formatage du programme avec nom complet
+    const formatProgramme = (program: string) => {
+      switch (program) {
+        case 'BBA':
+          return 'BBA (Bachelor of Business Administration)';
+        case 'MBA':
+          return 'MBA (Master of Business Administration)';
+        case 'MBA Complémentaire':
+          return 'MBA Complémentaire (Master of Business Administration Complémentaire)';
+        default:
+          return program;
+      }
+    };
+
     const fieldData = {
       numeroDocument: documentNumber,
       dateDocument: `Fait à Bruxelles le ${currentDate}`,
@@ -174,7 +188,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
       telephone: student.phone || '',
       email: student.email || '',
       adresse: student.address || '',
-      programme: student.program || '',
+      programme: formatProgramme(student.program),
       niveau: formatNiveau(student.studyYear),
       specialite: student.specialty || '',
       anneeAcademique: student.academicYear || '',
