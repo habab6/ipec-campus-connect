@@ -45,6 +45,7 @@ const DocumentGeneration = () => {
   const [attestations, setAttestations] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [creditNotes, setCreditNotes] = useState<any[]>([]);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [paymentDialog, setPaymentDialog] = useState<{
     isOpen: boolean;
@@ -750,6 +751,38 @@ const DocumentGeneration = () => {
           </Link>
         </div>
 
+        {/* Filtre par année académique */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Filtres</CardTitle>
+            <CardDescription>
+              Filtrer les documents par année académique
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <Label htmlFor="academic-year-filter">Année académique:</Label>
+              <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Sélectionner une année" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les années</SelectItem>
+                  {Array.from(new Set([
+                    ...attestations.map(a => a.academic_year),
+                    ...payments.map(p => p.academicYear),
+                    ...creditNotes.map(cn => cn.academic_year || student?.academicYear)
+                  ].filter(Boolean))).sort().reverse().map(year => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-medium mb-8">
           <CardHeader className="bg-gradient-primary text-primary-foreground rounded-t-lg">
             <CardTitle className="text-2xl flex items-center">
@@ -788,9 +821,10 @@ const DocumentGeneration = () => {
                 <div className="space-y-3">
                   {/* Afficher toutes les attestations pour l'étudiant */}
                   {attestations.length > 0 ? (
-                    attestations
-                      .filter(a => a.academic_year === student?.academicYear && a.study_year === student?.studyYear)
-                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                     attestations
+                       .filter(a => selectedAcademicYear === 'all' || a.academic_year === selectedAcademicYear)
+                       .filter(a => a.academic_year === student?.academicYear && a.study_year === student?.studyYear)
+                       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                       .map((attestation) => (
                         <div key={attestation.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                           {/* Header avec nom de l'attestation */}
@@ -881,10 +915,11 @@ const DocumentGeneration = () => {
                     </div>
                   )}
                   
-                  {/* Attestations des années précédentes */}
-                  {attestations
-                    .filter(a => !(a.academic_year === student?.academicYear && a.study_year === student?.studyYear))
-                    .sort((a, b) => new Date(b.created_at || b.generate_date).getTime() - new Date(a.created_at || a.generate_date).getTime())
+                   {/* Attestations des années précédentes */}
+                   {attestations
+                     .filter(a => selectedAcademicYear === 'all' || a.academic_year === selectedAcademicYear)
+                     .filter(a => !(a.academic_year === student?.academicYear && a.study_year === student?.studyYear))
+                     .sort((a, b) => new Date(b.created_at || b.generate_date).getTime() - new Date(a.created_at || a.generate_date).getTime())
                     .map((attestation) => (
                       <div key={attestation.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                         {/* Header avec nom de l'attestation */}
@@ -1030,7 +1065,9 @@ const DocumentGeneration = () => {
                      </div>
                    ) : (
                     <div className="space-y-3">
-                      {payments.map((payment) => {
+                       {payments
+                         .filter(payment => selectedAcademicYear === 'all' || payment.academicYear === selectedAcademicYear)
+                         .map((payment) => {
                         const existingInvoice = getExistingInvoice(payment);
                         const hasInvoice = !!existingInvoice;
                         const isFullyPaid = payment.status === 'Payé';
@@ -1280,7 +1317,9 @@ const DocumentGeneration = () => {
                   {creditNotes.length > 0 ? (
                     <div className="space-y-3 mb-6">
                       <h4 className="font-medium text-sm text-muted-foreground">Notes de crédit existantes ({creditNotes.length})</h4>
-                      {creditNotes.map((creditNote) => (
+                       {creditNotes
+                         .filter(creditNote => selectedAcademicYear === 'all' || (creditNote.academic_year || student?.academicYear) === selectedAcademicYear)
+                         .map((creditNote) => (
                         <div key={creditNote.id} className="border rounded-lg bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                           {/* Header avec numéro de la note de crédit */}
                           <div className="px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 border-b border-red-300">
