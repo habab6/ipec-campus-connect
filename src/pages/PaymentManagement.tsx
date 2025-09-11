@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer, RefreshCcw } from "lucide-react";
+import { CreditCard, ArrowLeft, Plus, Eye, Receipt, FileText, Euro, Printer, RefreshCcw, FileX } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Student, Payment } from "@/types";
 import { generateInvoice, generatePaymentSummary, downloadDocument, generateCreditNoteNumber } from "@/utils/documentGenerator";
@@ -106,6 +106,13 @@ const PaymentManagement = () => {
     paidDate: new Date().toISOString().split('T')[0]
   });
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [downloadChoiceDialog, setDownloadChoiceDialog] = useState<{
+    isOpen: boolean;
+    payment: Payment | null;
+  }>({
+    isOpen: false,
+    payment: null
+  });
 
   // Charger les factures pour tous les étudiants ayant des paiements
   useEffect(() => {
@@ -1282,24 +1289,35 @@ const PaymentManagement = () => {
                              const existingInvoice = getExistingInvoice(payment);
                              const hasInvoice = !!existingInvoice;
                              
-                             return hasInvoice ? (
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => generateInvoiceDocument(payment, true)}
-                               >
-                                 <Receipt className="h-4 w-4 mr-1" />
-                                 Télécharger PDF
-                               </Button>
-                             ) : (
-                               <Button
-                                 size="sm"
-                                 onClick={() => generateInvoiceDocument(payment, false)}
-                               >
-                                 <Receipt className="h-4 w-4 mr-1" />
-                                 Générer facture
-                               </Button>
-                             );
+                              return hasInvoice ? (
+                                payment.status === 'Remboursé' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setDownloadChoiceDialog({ isOpen: true, payment })}
+                                  >
+                                    <Receipt className="h-4 w-4 mr-1" />
+                                    Télécharger PDF
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => generateInvoiceDocument(payment, true)}
+                                  >
+                                    <Receipt className="h-4 w-4 mr-1" />
+                                    Télécharger PDF
+                                  </Button>
+                                )
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => generateInvoiceDocument(payment, false)}
+                                >
+                                  <Receipt className="h-4 w-4 mr-1" />
+                                  Générer facture
+                                </Button>
+                              );
                            })()}
                           
                            <Button
@@ -1699,12 +1717,138 @@ const PaymentManagement = () => {
                    </Button>
                  </DialogFooter>
                </DialogContent>
-             </Dialog>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-};
+              </Dialog>
 
-export default PaymentManagement;
+              {/* Dialog choix de téléchargement pour factures remboursées */}
+              <Dialog open={downloadChoiceDialog.isOpen} onOpenChange={(open) => setDownloadChoiceDialog({ isOpen: open, payment: null })}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Choisir le document à télécharger</DialogTitle>
+                    <DialogDescription>
+                      Cette facture a été remboursée. Que souhaitez-vous télécharger ?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (downloadChoiceDialog.payment) {
+                          generateInvoiceDocument(downloadChoiceDialog.payment, true);
+                        }
+                        setDownloadChoiceDialog({ isOpen: false, payment: null });
+                      }}
+                    >
+                      <Receipt className="h-4 w-4 mr-2" />
+                      Facture uniquement
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={async () => {
+                        if (downloadChoiceDialog.payment) {
+                          try {
+                            const existingInvoice = getExistingInvoice(downloadChoiceDialog.payment);
+                            const creditNotes = await getCreditNotesByStudentId(downloadChoiceDialog.payment.studentId);
+                            const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
+                            
+                            if (existingInvoice && correspondingCreditNote) {
+                              const student = getStudent(downloadChoiceDialog.payment.studentId);
+                              if (student) {
+                                const paymentWithInvoice = {
+                                  ...downloadChoiceDialog.payment,
+                                  invoiceNumber: existingInvoice.number
+                                };
+                                
+                                const pdfBytes = await fillCreditNotePdf(student, paymentWithInvoice, correspondingCreditNote.reason);
+                                const filename = `note-credit-${student.firstName}-${student.lastName}-${correspondingCreditNote.number}.pdf`;
+                                downloadPdf(pdfBytes, filename);
+                                
+                                toast({
+                                  title: "PDF téléchargé",
+                                  description: `Note de crédit ${correspondingCreditNote.number} téléchargée.`,
+                                });
+                              }
+                            } else {
+                              toast({
+                                title: "Erreur",
+                                description: "Note de crédit introuvable.",
+                                variant: "destructive",
+                              });
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Erreur",
+                              description: "Impossible de télécharger la note de crédit",
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                        setDownloadChoiceDialog({ isOpen: false, payment: null });
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Note de crédit uniquement
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={async () => {
+                        if (downloadChoiceDialog.payment) {
+                          try {
+                            const existingInvoice = getExistingInvoice(downloadChoiceDialog.payment);
+                            const creditNotes = await getCreditNotesByStudentId(downloadChoiceDialog.payment.studentId);
+                            const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
+                            
+                            if (existingInvoice && correspondingCreditNote) {
+                              const student = getStudent(downloadChoiceDialog.payment.studentId);
+                              if (student) {
+                                const { combineInvoiceAndCreditNotePdf } = await import('@/utils/positionPdfFiller');
+                                const pdfBytes = await combineInvoiceAndCreditNotePdf(student, downloadChoiceDialog.payment, existingInvoice.number, correspondingCreditNote);
+                                const filename = `facture-avec-note-credit-${student.firstName}-${student.lastName}-${existingInvoice.number}.pdf`;
+                                downloadPdf(pdfBytes, filename);
+                                
+                                toast({
+                                  title: "PDF téléchargé",
+                                  description: `PDF combiné téléchargé avec succès.`,
+                                });
+                              }
+                            } else {
+                              toast({
+                                title: "Erreur",
+                                description: "Documents introuvables.",
+                                variant: "destructive",
+                              });
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Erreur",
+                              description: "Impossible de générer le PDF combiné",
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                        setDownloadChoiceDialog({ isOpen: false, payment: null });
+                      }}
+                    >
+                      <FileX className="h-4 w-4 mr-2" />
+                      Facture + Note de crédit (PDF combiné)
+                    </Button>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDownloadChoiceDialog({ isOpen: false, payment: null })}>
+                      Annuler
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+           </CardContent>
+         </Card>
+       </div>
+     </div>
+   );
+ };
+
+ export default PaymentManagement;
