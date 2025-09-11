@@ -445,45 +445,6 @@ const DocumentGeneration = () => {
     }
   };
 
-  const generateCreditNoteOnly = async (payment: Payment) => {
-    if (!student) return;
-    
-    try {
-      const existingInvoice = getExistingInvoice(payment);
-      const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
-      
-      if (!existingInvoice || !correspondingCreditNote) {
-        toast({
-          title: "Erreur",
-          description: "Facture ou note de crédit introuvable.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Créer un objet payment avec le numéro de facture correct
-      const paymentWithInvoice = {
-        ...payment,
-        invoiceNumber: existingInvoice.number
-      };
-      
-      const pdfBytes = await fillCreditNotePdf(student, paymentWithInvoice, correspondingCreditNote.reason);
-      const filename = `note-credit-${student.firstName}-${student.lastName}-${correspondingCreditNote.number}.pdf`;
-      downloadPdf(pdfBytes, filename);
-      
-      toast({
-        title: "Note de crédit téléchargée",
-        description: `Note de crédit ${correspondingCreditNote.number} téléchargée.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Impossible de générer la note de crédit",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleMarkAsPaid = async () => {
     if (!paymentDialog.amount || !paymentDialog.method) {
       toast({
@@ -1728,9 +1689,42 @@ const DocumentGeneration = () => {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => {
+                onClick={async () => {
                   if (downloadChoiceDialog.payment) {
-                    generateCreditNoteOnly(downloadChoiceDialog.payment);
+                    try {
+                      const existingInvoice = getExistingInvoice(downloadChoiceDialog.payment);
+                      const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
+                      
+                      if (existingInvoice && correspondingCreditNote) {
+                        // Réutiliser la logique existante de la section notes de crédit
+                        const paymentWithInvoice = {
+                          ...downloadChoiceDialog.payment,
+                          invoiceNumber: existingInvoice.number
+                        };
+                        
+                        const { fillCreditNotePdf, downloadPdf } = await import('@/utils/positionPdfFiller');
+                        const pdfBytes = await fillCreditNotePdf(student!, paymentWithInvoice, correspondingCreditNote.reason);
+                        const filename = `note-credit-${student!.firstName}-${student!.lastName}-${correspondingCreditNote.number}.pdf`;
+                        downloadPdf(pdfBytes, filename);
+                        
+                        toast({
+                          title: "PDF téléchargé",
+                          description: `Note de crédit ${correspondingCreditNote.number} téléchargée.`,
+                        });
+                      } else {
+                        toast({
+                          title: "Erreur",
+                          description: "Note de crédit introuvable.",
+                          variant: "destructive",
+                        });
+                      }
+                    } catch (error) {
+                      toast({
+                        title: "Erreur",
+                        description: "Impossible de télécharger la note de crédit",
+                        variant: "destructive",
+                      });
+                    }
                   }
                   setDownloadChoiceDialog({ isOpen: false, payment: null });
                 }}
