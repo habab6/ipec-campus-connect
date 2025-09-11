@@ -249,41 +249,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: string | null
-          student_id: string | null
-          student_reference: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id: string
-          role?: string | null
-          student_id?: string | null
-          student_reference?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: string | null
-          student_id?: string | null
-          student_reference?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       registration_attestations: {
         Row: {
           academic_year: string

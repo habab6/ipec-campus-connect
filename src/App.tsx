@@ -11,9 +11,6 @@ import StudentList from "./pages/StudentList";
 import StudentEdit from "./pages/StudentEdit";
 import PaymentManagement from "./pages/PaymentManagement";
 import DocumentGeneration from "./pages/DocumentGeneration";
-import StudentAuth from "./pages/StudentAuth";
-import StudentDashboard from "./pages/StudentDashboard";
-import StudentAuthHome from "./pages/StudentAuthHome";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,15 +24,12 @@ const App = () => (
         <div className="min-h-screen bg-background">
           <Navigation />
           <Routes>
-            <Route path="/" element={<StudentAuthHome />} />
-            <Route path="/admin" element={<Home />} />
+            <Route path="/" element={<Home />} />
             <Route path="/register" element={<StudentRegistration />} />
             <Route path="/students" element={<StudentList />} />
             <Route path="/edit-student/:id" element={<StudentEdit />} />
             <Route path="/payments" element={<PaymentManagement />} />
             <Route path="/documents/:studentId" element={<DocumentGeneration />} />
-            <Route path="/student-auth" element={<StudentAuth />} />
-            <Route path="/student-dashboard" element={<StudentDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

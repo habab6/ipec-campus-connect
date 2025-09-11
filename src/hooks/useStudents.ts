@@ -47,15 +47,6 @@ export function useStudents() {
       console.log('Étudiant créé dans Supabase:', data);
       const createdStudent = dbStudentToStudent(data as DbStudent);
       
-      // Créer automatiquement un compte d'authentification pour l'étudiant
-      try {
-        await createStudentAuthAccount(data.id, createdStudent);
-        console.log('✅ Compte d\'authentification créé pour l\'étudiant');
-      } catch (authError) {
-        console.error('⚠️ Erreur création compte auth (étudiant créé):', authError);
-        // Ne pas faire échouer la création de l'étudiant si la création du compte échoue
-      }
-      
       // Créer automatiquement les deux attestations
       try {
         await createStudentAttestations(createdStudent);
@@ -70,37 +61,6 @@ export function useStudents() {
     } catch (err) {
       console.error('Erreur complète:', err);
       throw new Error(err instanceof Error ? err.message : 'Erreur lors de la création de l\'étudiant');
-    }
-  };
-
-  // Fonction pour créer un compte d'authentification pour l'étudiant
-  const createStudentAuthAccount = async (studentId: string, studentData: Student) => {
-    try {
-      // Appeler la fonction Edge pour créer le compte
-      const { data, error } = await supabase.functions.invoke('create-student-account', {
-        body: {
-          studentId: studentId,
-          email: studentData.email,
-          reference: studentData.reference,
-          firstName: studentData.firstName,
-          lastName: studentData.lastName
-        }
-      });
-
-      if (error) {
-        console.error('Erreur lors de l\'appel de la fonction Edge:', error);
-        throw error;
-      }
-
-      if (!data.success) {
-        console.error('Erreur retournée par la fonction:', data.error);
-        throw new Error(data.error);
-      }
-
-      console.log('Compte étudiant créé avec succès:', data);
-    } catch (error) {
-      console.error('Erreur lors de la création du compte d\'authentification:', error);
-      throw error;
     }
   };
 
