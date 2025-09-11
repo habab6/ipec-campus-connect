@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LogIn, AlertCircle } from 'lucide-react';
+import { LogIn, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { createAccountForExistingStudent } from '@/utils/createMissingAccounts';
 
 const StudentAuth = () => {
   const [reference, setReference] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [creatingAccount, setCreatingAccount] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -62,6 +64,11 @@ const StudentAuth = () => {
       });
 
       if (authError) {
+        // Si l'erreur indique que l'utilisateur n'existe pas, proposer de créer le compte
+        if (authError.message.includes('Invalid login credentials') || authError.message.includes('Email not confirmed')) {
+          setError('Compte non trouvé. Voulez-vous créer le compte pour cet étudiant ?');
+          return;
+        }
         setError('Identifiants incorrects');
         return;
       }
@@ -75,6 +82,27 @@ const StudentAuth = () => {
       setError('Erreur lors de la connexion');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateAccount = async () => {
+    if (!reference) {
+      setError('Veuillez saisir une référence étudiant');
+      return;
+    }
+
+    setCreatingAccount(true);
+    setError('');
+
+    try {
+      await createAccountForExistingStudent(reference.toUpperCase());
+      toast.success('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+      setError('');
+    } catch (error) {
+      console.error('Erreur lors de la création du compte:', error);
+      setError('Erreur lors de la création du compte. Vérifiez que la référence est correcte.');
+    } finally {
+      setCreatingAccount(false);
     }
   };
 
@@ -132,6 +160,25 @@ const StudentAuth = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>
+
+            {error && error.includes('Voulez-vous créer') && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleCreateAccount}
+                disabled={creatingAccount}
+              >
+                {creatingAccount ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Création du compte...
+                  </>
+                ) : (
+                  'Créer le compte étudiant'
+                )}
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>

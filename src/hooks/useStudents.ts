@@ -76,39 +76,28 @@ export function useStudents() {
   // Fonction pour créer un compte d'authentification pour l'étudiant
   const createStudentAuthAccount = async (studentId: string, studentData: Student) => {
     try {
-      // Créer le compte utilisateur avec l'email de l'étudiant et le mot de passe par défaut
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: studentData.email,
-        password: 'Student1',
-        email_confirm: true, // Confirmer automatiquement l'email
-        user_metadata: {
-          role: 'student',
-          student_reference: studentData.reference,
-          full_name: `${studentData.firstName} ${studentData.lastName}`
+      // Appeler la fonction Edge pour créer le compte
+      const { data, error } = await supabase.functions.invoke('create-student-account', {
+        body: {
+          studentId: studentId,
+          email: studentData.email,
+          reference: studentData.reference,
+          firstName: studentData.firstName,
+          lastName: studentData.lastName
         }
       });
 
-      if (authError) {
-        console.error('Erreur lors de la création du compte étudiant:', authError);
-        throw authError;
+      if (error) {
+        console.error('Erreur lors de l\'appel de la fonction Edge:', error);
+        throw error;
       }
 
-      if (authData.user) {
-        // Créer le profil étudiant
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            student_reference: studentData.reference,
-            student_id: studentId,
-            role: 'student'
-          });
-
-        if (profileError) {
-          console.error('Erreur lors de la création du profil étudiant:', profileError);
-          throw profileError;
-        }
+      if (!data.success) {
+        console.error('Erreur retournée par la fonction:', data.error);
+        throw new Error(data.error);
       }
+
+      console.log('Compte étudiant créé avec succès:', data);
     } catch (error) {
       console.error('Erreur lors de la création du compte d\'authentification:', error);
       throw error;
