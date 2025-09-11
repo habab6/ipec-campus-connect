@@ -512,10 +512,8 @@ const PaymentManagement = () => {
       downloadPdf(pdfBytes, filename);
       
       toast({
-        title: isDuplicate ? "Duplicata téléchargé" : "Facture générée",
-        description: isDuplicate 
-          ? `Duplicata de la facture ${invoiceNumber} téléchargé.`
-          : `Facture ${invoiceNumber} générée pour ${payment.amount}€.`,
+        title: "Facture téléchargée",
+        description: `Facture ${invoiceNumber} téléchargée pour ${payment.amount}€.`,
       });
     } catch (error) {
       console.error('Error generating PDF invoice:', error);
