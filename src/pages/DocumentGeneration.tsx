@@ -88,6 +88,12 @@ const DocumentGeneration = () => {
     reason: ''
   });
 
+  // State pour la modale de choix de téléchargement pour factures remboursées
+  const [downloadChoiceDialog, setDownloadChoiceDialog] = useState({
+    isOpen: false,
+    payment: null as Payment | null
+  });
+
   useEffect(() => {
     console.log('DocumentGeneration useEffect triggered - studentId:', studentId);
     
@@ -434,6 +440,45 @@ const DocumentGeneration = () => {
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de générer le PDF combiné",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateCreditNoteOnly = async (payment: Payment) => {
+    if (!student) return;
+    
+    try {
+      const existingInvoice = getExistingInvoice(payment);
+      const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
+      
+      if (!existingInvoice || !correspondingCreditNote) {
+        toast({
+          title: "Erreur",
+          description: "Facture ou note de crédit introuvable.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Créer un objet payment avec le numéro de facture correct
+      const paymentWithInvoice = {
+        ...payment,
+        invoiceNumber: existingInvoice.number
+      };
+      
+      const pdfBytes = await fillCreditNotePdf(student, paymentWithInvoice, correspondingCreditNote.reason);
+      const filename = `note-credit-${student.firstName}-${student.lastName}-${correspondingCreditNote.number}.pdf`;
+      downloadPdf(pdfBytes, filename);
+      
+      toast({
+        title: "Note de crédit téléchargée",
+        description: `Note de crédit ${correspondingCreditNote.number} téléchargée.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de générer la note de crédit",
         variant: "destructive",
       });
     }
@@ -1141,7 +1186,11 @@ const DocumentGeneration = () => {
                                       size="sm"
                                       onClick={() => {
                                         if (payment.status === 'Remboursé') {
-                                          generateCombinedInvoiceAndCreditNote(payment);
+                                          // Ouvrir la modale de choix pour les factures remboursées
+                                          setDownloadChoiceDialog({
+                                            isOpen: true,
+                                            payment: payment
+                                          });
                                         } else {
                                           generateInvoiceDoc(payment);
                                         }
@@ -1647,6 +1696,69 @@ const DocumentGeneration = () => {
               </Button>
               <Button onClick={addInstallment}>
                 Paiement
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog pour choix de téléchargement des factures remboursées */}
+        <Dialog open={downloadChoiceDialog.isOpen} onOpenChange={(open) => setDownloadChoiceDialog(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Choisir le type de téléchargement</DialogTitle>
+              <DialogDescription>
+                Cette facture a été remboursée. Que souhaitez-vous télécharger ?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  if (downloadChoiceDialog.payment) {
+                    generateInvoiceDoc(downloadChoiceDialog.payment);
+                  }
+                  setDownloadChoiceDialog({ isOpen: false, payment: null });
+                }}
+              >
+                <Receipt className="mr-2 h-4 w-4" />
+                Télécharger la facture seule
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  if (downloadChoiceDialog.payment) {
+                    generateCreditNoteOnly(downloadChoiceDialog.payment);
+                  }
+                  setDownloadChoiceDialog({ isOpen: false, payment: null });
+                }}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                Télécharger la note de crédit seule
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  if (downloadChoiceDialog.payment) {
+                    generateCombinedInvoiceAndCreditNote(downloadChoiceDialog.payment);
+                  }
+                  setDownloadChoiceDialog({ isOpen: false, payment: null });
+                }}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Télécharger PDF combiné (facture + note de crédit)
+              </Button>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setDownloadChoiceDialog({ isOpen: false, payment: null })}
+              >
+                Annuler
               </Button>
             </DialogFooter>
           </DialogContent>
