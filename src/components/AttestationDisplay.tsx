@@ -58,7 +58,8 @@ export const AttestationDisplay = ({ attestation, student, onGenerate }: Attesta
         pdfBytes = await fillRegistrationPdfWithPositions(
           historicalStudent, 
           attestation.number,
-          '/templates/attestation-template.pdf'  // Template d'inscription explicite
+          '/templates/attestation-template.pdf',  // Template d'inscription explicite
+          attestation.generate_date
         );
       }
       

@@ -297,7 +297,7 @@ const DocumentGeneration = () => {
       const updatedAttestations = await getAttestationsByStudentId(student.id);
       setAttestations(updatedAttestations);
       
-      const pdfBytes = await fillRegistrationPdfWithPositions(student, attestation.number);
+      const pdfBytes = await fillRegistrationPdfWithPositions(student, attestation.number, '/templates/attestation-template.pdf', attestation.generate_date);
       const filename = `attestation-inscription-${student.firstName}-${student.lastName}-${attestation.number}.pdf`;
       downloadPdf(pdfBytes, filename);
       
@@ -986,7 +986,7 @@ const DocumentGeneration = () => {
                                     registrationDate: attestation.registration_date || student!.registrationDate
                                   };
                                   
-                                  const pdfBytes = await fillRegistrationPdfWithPositions(historicalStudent, attestation.number);
+                                  const pdfBytes = await fillRegistrationPdfWithPositions(historicalStudent, attestation.number, '/templates/attestation-template.pdf', attestation.generate_date);
                                   const studentName = attestation.student_full_name || `${student?.firstName}-${student?.lastName}`;
                                   const filename = `attestation-${studentName.replace(' ', '-')}-${attestation.number}.pdf`;
                                   downloadPdf(pdfBytes, filename);

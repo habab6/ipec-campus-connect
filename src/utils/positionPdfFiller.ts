@@ -122,7 +122,7 @@ const generateAttestationNumber = (student: Student, type: 'inscription' | 'prea
 };
 
 // Remplir le PDF avec positionnement x,y
-export const fillRegistrationPdfWithPositions = async (student: Student, attestationNumber?: string, templatePath: string = '/templates/attestation-template.pdf'): Promise<Uint8Array> => {
+export const fillRegistrationPdfWithPositions = async (student: Student, attestationNumber?: string, templatePath: string = '/templates/attestation-template.pdf', generateDate?: string): Promise<Uint8Array> => {
   try {
     console.log('📍 Génération PDF avec positionnement x,y');
     
@@ -150,7 +150,7 @@ export const fillRegistrationPdfWithPositions = async (student: Student, attesta
     }
     
     // Préparer les données avec tous les nouveaux champs
-    const currentDate = new Date().toLocaleDateString('fr-FR');
+    const currentDate = generateDate ? new Date(generateDate).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
     const documentNumber = attestationNumber || generateAttestationNumber(student, 'inscription');
     
     // Formatage du niveau d'études
