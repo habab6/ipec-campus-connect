@@ -741,18 +741,30 @@ const PaymentManagement = () => {
         if (!existingInvoice) continue;
         
         try {
-          // Import des modules PDF
-          const { fillInvoicePdfWithPositions } = await import('@/utils/positionPdfFiller');
+          // Vérifier s'il y a une note de crédit pour ce paiement
+          const creditNotes = await getCreditNotesByStudentId(payment.studentId);
+          const correspondingCreditNote = creditNotes.find(cn => cn.original_invoice_id === existingInvoice?.id);
           
-          const invoiceNumber = existingInvoice.number || 'SANS-NUMERO';
-          const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
+          let pdfBytes: Uint8Array;
+          let filename: string;
+          
+          if (payment.status === 'Remboursé' && correspondingCreditNote) {
+            // Générer le PDF combiné (facture + note de crédit)
+            const { combineInvoiceAndCreditNotePdf } = await import('@/utils/positionPdfFiller');
+            pdfBytes = await combineInvoiceAndCreditNotePdf(student, payment, existingInvoice.number || '', correspondingCreditNote);
+            filename = `facture-avec-note-credit-${student.firstName}-${student.lastName}-${existingInvoice.number || 'N/A'}.pdf`;
+          } else {
+            // Générer uniquement la facture
+            const { fillInvoicePdfWithPositions } = await import('@/utils/positionPdfFiller');
+            pdfBytes = await fillInvoicePdfWithPositions(student, payment, existingInvoice.number || 'SANS-NUMERO');
+            filename = `facture-${student.firstName}-${student.lastName}-${existingInvoice.number || 'N/A'}.pdf`;
+          }
           
           // Ajouter le PDF au ZIP
-          const filename = `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
           zip.file(filename, pdfBytes);
           addedCount++;
         } catch (error) {
-          console.error(`Erreur lors de la génération de la facture ${existingInvoice.number}:`, error);
+          console.error(`Erreur lors de la génération de la facture pour ${student.firstName} ${student.lastName}:`, error);
         }
       }
       
