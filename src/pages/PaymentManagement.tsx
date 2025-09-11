@@ -506,9 +506,7 @@ const PaymentManagement = () => {
       
       const invoiceNumber = invoice.number || 'SANS-NUMERO';
       const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
-      const filename = isDuplicate 
-        ? `duplicata-facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`
-        : `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
+      const filename = `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
       downloadPdf(pdfBytes, filename);
       
       toast({
@@ -1351,59 +1349,6 @@ const PaymentManagement = () => {
                               </Button>
                             )}
                             
-                             {payment.status === 'Remboursé' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={async () => {
-                                  const student = getStudent(payment.studentId);
-                                  if (student) {
-                                    try {
-                                      // Trouver la note de crédit existante pour ce paiement
-                                      const creditNotes = await getCreditNotesByStudentId(payment.studentId);
-                                      const invoices = await getInvoicesByStudentId(payment.studentId);
-                                      
-                                      // Trouver la facture associée à ce paiement
-                                      const paymentInvoice = invoices.find(inv => inv.payment_id === payment.id);
-                                      
-                                      // Trouver la note de crédit correspondante
-                                      const correspondingCreditNote = creditNotes.find(cn => 
-                                        cn.original_invoice_id === paymentInvoice?.id
-                                      );
-                                      
-                                      if (correspondingCreditNote && paymentInvoice) {
-                                        // Utiliser les données existantes avec le bon numéro de facture d'origine
-                                        const pdfBytes = await fillCreditNotePdf(
-                                          student, 
-                                          payment, 
-                                          correspondingCreditNote.reason || payment.refundReason || 'Remboursement',
-                                          paymentInvoice.number
-                                        );
-                                        const filename = `note-credit-${student.firstName}-${student.lastName}-${correspondingCreditNote.number}.pdf`;
-                                        downloadPdf(pdfBytes, filename);
-                                      } else {
-                                        // Fallback si aucune note de crédit trouvée
-                                        const pdfBytes = await fillCreditNotePdf(student, payment, payment.refundReason || 'Remboursement');
-                                        const filename = `note-credit-${student.firstName}-${student.lastName}.pdf`;
-                                        downloadPdf(pdfBytes, filename);
-                                      }
-                                    } catch (error) {
-                                      console.error('Erreur de téléchargement NC:', error);
-                                      toast({
-                                        title: "Erreur",
-                                        description: "Impossible de télécharger la note de crédit.",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  }
-                                }}
-                                className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                              >
-                                <FileText className="h-4 w-4 mr-1" />
-                                Télécharger Note de crédit
-                              </Button>
-                            )}
-                           
                            {payment.status === 'En attente' && (
                              <Button
                                variant="default"
