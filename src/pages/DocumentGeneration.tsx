@@ -852,7 +852,7 @@ const DocumentGeneration = () => {
                     <div className="space-y-1.5 text-xs">
                       <div>
                         <span className="text-slate-500">N° identité: </span>
-                        <span className="font-mono">{student.identityNumber}</span>
+                        <span>{student.identityNumber}</span>
                       </div>
                       <div>
                         <span className="text-slate-500">Email: </span>
@@ -879,7 +879,7 @@ const DocumentGeneration = () => {
                   <div className="space-y-1.5 text-xs">
                     <div>
                       <span className="text-slate-500">Référence: </span>
-                      <span className="font-mono">{student.reference}</span>
+                      <span>{student.reference}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">Programme: </span>
