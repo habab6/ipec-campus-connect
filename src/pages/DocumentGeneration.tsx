@@ -793,169 +793,132 @@ const DocumentGeneration = () => {
           </CardHeader>
 
           <CardContent className="p-6">
-            {/* Student Info Complete - Improved Design */}
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-6 mb-8 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <User className="h-5 w-5 text-primary" />
+            {/* Student Info Complete - Compact Design */}
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-lg p-4 mb-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-primary/10 rounded-md">
+                    <User className="h-4 w-4 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-800">Informations de l'étudiant</h3>
+                  <h3 className="text-lg font-semibold text-slate-800">Informations de l'étudiant</h3>
                 </div>
                 <Link to={`/edit-student/${student.id}`}>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors">
-                    <Edit className="h-4 w-4" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-colors">
+                    <Edit className="h-3.5 w-3.5" />
                     Modifier
                   </Button>
                 </Link>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {/* Informations personnelles */}
-                <div className="bg-white rounded-lg p-4 border border-slate-200/80 shadow-sm">
-                  <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4 text-slate-500" />
+                <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
+                  <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
+                    <User className="h-3.5 w-3.5 text-slate-500" />
                     Informations personnelles
                   </h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-500 w-20">Civilité:</span>
-                      <span className="text-sm font-medium">{student.civilite}</span>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Civilité:</span>
+                      <span className="font-medium">{student.civilite}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-500 w-20">Prénom:</span>
-                      <span className="text-sm font-medium">{student.firstName}</span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Nom:</span>
+                      <span className="font-medium">{student.firstName} {student.lastName}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-500 w-20">Nom:</span>
-                      <span className="text-sm font-medium">{student.lastName}</span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Né(e) le:</span>
+                      <span className="font-medium">{new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</span>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400 mt-0.5" />
-                      <div>
-                        <span className="text-sm text-slate-500">Né(e) le:</span>
-                        <p className="text-sm font-medium">{new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</p>
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Lieu:</span>
+                      <span className="font-medium">{student.cityOfBirth}</span>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
-                      <div>
-                        <span className="text-sm text-slate-500">Lieu:</span>
-                        <p className="text-sm font-medium">{student.cityOfBirth}, {student.countryOfBirth}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <span className="text-sm text-slate-500">Nationalité:</span>
-                        <span className="text-sm font-medium ml-2">{student.nationality}</span>
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Nationalité:</span>
+                      <span className="font-medium">{student.nationality}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Informations de contact */}
-                <div className="bg-white rounded-lg p-4 border border-slate-200/80 shadow-sm">
-                  <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-slate-500" />
+                <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
+                  <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
+                    <Mail className="h-3.5 w-3.5 text-slate-500" />
                     Contact & Identification
                   </h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <span className="text-sm text-slate-500">N° d'identité:</span>
-                        <p className="text-sm font-medium font-mono">{student.identityNumber}</p>
-                      </div>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">N° identité:</span>
+                      <span className="font-medium font-mono">{student.identityNumber}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <span className="text-sm text-slate-500">Email:</span>
-                        <p className="text-sm font-medium">{student.email}</p>
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Email:</span>
+                      <span className="font-medium truncate ml-2">{student.email}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <span className="text-sm text-slate-500">Téléphone:</span>
-                        <p className="text-sm font-medium">{student.phone}</p>
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Téléphone:</span>
+                      <span className="font-medium">{student.phone}</span>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
-                      <div>
-                        <span className="text-sm text-slate-500">Adresse:</span>
-                        <p className="text-sm font-medium">{student.address}</p>
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Référence:</span>
+                      <span className="font-medium font-mono">{student.reference}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <span className="text-sm text-slate-500">Référence:</span>
-                        <p className="text-sm font-medium font-mono">{student.reference}</p>
-                      </div>
+                    <div className="pt-1">
+                      <span className="text-slate-500 text-xs">Adresse:</span>
+                      <p className="font-medium text-xs mt-0.5">{student.address}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Informations académiques */}
-                <div className="bg-white rounded-lg p-4 border border-slate-200/80 shadow-sm">
-                  <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-slate-500" />
+                <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
+                  <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
+                    <GraduationCap className="h-3.5 w-3.5 text-slate-500" />
                     Informations académiques
                   </h4>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <GraduationCap className="h-4 w-4 text-slate-400 mt-0.5" />
-                      <div>
-                        <span className="text-sm text-slate-500">Programme:</span>
-                        <p className="text-sm font-medium">{student.program}</p>
-                      </div>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Programme:</span>
+                      <span className="font-medium">{student.program}</span>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-sm text-slate-500">Spécialité:</span>
-                      <p className="text-sm font-medium">{student.specialty}</p>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Spécialité:</span>
+                      <span className="font-medium">{student.specialty}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-500">Année d'étude:</span>
-                      <span className="px-2 py-1 bg-primary/10 text-primary rounded-md text-sm font-medium">
-                        {student.studyYear === 1 ? '1ère année' : `${student.studyYear}ème année`}
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">Année:</span>
+                      <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
+                        {student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <span className="text-sm text-slate-500">Année académique:</span>
-                        <p className="text-sm font-medium">{student.academicYear}</p>
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Académique:</span>
+                      <span className="font-medium">{student.academicYear}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <div>
-                        <span className="text-sm text-slate-500">Date d'inscription:</span>
-                        <p className="text-sm font-medium">{new Date(student.registrationDate).toLocaleDateString('fr-FR')}</p>
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Inscription:</span>
+                      <span className="font-medium">{new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-500">Statut:</span>
-                      <span className={`px-2 py-1 rounded-md text-sm font-medium ${
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">Statut:</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                         student.status === 'Actif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                       }`}>
                         {student.status}
                       </span>
                     </div>
                     {student.hasMBA2Diploma && (
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium">
-                          ✓ Diplôme MBA2
+                      <div className="pt-1">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                          ✓ MBA2
                         </span>
                       </div>
                     )}
                     {student.notes && (
-                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                        <span className="text-sm text-yellow-700 font-medium">Notes:</span>
-                        <p className="text-sm text-yellow-600 mt-1">{student.notes}</p>
+                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                        <span className="text-yellow-700 font-medium">Notes:</span>
+                        <p className="text-yellow-600 mt-0.5">{student.notes}</p>
                       </div>
                     )}
                   </div>
