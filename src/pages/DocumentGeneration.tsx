@@ -964,15 +964,15 @@ const DocumentGeneration = () => {
                                      {getSpecialtyCode(attestation.specialty)}
                                    </span>
                                  )}
-                                 {!attestation.is_generated ? (
-                                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
-                                     Non généré
-                                   </span>
-                                 ) : (
-                                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                     Généré
-                                   </span>
-                                 )}
+                                  {!attestation.is_generated ? (
+                                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
+                                      Non générée
+                                    </span>
+                                  ) : (
+                                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                      Générée
+                                    </span>
+                                  )}
                                </div>
                             </div>
                           </div>
@@ -1066,7 +1066,16 @@ const DocumentGeneration = () => {
                                    {getSpecialtyCode(attestation.specialty)}
                                  </span>
                                )}
-                            </div>
+                               {!attestation.is_generated ? (
+                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
+                                   Non générée
+                                 </span>
+                               ) : (
+                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                   Générée
+                                 </span>
+                               )}
+                             </div>
                           </div>
                         </div>
                         
