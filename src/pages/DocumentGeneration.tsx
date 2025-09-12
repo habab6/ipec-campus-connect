@@ -818,24 +818,24 @@ const DocumentGeneration = () => {
                     Informations personnelles
                   </h4>
                   <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Civilité:</span>
+                    <div>
+                      <span className="text-slate-500">Civilité: </span>
                       <span className="font-medium">{student.civilite}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Nom:</span>
+                    <div>
+                      <span className="text-slate-500">Nom: </span>
                       <span className="font-medium">{student.firstName} {student.lastName}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Né(e) le:</span>
+                    <div>
+                      <span className="text-slate-500">Né(e) le: </span>
                       <span className="font-medium">{new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Lieu:</span>
+                    <div>
+                      <span className="text-slate-500">Lieu: </span>
                       <span className="font-medium">{student.cityOfBirth}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Nationalité:</span>
+                    <div>
+                      <span className="text-slate-500">Nationalité: </span>
                       <span className="font-medium">{student.nationality}</span>
                     </div>
                   </div>
@@ -848,25 +848,25 @@ const DocumentGeneration = () => {
                     Contact & Identification
                   </h4>
                   <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">N° identité:</span>
+                    <div>
+                      <span className="text-slate-500">N° identité: </span>
                       <span className="font-medium font-mono">{student.identityNumber}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Email:</span>
-                      <span className="font-medium truncate ml-2">{student.email}</span>
+                    <div>
+                      <span className="text-slate-500">Email: </span>
+                      <span className="font-medium">{student.email}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Téléphone:</span>
+                    <div>
+                      <span className="text-slate-500">Téléphone: </span>
                       <span className="font-medium">{student.phone}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Référence:</span>
+                    <div>
+                      <span className="text-slate-500">Référence: </span>
                       <span className="font-medium font-mono">{student.reference}</span>
                     </div>
                     <div className="pt-1">
-                      <span className="text-slate-500 text-xs">Adresse:</span>
-                      <p className="font-medium text-xs mt-0.5">{student.address}</p>
+                      <span className="text-slate-500 text-xs">Adresse: </span>
+                      <span className="font-medium text-xs">{student.address}</span>
                     </div>
                   </div>
                 </div>
@@ -878,30 +878,30 @@ const DocumentGeneration = () => {
                     Informations académiques
                   </h4>
                   <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Programme:</span>
+                    <div>
+                      <span className="text-slate-500">Programme: </span>
                       <span className="font-medium">{student.program}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Spécialité:</span>
+                    <div>
+                      <span className="text-slate-500">Spécialité: </span>
                       <span className="font-medium">{student.specialty}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Année:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">Année: </span>
                       <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
                         {student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Académique:</span>
+                    <div>
+                      <span className="text-slate-500">Académique: </span>
                       <span className="font-medium">{student.academicYear}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Inscription:</span>
+                    <div>
+                      <span className="text-slate-500">Inscription: </span>
                       <span className="font-medium">{new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Statut:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">Statut: </span>
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                         student.status === 'Actif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                       }`}>
