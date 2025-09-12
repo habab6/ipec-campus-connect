@@ -862,7 +862,7 @@ const DocumentGeneration = () => {
                           +{student.phone}
                         </a>
                       </div>
-                      <div className="pt-1">
+                      <div>
                         <span className="text-slate-500 text-xs">Adresse: </span>
                         <span className="text-xs">{student.address}</span>
                       </div>
@@ -896,7 +896,7 @@ const DocumentGeneration = () => {
                       }`}>
                         {student.status}
                       </span>
-                      <span className="text-slate-500">(inscription le: </span>
+                      <span className="text-slate-500">(inscription le:</span>
                       <span>{new Date(student.registrationDate).toLocaleDateString('fr-FR')})</span>
                     </div>
                     {student.hasMBA2Diploma && (
