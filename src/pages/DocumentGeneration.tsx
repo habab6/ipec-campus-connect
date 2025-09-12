@@ -757,37 +757,29 @@ const DocumentGeneration = () => {
           </Link>
         </div>
 
-        {/* Filtre par année académique */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Filtres</CardTitle>
-            <CardDescription>
-              Filtrer les documents par année académique
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <Label htmlFor="academic-year-filter">Année académique:</Label>
-              <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Sélectionner une année" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les années</SelectItem>
-                  {Array.from(new Set([
-                    ...attestations.map(a => a.academic_year),
-                    ...payments.map(p => p.academicYear),
-                    ...creditNotes.map(cn => cn.academic_year || student?.academicYear)
-                  ].filter(Boolean))).sort().reverse().map(year => (
-                    <SelectItem key={year} value={year}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filtre par année académique - Compact */}
+        <div className="bg-muted/50 p-4 rounded-lg mb-6 border">
+          <div className="flex items-center gap-4">
+            <Label htmlFor="academic-year-filter" className="font-medium">Filtrer par année académique:</Label>
+            <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Sélectionner une année" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les années</SelectItem>
+                {Array.from(new Set([
+                  ...attestations.map(a => a.academic_year),
+                  ...payments.map(p => p.academicYear),
+                  ...creditNotes.map(cn => cn.academic_year || student?.academicYear)
+                ].filter(Boolean))).sort().reverse().map(year => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <Card className="shadow-medium mb-8">
           <CardHeader className="bg-gradient-primary text-primary-foreground rounded-t-lg">
@@ -801,14 +793,44 @@ const DocumentGeneration = () => {
           </CardHeader>
 
           <CardContent className="p-6">
-            {/* Student Info */}
-            <div className="bg-muted p-4 rounded-lg mb-6">
-              <h3 className="font-semibold mb-2">Informations de l'étudiant</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                <p><strong>Programme:</strong> {student.program}</p>
-                <p><strong>Spécialité:</strong> {student.specialty}</p>
-                <p><strong>Email:</strong> {student.email}</p>
-                <p><strong>Statut:</strong> {student.status}</p>
+            {/* Student Info Complete */}
+            <div className="bg-muted p-6 rounded-lg mb-6 border">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Informations de l'étudiant</h3>
+                <Link to={`/edit-student/${student.id}`}>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Modifier
+                  </Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <div className="space-y-2">
+                  <p><strong>Civilité:</strong> {student.civilite}</p>
+                  <p><strong>Prénom:</strong> {student.firstName}</p>
+                  <p><strong>Nom:</strong> {student.lastName}</p>
+                  <p><strong>Date de naissance:</strong> {new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</p>
+                  <p><strong>Lieu de naissance:</strong> {student.cityOfBirth}</p>
+                  <p><strong>Pays de naissance:</strong> {student.countryOfBirth}</p>
+                </div>
+                <div className="space-y-2">
+                  <p><strong>Nationalité:</strong> {student.nationality}</p>
+                  <p><strong>N° d'identité:</strong> {student.identityNumber}</p>
+                  <p><strong>Email:</strong> {student.email}</p>
+                  <p><strong>Téléphone:</strong> {student.phone}</p>
+                  <p><strong>Adresse:</strong> {student.address}</p>
+                  <p><strong>Référence:</strong> {student.reference}</p>
+                </div>
+                <div className="space-y-2">
+                  <p><strong>Programme:</strong> {student.program}</p>
+                  <p><strong>Spécialité:</strong> {student.specialty}</p>
+                  <p><strong>Année d'étude:</strong> {student.studyYear}</p>
+                  <p><strong>Année académique:</strong> {student.academicYear}</p>
+                  <p><strong>Date d'inscription:</strong> {new Date(student.registrationDate).toLocaleDateString('fr-FR')}</p>
+                  <p><strong>Statut:</strong> {student.status}</p>
+                  {student.hasMBA2Diploma && <p><strong>Diplôme MBA2:</strong> Oui</p>}
+                  {student.notes && <p><strong>Notes:</strong> {student.notes}</p>}
+                </div>
               </div>
             </div>
 
