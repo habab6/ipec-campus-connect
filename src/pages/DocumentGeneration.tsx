@@ -852,11 +852,15 @@ const DocumentGeneration = () => {
                       </div>
                       <div>
                         <span className="text-slate-500">Email: </span>
-                        <span>{student.email}</span>
+                        <a href={`mailto:${student.email}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                          {student.email}
+                        </a>
                       </div>
                       <div>
                         <span className="text-slate-500">Téléphone: </span>
-                        <span>{student.phone}</span>
+                        <a href={`tel:+${student.phone}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                          +{student.phone}
+                        </a>
                       </div>
                       <div className="pt-1">
                         <span className="text-slate-500 text-xs">Adresse: </span>
