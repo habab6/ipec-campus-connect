@@ -889,9 +889,9 @@ const DocumentGeneration = () => {
                       <span className="text-slate-500">Spécialité: </span>
                       <span>{student.specialty}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
                       <span className="text-slate-500">Statut: </span>
-                      <span className={`px-2 py-0.5 rounded text-xs ${
+                      <span className={`px-2 py-0.5 rounded text-xs mr-2 ${
                         student.status === 'Actif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                       }`}>
                         {student.status}
