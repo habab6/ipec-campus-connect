@@ -758,29 +758,6 @@ const DocumentGeneration = () => {
         </div>
 
 
-          {/* Filtre par année académique - Compact */}
-          <div className="bg-muted/50 p-4 rounded-lg mb-6 border">
-            <div className="flex items-center gap-4">
-              <Label htmlFor="academic-year-filter" className="font-medium">Filtrer par année académique:</Label>
-              <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Sélectionner une année" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les années</SelectItem>
-                  {Array.from(new Set([
-                    ...attestations.map(a => a.academic_year),
-                    ...payments.map(p => p.academicYear),
-                    ...creditNotes.map(cn => cn.academic_year || student?.academicYear)
-                  ].filter(Boolean))).sort().reverse().map(year => (
-                    <SelectItem key={year} value={year}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
           <Card className="shadow-medium mb-8">
           <CardHeader className="bg-gradient-primary text-primary-foreground rounded-t-lg">
@@ -794,6 +771,29 @@ const DocumentGeneration = () => {
           </CardHeader>
 
           <CardContent className="p-6">
+            {/* Filtre par année académique - Compact */}
+            <div className="bg-muted/50 p-4 rounded-lg mb-6 border">
+              <div className="flex items-center gap-4">
+                <Label htmlFor="academic-year-filter" className="font-medium">Filtrer par année académique:</Label>
+                <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Sélectionner une année" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les années</SelectItem>
+                    {Array.from(new Set([
+                      ...attestations.map(a => a.academic_year),
+                      ...payments.map(p => p.academicYear),
+                      ...creditNotes.map(cn => cn.academic_year || student?.academicYear)
+                    ].filter(Boolean))).sort().reverse().map(year => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             {/* Student Info Complete - Compact Design */}
             <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-lg p-4 mb-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
