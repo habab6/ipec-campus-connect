@@ -822,23 +822,23 @@ const DocumentGeneration = () => {
                     <div className="space-y-1.5 text-xs">
                       <div>
                         <span className="text-slate-500">Civilité: </span>
-                        <span className="font-bold">{student.civilite}</span>
+                        <span>{student.civilite}</span>
                       </div>
                       <div>
                         <span className="text-slate-500">Nom: </span>
-                        <span className="font-bold">{student.firstName} {student.lastName}</span>
+                        <span>{student.firstName} {student.lastName}</span>
                       </div>
                       <div>
                         <span className="text-slate-500">Né(e) le: </span>
-                        <span className="font-bold">{new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</span>
+                        <span>{new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</span>
                       </div>
                       <div>
                         <span className="text-slate-500">Lieu: </span>
-                        <span className="font-bold">{student.cityOfBirth}</span>
+                        <span>{student.cityOfBirth}</span>
                       </div>
                       <div>
                         <span className="text-slate-500">Nationalité: </span>
-                        <span className="font-bold">{student.nationality}</span>
+                        <span>{student.nationality}</span>
                       </div>
                     </div>
                   </div>
@@ -852,19 +852,19 @@ const DocumentGeneration = () => {
                     <div className="space-y-1.5 text-xs">
                       <div>
                         <span className="text-slate-500">N° identité: </span>
-                        <span className="font-bold font-mono">{student.identityNumber}</span>
+                        <span className="font-mono">{student.identityNumber}</span>
                       </div>
                       <div>
                         <span className="text-slate-500">Email: </span>
-                        <span className="font-bold">{student.email}</span>
+                        <span>{student.email}</span>
                       </div>
                       <div>
                         <span className="text-slate-500">Téléphone: </span>
-                        <span className="font-bold">{student.phone}</span>
+                        <span>{student.phone}</span>
                       </div>
                       <div className="pt-1">
                         <span className="text-slate-500 text-xs">Adresse: </span>
-                        <span className="font-bold text-xs">{student.address}</span>
+                        <span className="text-xs">{student.address}</span>
                       </div>
                     </div>
                   </div>
@@ -879,31 +879,31 @@ const DocumentGeneration = () => {
                   <div className="space-y-1.5 text-xs">
                     <div>
                       <span className="text-slate-500">Référence: </span>
-                      <span className="font-bold font-mono">{student.reference}</span>
+                      <span className="font-mono">{student.reference}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">Programme: </span>
-                      <span className="font-bold">{student.program}</span>
+                      <span>{student.program}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">Année: </span>
-                      <span className="font-bold">{student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`}</span>
+                      <span>{student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">Spécialité: </span>
-                      <span className="font-bold">{student.specialty}</span>
+                      <span>{student.specialty}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">Académique: </span>
-                      <span className="font-bold">{student.academicYear}</span>
+                      <span>{student.academicYear}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">Inscription: </span>
-                      <span className="font-bold">{new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
+                      <span>{new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-slate-500">Statut: </span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                      <span className={`px-2 py-0.5 rounded text-xs ${
                         student.status === 'Actif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                       }`}>
                         {student.status}
@@ -912,7 +912,7 @@ const DocumentGeneration = () => {
                     {student.hasMBA2Diploma && (
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500">MBA 2: </span>
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
                           ✓ Diplômé
                         </span>
                       </div>
