@@ -944,10 +944,12 @@ const DocumentGeneration = () => {
                               <div className="text-lg font-semibold text-white">
                                 Attestation {attestation.number}
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                                  {attestation.program}
-                                </span>
+                               <div className="flex items-center gap-2">
+                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                   {attestation.program === 'MBA Complémentaire' 
+                                     ? 'MBA Complémentaire' 
+                                     : `${attestation.program}${attestation.study_year}`}
+                                 </span>
                                 {!attestation.is_generated ? (
                                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
                                     Non généré
@@ -961,51 +963,51 @@ const DocumentGeneration = () => {
                             </div>
                           </div>
                           
-                          {/* Content Section */}
-                          <div className="p-4">
-                            {/* Informations dans une grille */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                              <div>
-                                <label className="text-sm font-medium text-muted-foreground">Programme</label>
-                                <p className="text-lg font-semibold text-foreground">{attestation.program}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
-                                <p className="text-sm font-medium text-foreground">
-                                  {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
-                                </p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-muted-foreground">Année académique</label>
-                                <p className="text-sm font-medium text-foreground">
-                                  {attestation.academic_year}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Boutons d'action */}
-                            <div className="flex items-center gap-2 justify-end mb-4">
-                              {attestation.is_generated ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => generateRegistrationDoc(attestation.id)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Download className="h-4 w-4" />
-                                  Télécharger PDF
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  onClick={() => generateRegistrationDoc(attestation.id)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  Générer l'attestation
-                                </Button>
-                              )}
-                            </div>
+                           {/* Content Section */}
+                           <div className="p-4">
+                             {/* Informations et bouton sur la même ligne */}
+                             <div className="flex items-center justify-between">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <div>
+                                   <label className="text-sm font-medium text-muted-foreground">Programme</label>
+                                   <p className="text-lg font-semibold text-foreground">
+                                     {attestation.program === 'MBA Complémentaire' 
+                                       ? 'MBA Complémentaire' 
+                                       : `${attestation.program} ${attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}`}
+                                   </p>
+                                 </div>
+                                 <div>
+                                   <label className="text-sm font-medium text-muted-foreground">Année académique</label>
+                                   <p className="text-sm font-medium text-foreground">
+                                     {attestation.academic_year}
+                                   </p>
+                                 </div>
+                               </div>
+                               
+                               {/* Bouton d'action à droite */}
+                               <div className="ml-4">
+                                 {attestation.is_generated ? (
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => generateRegistrationDoc(attestation.id)}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Download className="h-4 w-4" />
+                                     Télécharger PDF
+                                   </Button>
+                                 ) : (
+                                   <Button
+                                     size="sm"
+                                     onClick={() => generateRegistrationDoc(attestation.id)}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <FileText className="h-4 w-4" />
+                                     Générer l'attestation
+                                   </Button>
+                                 )}
+                               </div>
+                             </div>
 
                             {/* Informations de génération */}
                             {attestation.is_generated && (
@@ -1039,10 +1041,12 @@ const DocumentGeneration = () => {
                             <div className="text-lg font-semibold text-white">
                               Attestation {attestation.number}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                                {attestation.program}
-                              </span>
+                             <div className="flex items-center gap-2">
+                               <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                 {attestation.program === 'MBA Complémentaire' 
+                                   ? 'MBA Complémentaire' 
+                                   : `${attestation.program}${attestation.study_year}`}
+                               </span>
                               {attestation.specialty && (
                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
                                   {attestation.specialty}
@@ -1054,32 +1058,31 @@ const DocumentGeneration = () => {
                         
                         {/* Content Section */}
                         <div className="p-4">
-                          {/* Informations dans une grille avec boutons d'action */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Programme</label>
-                              <p className="text-lg font-semibold text-foreground">{attestation.program}</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année d'étude</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}
-                              </p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-muted-foreground">Année académique</label>
-                              <p className="text-sm font-medium text-foreground">
-                                {attestation.academic_year}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Boutons d'action */}
-                          <div className="flex items-center gap-2 justify-end mb-4">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
+                           {/* Informations et bouton sur la même ligne */}
+                           <div className="flex items-center justify-between">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div>
+                                 <label className="text-sm font-medium text-muted-foreground">Programme</label>
+                                 <p className="text-lg font-semibold text-foreground">
+                                   {attestation.program === 'MBA Complémentaire' 
+                                     ? 'MBA Complémentaire' 
+                                     : `${attestation.program} ${attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}`}
+                                 </p>
+                               </div>
+                               <div>
+                                 <label className="text-sm font-medium text-muted-foreground">Année académique</label>
+                                 <p className="text-sm font-medium text-foreground">
+                                   {attestation.academic_year}
+                                 </p>
+                               </div>
+                             </div>
+                             
+                             {/* Bouton d'action à droite */}
+                             <div className="ml-4">
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={async () => {
                                 try {
                                   const historicalStudent = {
                                     ...student!,
@@ -1119,8 +1122,9 @@ const DocumentGeneration = () => {
                             >
                               <Download className="h-4 w-4" />
                               Télécharger PDF
-                            </Button>
-                          </div>
+                             </Button>
+                             </div>
+                           </div>
 
                           {/* Informations de génération */}
                           <div className="mt-4 p-3 bg-muted/50 rounded-lg">
