@@ -810,87 +810,88 @@ const DocumentGeneration = () => {
                 </Link>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {/* Informations personnelles */}
-                <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
-                  <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
-                    <User className="h-3.5 w-3.5 text-slate-500" />
-                    Informations personnelles
-                  </h4>
-                  <div className="space-y-1.5 text-xs">
-                    <div>
-                      <span className="text-slate-500">Civilité: </span>
-                      <span className="font-medium">{student.civilite}</span>
+              <div className="space-y-4">
+                {/* Première ligne - Informations personnelles et contact */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Informations personnelles */}
+                  <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
+                    <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
+                      <User className="h-3.5 w-3.5 text-slate-500" />
+                      Informations personnelles
+                    </h4>
+                    <div className="space-y-1.5 text-xs">
+                      <div>
+                        <span className="text-slate-500">Civilité: </span>
+                        <span className="font-medium">{student.civilite}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Nom: </span>
+                        <span className="font-medium">{student.firstName} {student.lastName}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Né(e) le: </span>
+                        <span className="font-medium">{new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Lieu: </span>
+                        <span className="font-medium">{student.cityOfBirth}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Nationalité: </span>
+                        <span className="font-medium">{student.nationality}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-500">Nom: </span>
-                      <span className="font-medium">{student.firstName} {student.lastName}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Né(e) le: </span>
-                      <span className="font-medium">{new Date(student.dateOfBirth).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Lieu: </span>
-                      <span className="font-medium">{student.cityOfBirth}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Nationalité: </span>
-                      <span className="font-medium">{student.nationality}</span>
+                  </div>
+
+                  {/* Informations de contact */}
+                  <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
+                    <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
+                      <Mail className="h-3.5 w-3.5 text-slate-500" />
+                      Contact & Identification
+                    </h4>
+                    <div className="space-y-1.5 text-xs">
+                      <div>
+                        <span className="text-slate-500">N° identité: </span>
+                        <span className="font-medium font-mono">{student.identityNumber}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Email: </span>
+                        <span className="font-medium">{student.email}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Téléphone: </span>
+                        <span className="font-medium">{student.phone}</span>
+                      </div>
+                      <div className="pt-1">
+                        <span className="text-slate-500 text-xs">Adresse: </span>
+                        <span className="font-medium text-xs">{student.address}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Informations de contact */}
-                <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
-                  <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
-                    <Mail className="h-3.5 w-3.5 text-slate-500" />
-                    Contact & Identification
-                  </h4>
-                  <div className="space-y-1.5 text-xs">
-                    <div>
-                      <span className="text-slate-500">N° identité: </span>
-                      <span className="font-medium font-mono">{student.identityNumber}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Email: </span>
-                      <span className="font-medium">{student.email}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Téléphone: </span>
-                      <span className="font-medium">{student.phone}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Référence: </span>
-                      <span className="font-medium font-mono">{student.reference}</span>
-                    </div>
-                    <div className="pt-1">
-                      <span className="text-slate-500 text-xs">Adresse: </span>
-                      <span className="font-medium text-xs">{student.address}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Informations académiques */}
+                {/* Deuxième ligne - Informations académiques */}
                 <div className="bg-white rounded-md p-3 border border-slate-200/80 shadow-sm">
                   <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-1.5 text-sm">
                     <GraduationCap className="h-3.5 w-3.5 text-slate-500" />
                     Informations académiques
                   </h4>
-                  <div className="space-y-1.5 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1.5 text-xs">
+                    <div>
+                      <span className="text-slate-500">Référence: </span>
+                      <span className="font-medium font-mono">{student.reference}</span>
+                    </div>
                     <div>
                       <span className="text-slate-500">Programme: </span>
                       <span className="font-medium">{student.program}</span>
                     </div>
                     <div>
+                      <span className="text-slate-500">Année: </span>
+                      <span className="font-medium">{student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`}</span>
+                    </div>
+                    <div>
                       <span className="text-slate-500">Spécialité: </span>
                       <span className="font-medium">{student.specialty}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500">Année: </span>
-                      <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
-                        {student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`}
-                      </span>
                     </div>
                     <div>
                       <span className="text-slate-500">Académique: </span>
@@ -909,19 +910,20 @@ const DocumentGeneration = () => {
                       </span>
                     </div>
                     {student.hasMBA2Diploma && (
-                      <div className="pt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500">MBA 2: </span>
                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                          ✓ MBA2
+                          ✓ Diplômé
                         </span>
                       </div>
                     )}
-                    {student.notes && (
-                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                        <span className="text-yellow-700 font-medium">Notes:</span>
-                        <p className="text-yellow-600 mt-0.5">{student.notes}</p>
-                      </div>
-                    )}
                   </div>
+                  {student.notes && (
+                    <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                      <span className="text-yellow-700 font-medium">Notes: </span>
+                      <span className="text-yellow-700">{student.notes}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
