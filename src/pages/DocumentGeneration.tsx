@@ -959,16 +959,21 @@ const DocumentGeneration = () => {
                                      ? 'MBA Complémentaire' 
                                      : `${attestation.program}${attestation.study_year}`}
                                  </span>
-                                {!attestation.is_generated ? (
-                                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
-                                    Non généré
-                                  </span>
-                                ) : (
-                                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                    Généré
-                                  </span>
-                                )}
-                              </div>
+                                 {attestation.specialty && (
+                                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                     {getSpecialtyCode(attestation.specialty)}
+                                   </span>
+                                 )}
+                                 {!attestation.is_generated ? (
+                                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-500 text-white">
+                                     Non généré
+                                   </span>
+                                 ) : (
+                                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                     Généré
+                                   </span>
+                                 )}
+                               </div>
                             </div>
                           </div>
                           
