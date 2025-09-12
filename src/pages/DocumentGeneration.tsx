@@ -44,7 +44,8 @@ const DocumentGeneration = () => {
     createInvoice,
     updatePayment,
     getCreditNotesByStudentId,
-    createCreditNote
+    createCreditNote,
+    createPayment
   } = usePayments();
   const [student, setStudent] = useState<Student | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -86,6 +87,17 @@ const DocumentGeneration = () => {
     isOpen: boolean;
   }>({
     isOpen: false
+  });
+
+  // State pour la création de facture manuelle
+  const [newPayment, setNewPayment] = useState({
+    amount: "",
+    dueDate: "",
+    type: "",
+    description: "",
+    method: "",
+    paidDate: "",
+    paidMethod: ""
   });
 
   // State pour la modale de remboursement (note de crédit)
@@ -329,26 +341,6 @@ const DocumentGeneration = () => {
     }
   };
 
-  const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
-    const year = String(new Date().getFullYear()).slice(-2); // Prendre les 2 derniers chiffres de l'année
-    const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
-                     payment.type === 'Minerval' ? 'MIN' : 
-                     payment.type === 'Frais d\'envoi' ? 'ENV' :
-                     payment.type === 'Duplicata' ? 'TEL' : 'MIN';
-    
-    // Utiliser la date et l'heure pour obtenir un numéro séquentiel unique
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    // Créer un numéro basé sur la timestamp pour garantir l'unicité
-    const timeBasedNumber = `${month}${day}${hours}${minutes}${seconds}`;
-    
-    return `IPEC-${year}${timeBasedNumber}-${typeCode}`;
-  };
 
   const getInvoiceKey = (payment: Payment) => {
     if (!student) return null;
@@ -721,6 +713,188 @@ const DocumentGeneration = () => {
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de générer l'avoir",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fonctions pour la création de facture manuelle
+  const calculateDueDate = (type: string): string => {
+    const today = new Date();
+    
+    if (type === 'Frais de dossier' || type === "Frais d'envoi" || type === 'Duplicata') {
+      // 14 jours calendaires après aujourd'hui
+      const dueDate = new Date(today);
+      dueDate.setDate(today.getDate() + 14);
+      return dueDate.toISOString().split('T')[0];
+    } else if (type === 'Minerval') {
+      // 31 décembre de l'année en cours
+      return `${today.getFullYear()}-12-31`;
+    }
+    
+    // Par défaut, 30 jours
+    const dueDate = new Date(today);
+    dueDate.setDate(today.getDate() + 30);
+    return dueDate.toISOString().split('T')[0];
+  };
+
+  const generateInvoiceNumber = async (student: Student, payment: Payment): Promise<string> => {
+    const year = String(new Date().getFullYear()).slice(-2);
+    const typeCode = payment.type === 'Frais de dossier' ? 'FD' : 
+                     payment.type === 'Minerval' ? 'MIN' : 
+                     payment.type === 'Frais d\'envoi' ? 'ENV' :
+                     payment.type === 'Duplicata' ? 'DC' : 'MIN';
+    
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    const timeBasedNumber = `${month}${day}${hours}${minutes}${seconds}`;
+    
+    return `IPEC-${year}${timeBasedNumber}-${typeCode}`;
+  };
+
+  const handleAddPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!student || !newPayment.amount || !newPayment.type) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const dueDate = newPayment.dueDate || calculateDueDate(newPayment.type);
+
+      const payment: Omit<Payment, 'id'> = {
+        studentId: student.id,
+        amount: parseFloat(newPayment.amount),
+        dueDate: dueDate,
+        status: newPayment.paidDate ? 'Payé' : 'En attente',
+        type: newPayment.type as Payment['type'],
+        description: newPayment.description || `${newPayment.type} - ${student.firstName} ${student.lastName}`,
+        method: newPayment.paidMethod as Payment['method'],
+        invoiceNumber: null,
+        invoiceDate: new Date().toISOString().split('T')[0],
+        paidDate: newPayment.paidDate || undefined,
+        academicYear: student.academicYear,
+        studyYear: student.studyYear
+      };
+
+      const createdPaymentData = await createPayment(payment);
+
+      if (createdPaymentData) {
+        const createdPayment: Payment = {
+          id: createdPaymentData.id,
+          studentId: createdPaymentData.student_id,
+          amount: createdPaymentData.amount,
+          dueDate: createdPaymentData.due_date,
+          status: createdPaymentData.status as Payment['status'],
+          type: createdPaymentData.type as Payment['type'],
+          description: createdPaymentData.description,
+          method: createdPaymentData.method as Payment['method'],
+          invoiceNumber: createdPaymentData.invoice_number,
+          invoiceDate: createdPaymentData.invoice_date,
+          paidDate: createdPaymentData.paid_date,
+          academicYear: createdPaymentData.academic_year,
+          studyYear: createdPaymentData.study_year
+        };
+
+        // Générer automatiquement la facture
+        setTimeout(async () => {
+          try {
+            await generateInvoiceDocument(createdPayment, false);
+          } catch (error) {
+            console.error('Erreur lors de la génération automatique de la facture:', error);
+          }
+        }, 500);
+      }
+
+      toast({
+        title: "Facture créée !",
+        description: `Facture manuelle générée pour ${student.firstName} ${student.lastName}.`,
+      });
+
+      // Reset form et actualiser les données
+      setNewPayment({
+        amount: "",
+        dueDate: "",
+        type: "",
+        description: "",
+        method: "",
+        paidDate: "",
+        paidMethod: ""
+      });
+      setManualInvoiceDialog({ isOpen: false });
+      
+      // Recharger les données
+      if (studentId) {
+        const updatedPayments = await getPaymentsByStudentId(studentId);
+        setPayments(updatedPayments);
+        const updatedInvoices = await getInvoicesByStudentId(studentId);
+        setInvoices(updatedInvoices);
+      }
+    } catch (error) {
+      console.error('Erreur complète:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer la facture manuelle.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateInvoiceDocument = async (payment: Payment, isDuplicate = false) => {
+    if (!student) return;
+
+    try {
+      const { fillInvoicePdfWithPositions, downloadPdf } = await import('@/utils/positionPdfFiller');
+      
+      let invoice = invoices.find(i => 
+        i.student_id === student.id && 
+        i.payment_id === payment.id
+      );
+      
+      if (!invoice && !isDuplicate) {
+        const invoiceNumber = await generateInvoiceNumber(student, payment);
+        const newInvoiceData = {
+          student_id: student.id,
+          payment_id: payment.id,
+          number: invoiceNumber,
+          amount: payment.amount,
+          type: payment.type,
+          academic_year: payment.academicYear || student.academicYear,
+          study_year: payment.studyYear || student.studyYear,
+          generate_date: new Date().toISOString().split('T')[0]
+        };
+        
+        const createdInvoice = await createInvoice(newInvoiceData);
+        setInvoices(prev => [...prev, createdInvoice]);
+        invoice = createdInvoice;
+      }
+      
+      if (!invoice) return;
+      
+      const invoiceNumber = invoice.number || 'SANS-NUMERO';
+      const pdfBytes = await fillInvoicePdfWithPositions(student, payment, invoiceNumber);
+      const filename = `facture-${student.firstName}-${student.lastName}-${invoiceNumber}.pdf`;
+      downloadPdf(pdfBytes, filename);
+      
+      toast({
+        title: "Facture téléchargée",
+        description: `Facture ${invoiceNumber} téléchargée pour ${payment.amount}€.`,
+      });
+    } catch (error) {
+      console.error('Error generating PDF invoice:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer la facture PDF.",
         variant: "destructive",
       });
     }
@@ -1887,6 +2061,115 @@ const DocumentGeneration = () => {
                 Annuler
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog pour la création de facture manuelle */}
+        <Dialog open={manualInvoiceDialog.isOpen} onOpenChange={(open) => setManualInvoiceDialog({ isOpen: open })}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg">Créer une facture manuelle</DialogTitle>
+              <DialogDescription>
+                Créer une facture manuelle pour l'étudiant {student?.firstName} {student?.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddPayment} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="amount">Montant (€) *</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    value={newPayment.amount}
+                    onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
+                    placeholder={newPayment.type === 'Frais de dossier' ? "500€" : newPayment.type === "Frais d'envoi" ? "120€" : newPayment.type === "Duplicata" ? "35€" : "0.00"}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="type">Type de paiement *</Label>
+                  <Select onValueChange={(value) => {
+                    setNewPayment(prev => ({ 
+                      ...prev, 
+                      type: value,
+                      dueDate: calculateDueDate(value),
+                      amount: value === "Frais de dossier" ? "500" : value === "Frais d'envoi" ? "120" : value === "Duplicata" ? "35" : prev.amount
+                    }));
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez le type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Frais de dossier">Frais de dossier</SelectItem>
+                      <SelectItem value="Minerval">Minerval</SelectItem>
+                      <SelectItem value="Frais d'envoi">Frais d'envoi</SelectItem>
+                      <SelectItem value="Duplicata">Duplicata</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="dueDate">Date d'échéance *</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={newPayment.dueDate}
+                    onChange={(e) => setNewPayment(prev => ({ ...prev, dueDate: e.target.value }))}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="paidDate">Date de paiement (si déjà payé)</Label>
+                  <Input
+                    id="paidDate"
+                    type="date"
+                    value={newPayment.paidDate}
+                    onChange={(e) => setNewPayment(prev => ({ ...prev, paidDate: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="paidMethod">Moyen de paiement</Label>
+                <Select onValueChange={(value) => setNewPayment(prev => ({ ...prev, paidMethod: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez le moyen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Espèces">Espèces</SelectItem>
+                    <SelectItem value="Virement">Virement bancaire</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={newPayment.description}
+                  onChange={(e) => setNewPayment(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Description du paiement..."
+                  rows={2}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setManualInvoiceDialog({ isOpen: false })}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit">
+                  Créer la facture
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
