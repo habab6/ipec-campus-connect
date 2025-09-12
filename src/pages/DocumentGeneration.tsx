@@ -23,6 +23,15 @@ import { fillRegistrationPdfWithPositions, fillInvoicePdfWithPositions, fillCred
 import { generatePaymentSummaryPdf, downloadPaymentSummary } from "@/utils/paymentSummaryGenerator";
 import { AttestationDisplay } from "@/components/AttestationDisplay";
 
+const getSpecialtyCode = (specialty: string): string => {
+  if (specialty.toLowerCase().includes('études européennes') || specialty.toLowerCase().includes('internationale')) return 'EEU';
+  if (specialty.toLowerCase().includes('économie') && specialty.toLowerCase().includes('finance')) return 'EF';
+  if (specialty.toLowerCase().includes('informatique') && specialty.toLowerCase().includes('gestion')) return 'IG';
+  if (specialty.toLowerCase().includes('management')) return 'MGT';
+  if (specialty.toLowerCase().includes('marketing') && specialty.toLowerCase().includes('créativ')) return 'MC';
+  return specialty;
+};
+
 const DocumentGeneration = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const { toast } = useToast();
@@ -967,13 +976,13 @@ const DocumentGeneration = () => {
                            <div className="p-4">
                              {/* Informations et bouton sur la même ligne */}
                              <div className="flex items-center justify-between">
-                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                  <div>
                                    <label className="text-sm font-medium text-muted-foreground">Programme</label>
                                    <p className="text-lg font-semibold text-foreground">
                                      {attestation.program === 'MBA Complémentaire' 
                                        ? 'MBA Complémentaire' 
-                                       : `${attestation.program} ${attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}`}
+                                       : `${attestation.program} ${attestation.study_year}`}
                                    </p>
                                  </div>
                                  <div>
@@ -1047,11 +1056,11 @@ const DocumentGeneration = () => {
                                    ? 'MBA Complémentaire' 
                                    : `${attestation.program}${attestation.study_year}`}
                                </span>
-                              {attestation.specialty && (
-                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
-                                  {attestation.specialty}
-                                </span>
-                              )}
+                               {attestation.specialty && (
+                                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                   {getSpecialtyCode(attestation.specialty)}
+                                 </span>
+                               )}
                             </div>
                           </div>
                         </div>
@@ -1060,13 +1069,13 @@ const DocumentGeneration = () => {
                         <div className="p-4">
                            {/* Informations et bouton sur la même ligne */}
                            <div className="flex items-center justify-between">
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                <div>
                                  <label className="text-sm font-medium text-muted-foreground">Programme</label>
                                  <p className="text-lg font-semibold text-foreground">
                                    {attestation.program === 'MBA Complémentaire' 
                                      ? 'MBA Complémentaire' 
-                                     : `${attestation.program} ${attestation.study_year === 1 ? '1ère année' : `${attestation.study_year}ème année`}`}
+                                     : `${attestation.program} ${attestation.study_year}`}
                                  </p>
                                </div>
                                <div>
