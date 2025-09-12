@@ -834,11 +834,7 @@ const DocumentGeneration = () => {
                       </div>
                       <div>
                         <span className="text-slate-500">Lieu: </span>
-                        <span>{student.cityOfBirth}</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Nationalité: </span>
-                        <span>{student.nationality}</span>
+                        <span>{student.cityOfBirth} ({student.countryOfBirth})</span>
                       </div>
                     </div>
                   </div>
@@ -883,23 +879,11 @@ const DocumentGeneration = () => {
                     </div>
                     <div>
                       <span className="text-slate-500">Programme: </span>
-                      <span>{student.program}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Année: </span>
-                      <span>{student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`}</span>
+                      <span>{student.program} {student.studyYear === 1 ? '1ère' : `${student.studyYear}ème`} année</span>
                     </div>
                     <div>
                       <span className="text-slate-500">Spécialité: </span>
                       <span>{student.specialty}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Académique: </span>
-                      <span>{student.academicYear}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Inscription: </span>
-                      <span>{new Date(student.registrationDate).toLocaleDateString('fr-FR')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-slate-500">Statut: </span>
@@ -908,6 +892,8 @@ const DocumentGeneration = () => {
                       }`}>
                         {student.status}
                       </span>
+                      <span className="text-slate-500">(inscription le: </span>
+                      <span>{new Date(student.registrationDate).toLocaleDateString('fr-FR')})</span>
                     </div>
                     {student.hasMBA2Diploma && (
                       <div className="flex items-center gap-2">
